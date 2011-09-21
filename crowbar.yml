@@ -1,3 +1,7 @@
+barclamp:
+  requires:
+    - crowbar
+    - glance
 
 debs:
   ppas:
