@@ -61,3 +61,6 @@ debs:
     - python-pip
     - python-virtualenv
     - bzr
+
+extra_files:
+  - http://uec-images.ubuntu.com/releases/11.04/release/ubuntu-11.04-server-uec-amd64.tar.gz ami
