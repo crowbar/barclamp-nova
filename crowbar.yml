@@ -53,7 +53,6 @@ debs:
     - dnsmasq-base
     - python-nova
     - nova-api
-    - nova-objectstore
     - nova-volume
     - nova-scheduler
     - nova-doc

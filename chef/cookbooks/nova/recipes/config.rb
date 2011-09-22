@@ -86,16 +86,6 @@ Chef::Log.info("Api server found at #{public_api_ip} #{admin_api_ip}")
 fixed_net = node["network"]["networks"]["nova_fixed"]
 node[:nova][:public_interface] = "br#{fixed_net["vlan"]}"
 
-objectstores = search(:node, "recipes:nova\\:\\:objectstore#{env_filter}") || []
-if objectstores.length > 0
-  objectstore = objectstores[0]
-else
-  objectstore = node
-end
-public_objectstore_ip = Chef::Recipe::Barclamp::Inventory.get_network_by_type(objectstore, "public").address
-admin_objectstore_ip = Chef::Recipe::Barclamp::Inventory.get_network_by_type(objectstore, "admin").address
-Chef::Log.info("Objectstore server found at #{public_objectstore_ip} #{admin_objectstore_ip}")
-
 networks = search(:node, "recipes:nova\\:\\:network#{env_filter}") || []
 if networks.length > 0
   network = networks[0]
@@ -180,8 +170,6 @@ template "/etc/nova/nova.conf" do
   variables(
             :sql_connection => sql_connection,
             :rabbit_settings => rabbit_settings,
-            :s3_host => admin_objectstore_ip,
-            :s3_dmz_host => public_objectstore_ip,
             :ec2_host => admin_api_ip,
             :ec2_dmz_host => public_api_ip,
             :network_public_ip => network_public_ip,

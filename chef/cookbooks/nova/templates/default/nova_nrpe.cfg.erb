@@ -15,7 +15,6 @@ command[check_nova_manage]=/usr/lib/nagios/plugins/check_nova_manage -S <%= @nov
 command[check_nova_api]=/usr/lib/nagios/plugins/check_procs -w 2:4 -c 2:10 -a "nova-api"
 command[check_nova_compute]=/usr/lib/nagios/plugins/check_procs -w 2:4 -c 2:10 -a "nova-compute"
 command[check_nova_network]=/usr/lib/nagios/plugins/check_procs -w 2:4 -c 2:10 -a "nova-network"
-command[check_nova_objectstore]=/usr/lib/nagios/plugins/check_procs -w 2:4 -c 2:10 -a "nova-objectstore"
 command[check_nova_scheduler]=/usr/lib/nagios/plugins/check_procs -w 2:4 -c 2:10 -a "nova-scheduler"
 command[check_nova_volume]=/usr/lib/nagios/plugins/check_procs -w 2:4 -c 2:10 -a "nova-volume"
 

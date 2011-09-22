@@ -41,10 +41,6 @@ network
 -------
 Installs the `nova-network` service.
 
-objectstore
------------
-Installs the `nova-objectstore` service.
-
 project
 -------
 Configures the Nova project, network and permissions.

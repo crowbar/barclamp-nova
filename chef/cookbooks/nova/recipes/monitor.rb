@@ -25,8 +25,7 @@ nova_scale = {
   :volumes => [],
   :networks => [],
   :schedulers => [],
-  :apis => [],
-  :objectstores => []
+  :apis => []
 }
 
 unless node[:nova_environment].nil?
@@ -36,14 +35,12 @@ unless node[:nova_environment].nil?
     nova_scale[:networks] << n
     nova_scale[:schedulers] << n
     nova_scale[:apis] << n
-    nova_scale[:objectstores] << n
   end
 
   search(:node, "roles:nova-multi-controller AND nova_environment:#{node[:nova_environment]}") do |n|
     nova_scale[:networks] << n
     nova_scale[:schedulers] << n
     nova_scale[:apis] << n
-    nova_scale[:objectstores] << n
   end
 
   search(:node, "roles:nova-multi-compute AND nova_environment:#{node[:nova_environment]}") do |n|
