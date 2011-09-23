@@ -24,14 +24,14 @@ node.set_unless['nova']['db']['password']
 
 include_recipe "mysql::client"
 
-db_server = search(:node, "role:mysql-server")
+db_server = search(:node, "role:#{node[:dbserver]}")
 
-node[:mysql][:bind_address] = Chef::Recipe::Barclamp::Inventory.get_network_by_type(node, "admin").address
+#node[:mysql][:bind_address] = Chef::Recipe::Barclamp::Inventory.get_network_by_type(node, "admin").address
 #node[:mysql][:bind_address] = node[:nova][:my_ip]
 
 # Creates empty nova database
 mysql_database "create #{node[:nova][:db][:database]} database" do
-  host db_server[0].ipaddress
+  host db_server[0].mysql.api_bind_host
   username "db_maker"
   password db_server[0].mysql.db_maker_password
   database node[:nova][:db][:database]
@@ -39,9 +39,9 @@ mysql_database "create #{node[:nova][:db][:database]} database" do
 end
 
 mysql_database "create test database user" do
-  host "#{db_server[0].ipaddress}"
+  host db_server[0].mysql.api_bind_host
   username "db_maker"
-  password "#{db_server[0].mysql.db_maker_password}"
+  password db_server[0].mysql.db_maker_password
   database "test_db"
   action :query
   sql "GRANT SELECT, INSERT, UPDATE, DELETE, CREATE, DROP, INDEX, ALTER ON *.* TO '#{node[:nova][:db][:user]}'@'%' IDENTIFIED BY '#{node[:nova][:db][:password]}' WITH GRANT OPTION;"
