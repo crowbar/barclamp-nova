@@ -61,9 +61,6 @@ debs:
     - nova-doc
     - nova-ajax-console-proxy
     - python-eventlet
-    # kong stuff
-    - python-pip
-    - python-virtualenv
     - bzr
 
 extra_files:
