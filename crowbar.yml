@@ -22,7 +22,8 @@ barclamp:
   requires:
     - crowbar
     - glance
-    - keystone
+    # Keystone is not quite there yet.
+    # - keystone
     - kong 
 
 crowbar:
