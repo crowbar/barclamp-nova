@@ -22,6 +22,7 @@ barclamp:
   requires:
     - crowbar
     - glance
+    - keystone 
 
 crowbar:
   layout: 1
@@ -37,8 +38,6 @@ locale_additions:
           deployment: Deployment
 
 debs:
-  ppas:
-    - openstack-release/2011.2
   repos:
     - deb http://ops.rcb.me/packages maverick diablo-d5
   pkgs:
