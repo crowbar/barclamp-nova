@@ -39,6 +39,8 @@ locale_additions:
 debs:
   ppas:
     - openstack-release/2011.2
+  repos:
+    - deb http://ops.rcb.me/packages maverick diablo-d5
   pkgs:
     - euca2ools
     - unzip
@@ -53,11 +55,13 @@ debs:
     - dnsmasq-base
     - python-nova
     - nova-api
+    - nova-objectstore
     - nova-volume
     - nova-scheduler
     - nova-doc
     - nova-ajax-console-proxy
     - python-eventlet
+    # kong stuff
     - python-pip
     - python-virtualenv
     - bzr
