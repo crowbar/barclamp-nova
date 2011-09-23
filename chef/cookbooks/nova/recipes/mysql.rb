@@ -18,41 +18,33 @@
 # limitations under the License.
 #
 
-#nova db user and root have same password
-node[:nova][:db][:password] = node[:mysql][:server_root_password]
-# GREG: Resolve this nicely.
+::Chef::Recipe.send(:include, Opscode::OpenSSL::Password)
+
+node.set_unless['nova']['db']['password']
+
+include_recipe "mysql::client"
+
+db_server = search(:node, "role:mysql-server")
+
 node[:mysql][:bind_address] = Chef::Recipe::Barclamp::Inventory.get_network_by_type(node, "admin").address
 #node[:mysql][:bind_address] = node[:nova][:my_ip]
 
-include_recipe "mysql::server"
-
-execute "mysql-install-nova-privileges" do
-  command "/usr/bin/mysql -u root -p#{node[:nova][:db][:password]} < /etc/mysql/nova-grants.sql"
-  action :nothing
-end
-
-# Permissions for the nova user
-template "/etc/mysql/nova-grants.sql" do
-  path "/etc/mysql/nova-grants.sql"
-  source "grants.sql.erb"
-  owner "root"
-  group "root"
-  mode "0600"
-  variables(
-    :user     => node[:nova][:db][:user],
-    :password => node[:nova][:db][:password],
-    :database => node[:nova][:db][:database]
-  )
-  notifies :run, resources(:execute => "mysql-install-nova-privileges"), :immediately
-end
-
 # Creates empty nova database
 mysql_database "create #{node[:nova][:db][:database]} database" do
-  host "localhost"
-  username "root"
-  password node[:nova][:db][:password]
+  host db_server[0].ipaddress
+  username "db_maker"
+  password db_server[0].mysql.db_maker_password
   database node[:nova][:db][:database]
   action :create_db
+end
+
+mysql_database "create test database user" do
+  host "#{db_server[0].ipaddress}"
+  username "db_maker"
+  password "#{db_server[0].mysql.db_maker_password}"
+  database "test_db"
+  action :query
+  sql "GRANT SELECT, INSERT, UPDATE, DELETE, CREATE, DROP, INDEX, ALTER ON *.* TO '#{node[:nova][:db][:user]}'@'%' IDENTIFIED BY '#{node[:nova][:db][:password]}' WITH GRANT OPTION;"
 end
 
 # save data so it can be found by search
