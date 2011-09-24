@@ -73,7 +73,8 @@
               "mapping": {
                 "password": { "type": "str", "required": true },
                 "user": { "type": "str", "required": true },
-                "database": { "type": "str", "required": true }
+                "database": { "type": "str", "required": true },
+                "dbserver": { "type": "str", "required": true }
               }
             }
           }

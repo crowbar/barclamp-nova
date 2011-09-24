@@ -24,14 +24,16 @@ node.set_unless['nova']['db']['password']
 
 include_recipe "mysql::client"
 
-db_server = search(:node, "role:#{node[:dbserver]}")
+db_server = search(:node, "role:#{node[:nova][:db][:dbserver]}")
+
+log "DBServer: #{node[:nova][:db][:dbserver]} -  #{db_server[0].mysql.api_bind_host}"
 
 #node[:mysql][:bind_address] = Chef::Recipe::Barclamp::Inventory.get_network_by_type(node, "admin").address
 #node[:mysql][:bind_address] = node[:nova][:my_ip]
 
 # Creates empty nova database
 mysql_database "create #{node[:nova][:db][:database]} database" do
-  host db_server[0].mysql.api_bind_host
+  host     db_server[0].mysql.api_bind_host
   username "db_maker"
   password db_server[0].mysql.db_maker_password
   database node[:nova][:db][:database]
@@ -39,7 +41,7 @@ mysql_database "create #{node[:nova][:db][:database]} database" do
 end
 
 mysql_database "create test database user" do
-  host db_server[0].mysql.api_bind_host
+  host node[:nova][:db][:dbserver]
   username "db_maker"
   password db_server[0].mysql.db_maker_password
   database "test_db"
