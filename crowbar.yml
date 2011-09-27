@@ -20,11 +20,12 @@ barclamp:
   display: Nova
   version: 0
   requires:
-    - crowbar
+    - @crowbar
     - glance
-    # Keystone is not quite there yet.
-    # - keystone
-    - kong 
+    - keystone
+    - kong
+  member:
+    - openstack 
 
 crowbar:
   layout: 1
