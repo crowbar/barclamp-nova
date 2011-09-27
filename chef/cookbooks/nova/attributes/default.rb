@@ -26,9 +26,9 @@
 default[:nova][:db][:password] = "" # Set by Recipe
 default[:nova][:db][:user] = "nova"
 default[:nova][:db][:database] = "nova"
-default[:nova][:db][:dbserver] = "localhost"
+#default[:nova][:db][:dbserver] = "localhost"
 default[:nova][:mysql] = false
-
+override[:nova][:db][:password] = "1234"
 #
 # RabbitMQ Settings
 #

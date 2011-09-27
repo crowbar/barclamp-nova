@@ -24,7 +24,9 @@ node.set_unless['nova']['db']['password']
 
 include_recipe "mysql::client"
 
-db_server = search(:node, "role:#{node[:nova][:db][:dbserver]}")
+# Working placeholder - this only works if there's ONE mysql-server
+# box in your crowbar environment
+db_server = search(:node, "roles:mysql-server")
 
 log "DBServer: #{node[:nova][:db][:dbserver]} -  #{db_server[0].mysql.api_bind_host}"
 
@@ -40,13 +42,13 @@ mysql_database "create #{node[:nova][:db][:database]} database" do
   action :create_db
 end
 
-mysql_database "create test database user" do
-  host node[:nova][:db][:dbserver]
+mysql_database "create nova database user" do
+  host db_server[0].mysql.api_bind_host
   username "db_maker"
   password db_server[0].mysql.db_maker_password
-  database "test_db"
+  database node[:nova][:db][:database]
   action :query
-  sql "GRANT SELECT, INSERT, UPDATE, DELETE, CREATE, DROP, INDEX, ALTER ON *.* TO '#{node[:nova][:db][:user]}'@'%' IDENTIFIED BY '#{node[:nova][:db][:password]}' WITH GRANT OPTION;"
+  sql "GRANT SELECT, INSERT, UPDATE, DELETE, CREATE, DROP, INDEX, ALTER ON #{node[:nova][:db][:database]}.* TO '#{node[:nova][:db][:user]}'@'%' IDENTIFIED BY '#{node[:nova][:db][:password]}';"
 end
 
 # save data so it can be found by search
