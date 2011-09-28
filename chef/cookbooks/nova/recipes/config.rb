@@ -111,6 +111,7 @@ if glance_servers.length > 0
   glance_server_port = glance_server[:glance][:api_bind_port]
 else
   glance_server_ip = nil
+  glance_server_port = nil
 end
 Chef::Log.info("Glance server at #{glance_server_ip}")
 
