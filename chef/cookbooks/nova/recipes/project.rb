@@ -37,12 +37,12 @@ end
 
 execute "nova-manage network create --fixed_range_v4=#{node[:nova][:fixed_range]} --num_networks=#{node[:nova][:num_networks]} --network_size=#{node[:nova][:network_size]} --label nova_fixed" do
   user node[:nova][:user]
-  not_if { ::File.exists?("/var/lib/nova/setup") }
+  not_if "nova-manage network list | grep '#{node[:nova][:fixed_range]}'"
 end
 
 execute "nova-manage floating create --ip_range=#{node[:nova][:floating_range]}" do
   user node[:nova][:user]
-  not_if { ::File.exists?("/var/lib/nova/setup") }
+  not_if "nova-manage floating list | grep '#{node[:nova][:floating_range].split("/")[0]}'"
 end
 
 if node[:nova][:network_type] != "dhcpvlan"
@@ -124,12 +124,9 @@ execute "chmod 0600 #{node[:nova][:user_dir]}/mykey.priv" do
   user node[:nova][:user]
 end
 
-file "/var/lib/nova/setup" do
-  action :touch
-  not_if { ::File.exists?("/var/lib/nova/setup") }
-end
-
-cmd = Chef::ShellOut.new("sudo -i -u #{node[:nova][:user]} euca-describe-groups")
+cmd = Chef::ShellOut.new("sudo -i -u #{node[:nova][:user]} euca-describe-groups default")
+groups = cmd.run_command
+cmd = Chef::ShellOut.new("sudo -i -u #{node[:nova][:user]} euca-describe-groups default")
 groups = cmd.run_command
 Chef::Log.debug groups
 
@@ -142,11 +139,6 @@ execute "euca-authorize --config #{node[:nova][:user_dir]}/novarc -P tcp -p 22 d
   user node[:nova][:user]
   not_if {groups.stdout.include?("tcp")}
 end
-
-#debug output
-# execute "nova-manage service list" do
-#   user node[:nova][:user]
-# end
 
 #download and install AMIs
 (node[:nova][:images] or []).each do |image|
