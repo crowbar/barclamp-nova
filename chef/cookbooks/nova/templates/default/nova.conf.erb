@@ -15,7 +15,7 @@
 --osapi_host=<%= @ec2_host %>
 --FAKE_subdomain=ec2
 <% unless @glance_server_ip.nil? -%>
---glance_host=<%= @glance_server_ip %>
+--glance_api_servers=<%= @glance_server_ip %>:<%= @glance_server_port %>
 --image_service=nova.image.glance.GlanceImageService
 <% end -%>
 <% if @sql_connection -%>

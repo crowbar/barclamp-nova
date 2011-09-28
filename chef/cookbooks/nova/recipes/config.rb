@@ -108,6 +108,7 @@ glance_servers = search(:node, "roles:glance-server") || []
 if glance_servers.length > 0
   glance_server = glance_servers[0]
   glance_server_ip = Chef::Recipe::Barclamp::Inventory.get_network_by_type(glance_server, "admin").address
+  glance_server_port = glance_server[:glance][:api_bind_port]
 else
   glance_server_ip = nil
 end
@@ -174,7 +175,8 @@ template "/etc/nova/nova.conf" do
             :ec2_dmz_host => public_api_ip,
             :network_public_ip => network_public_ip,
             :dns_server_public_ip => dns_server_public_ip,
-            :glance_server_ip => glance_server_ip
+            :glance_server_ip => glance_server_ip,
+            :glance_server_port => glance_server_port
             )
   notifies :run, resources(:execute => "nova-manage db sync"), :immediately
 end
