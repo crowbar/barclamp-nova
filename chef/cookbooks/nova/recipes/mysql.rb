@@ -18,13 +18,12 @@
 # limitations under the License.
 #
 
-#nova db user and root have same password
-node[:nova][:db][:password] = node[:mysql][:server_root_password]
-# GREG: Resolve this nicely.
 node[:mysql][:bind_address] = Chef::Recipe::Barclamp::Inventory.get_network_by_type(node, "admin").address
-#node[:mysql][:bind_address] = node[:nova][:my_ip]
 
 include_recipe "mysql::server"
+
+#nova db user and root have same password
+node[:nova][:db][:password] = node[:mysql][:server_root_password]
 
 execute "mysql-install-nova-privileges" do
   command "/usr/bin/mysql -u root -p#{node[:nova][:db][:password]} < /etc/mysql/nova-grants.sql"
