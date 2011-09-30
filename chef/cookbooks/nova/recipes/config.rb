@@ -108,7 +108,7 @@ glance_servers = search(:node, "roles:glance-server") || []
 if glance_servers.length > 0
   glance_server = glance_servers[0]
   glance_server_ip = Chef::Recipe::Barclamp::Inventory.get_network_by_type(glance_server, "admin").address
-  glance_server_port = glance_server[:glance][:api_bind_port]
+  glance_server_port = glance_server[:glance][:api][:bind_port]
 else
   glance_server_ip = nil
   glance_server_port = nil
