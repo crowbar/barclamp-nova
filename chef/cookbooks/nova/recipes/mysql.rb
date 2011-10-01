@@ -20,13 +20,12 @@
 
 ::Chef::Recipe.send(:include, Opscode::OpenSSL::Password)
 
-node.set_unless['nova']['db']['password']
+node.set_unless['nova']['db']['password'] = secure_password
 
 include_recipe "mysql::client"
 
-# Working placeholder - this only works if there's ONE mysql-server
-# box in your crowbar environment
-db_server = search(:node, "roles:mysql-server")
+# find mysql server configured by mysql-client
+db_server = search(:node, "fqdn:#{node['mysql-server']}")
 
 log "DBServer: #{node[:nova][:db][:dbserver]} -  #{db_server[0].mysql.api_bind_host}"
 
