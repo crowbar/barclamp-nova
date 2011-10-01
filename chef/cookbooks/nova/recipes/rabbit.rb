@@ -43,6 +43,18 @@ rabbitmq_user node[:nova][:rabbit][:user] do
   action :set_permissions
 end
 
+execute "rabbitmqctl set_user_tags #{node[:nova][:rabbit][:user]} management" do
+  action :run
+end
+
+bash "replace parts of alertness tools" do
+  code <<-EOH
+sed -i "s/Management: Web UI/RabbitMQ Management/g" /usr/lib/nagios/plugins/check_rabbitmq_aliveness
+exit 0
+EOH
+  action :run
+end
+
 # save data so it can be found by search
 node.save
 
