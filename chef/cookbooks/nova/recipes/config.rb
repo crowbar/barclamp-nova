@@ -41,7 +41,11 @@ end
 env_filter = " AND nova_config_environment:#{node[:nova][:config][:environment]}"
 
 package "python-mysqldb"
-mysqls = search(:node, "roles:mysql-server") || []
+unless node['mysql-server'].nil?
+  mysqls = search(:node, "fqdn:#{node['mysql-server']}")
+else
+  mysqls = search(:node, "roles:mysql-server") || []
+end
 if mysqls.length > 0
   mysql = mysqls[0]
 else
