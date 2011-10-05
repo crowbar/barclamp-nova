@@ -19,4 +19,8 @@
 
 include_recipe "nova::config"
 
+package "openstackx" do
+  action :install
+end
+
 nova_package("api")
