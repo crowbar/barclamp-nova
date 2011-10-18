@@ -149,7 +149,7 @@ end
 BASH_SOURCE=#{node[:nova][:user_dir]}
 . ../.eucarc
 tar -zxvf #{filename}
-nova-manage image all_register natty-server-uec-amd64.img natty-server-uec-amd64-vmlinuz-virtual natty-server-uec-amd64-loader is_public='T' "Ubuntu-11.04-Server-x86_64"
+nova-manage image all_register natty-server-cloudimg-amd64.img natty-server-cloudimg-amd64-vmlinuz-virtual natty-server-cloudimg-amd64-loader is_public='T' "Ubuntu-11.04-Server-x86_64"
 EOH
     cwd "#{node[:nova][:user_dir]}/images/"
     user node[:nova][:user]
