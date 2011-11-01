@@ -21,6 +21,7 @@ barclamp:
   version: 0
   requires:
     - @crowbar
+    - mysql
     - glance
     - keystone
     - kong
