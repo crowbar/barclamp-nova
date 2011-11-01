@@ -26,6 +26,10 @@ include_recipe "mysql::client"
 
 # find mysql server configured by mysql-client
 db_server = search(:node, "fqdn:#{node['mysql-server']}")
+# if we found ourself, then use us.
+if db_server[0]['fqdn'] == node['fqdn']
+  db_server = [ node ]
+end
 
 log "DBServer: #{node[:nova][:db][:dbserver]} -  #{db_server[0].mysql.api_bind_host}"
 
