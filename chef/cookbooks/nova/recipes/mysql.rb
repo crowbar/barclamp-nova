@@ -31,17 +31,17 @@ log "DBServer: #{node[:nova][:db][:dbserver]} -  #{db_server[0].mysql.api_bind_h
 
 # Creates empty nova database
 mysql_database "create #{node[:nova][:db][:database]} database" do
-  host     db_server[0].mysql.api_bind_host
+  host     db_server[0]['mysql']['api_bind_host']
   username "db_maker"
-  password db_server[0].mysql.db_maker_password
+  password db_server[0]['mysql']['db_maker_password']
   database node[:nova][:db][:database]
   action :create_db
 end
 
 mysql_database "create nova database user" do
-  host db_server[0].mysql.api_bind_host
+  host     db_server[0]['mysql']['api_bind_host']
   username "db_maker"
-  password db_server[0].mysql.db_maker_password
+  password db_server[0]['mysql']['db_maker_password']
   database node[:nova][:db][:database]
   action :query
   sql "GRANT SELECT, INSERT, UPDATE, DELETE, CREATE, DROP, INDEX, ALTER ON #{node[:nova][:db][:database]}.* TO '#{node[:nova][:db][:user]}'@'%' IDENTIFIED BY '#{node[:nova][:db][:password]}';"
