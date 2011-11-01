@@ -1,6 +1,10 @@
 Welcome to a Barclamp for the Crowbar Framework project
 =======================================================
 
+KEITH: The feature-mysql-barclamp branch consists of minor changes to support use of an external MySQL server via the MySQL barclamp. No configuration changes are required.
+
+* The mysql server node is automatically provided by the node[:mysql-server] attribute, which is passed to the Nova nodes via the MySQL Client role of the MySQL barclamp. In order to use the remote MySQL server, you MUST assign each node the MySQL Client role through the same proposal your MySQL Server is assigned.
+
 The code and documentation is distributed under the Apache 2 license (http://www.apache.org/licenses/LICENSE-2.0.html). Contributions back to the source are encouraged.
 
 The Crowbar Framework (https://github.com/dellcloudedge/crowbar) was developed by the Dell CloudEdge Solutions Team (http://dell.com/openstack) as a OpenStack installer (http://OpenStack.org) but has evolved as a much broader function tool. 

@@ -46,8 +46,10 @@ execute "nova-manage floating create --ip_range=#{node[:nova][:floating_range]}"
 end
 
 if node[:nova][:network_type] != "dhcpvlan"
+
+  db_server = search(:node, "fqdn:#{node['mysql-server']}")[0]
   execute "mysql-fix-ranges-fixed" do
-    command "/usr/bin/mysql -u root -p#{node[:mysql][:server_root_password]} #{node[:nova][:db][:database]} < /etc/mysql/nova-fixed-range.sql"
+    command "/usr/bin/mysql -u #{node[:nova][:db][:user]} -h #{db_server[:mysql][:api_bind_host]} -p#{node[:nova][:db][:password]} #{node[:nova][:db][:database]} < /etc/mysql/nova-fixed-range.sql"
     action :nothing
   end
 

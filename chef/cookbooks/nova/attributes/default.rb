@@ -23,7 +23,7 @@
 #
 # Database Settings
 #
-default[:nova][:db][:password] = "" # Set by Recipe
+default[:nova][:db][:password] = nil
 default[:nova][:db][:user] = "nova"
 default[:nova][:db][:database] = "nova"
 default[:nova][:mysql] = false
