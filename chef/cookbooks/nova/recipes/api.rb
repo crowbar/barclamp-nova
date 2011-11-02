@@ -19,8 +19,36 @@
 
 include_recipe "nova::config"
 
+package "python-keystone" do
+  action :install
+end
+
 package "openstackx" do
   action :install
 end
 
 nova_package("api")
+
+# Need to figure out environment filter
+keystones = search(:node, "recipes:keystone\\:\\:server") || []
+if keystones.length > 0
+  keystone = keystones[0]
+else
+  keystone = node
+end
+
+keystone_address = Chef::Recipe::Barclamp::Inventory.get_network_by_type(keystone, "admin").address if keystone_address.nil?
+Chef::Log.info("Keystone server found at #{keystone_address}")
+
+template "/etc/nova/api-paste.ini" do
+  source "api-paste.ini.erb"
+  owner "root"
+  group "root"
+  mode "0644"
+  variables(
+    :keystone_ip_address => keystone_address,
+    :keystone_admin_token => keystone[:keystone][:dashboard]['long-lived-token']
+  )
+  notifies :restart, resources(:service => "nova-api"), :immediately
+end
+

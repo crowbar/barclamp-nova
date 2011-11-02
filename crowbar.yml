@@ -63,7 +63,8 @@ debs:
     - nova-volume
     - nova-scheduler
     - nova-doc
-    - nova-ajax-console-proxy
+    - nova-novnc
+    - nova-vncproxy
     - python-eventlet
     - bzr
     # dashboard stuff.  Will be moved to its own barclamp.
