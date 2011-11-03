@@ -37,26 +37,20 @@ package "nova-common" do
   action :install
 end
 
-# GREG: Resolve this nicely
-env_filter = " AND nova_config_environment:#{node[:nova][:config][:environment]}"
-
 package "python-mysqldb"
-unless node['mysql-server'].nil?
-  mysqls = search(:node, "fqdn:#{node['mysql-server']}") || []
-else
-  mysqls = search(:node, "roles:mysql-server") || []
-end
+env_filter = " AND mysql_config_environment:#{node[:nova][:mysql_instance]}"
+mysqls = search(:node, "roles:mysql-server#{env_filter}") || []
 if mysqls.length > 0
   mysql = mysqls[0]
 else
   mysql = node
 end
-# GREG: Resolve this nicely
 mysql_address = mysql[:mysql][:bind_address]
 mysql_address = Chef::Recipe::Barclamp::Inventory.get_network_by_type(mysql, "admin").address if mysql_address.nil?
 Chef::Log.info("Mysql server found at #{mysql_address}")
 sql_connection = "mysql://#{node[:nova][:db][:user]}:#{node[:nova][:db][:password]}@#{mysql_address}/#{node[:nova][:db][:database]}"
 
+env_filter = " AND nova_config_environment:#{node[:nova][:config][:environment]}"
 rabbits = search(:node, "recipes:nova\\:\\:rabbit#{env_filter}") || []
 if rabbits.length > 0
   rabbit = rabbits[0]

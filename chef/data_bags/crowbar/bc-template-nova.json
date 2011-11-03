@@ -3,6 +3,9 @@
   "description": "installs and configures the Openstack Nova component. It relies upon the network and glance barclamps for normal operation.",
   "attributes": {
     "nova": {
+      "keystone_instance": "none",
+      "glance_instance": "none",
+      "mysql_instance": "none",
       "use_barclamp": true,
       "libvirt_type": "kvm",
       "user": "nova",

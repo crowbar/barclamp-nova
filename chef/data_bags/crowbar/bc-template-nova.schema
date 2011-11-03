@@ -12,6 +12,9 @@
           "type": "map", 
           "required": true,
           "mapping": {
+            "keystone_instance": { "type": "str", "required": true },
+            "glance_instance": { "type": "str", "required": true },
+            "mysql_instance": { "type": "str", "required": true },
             "use_barclamp": { "type": "bool", "required": true },
             "libvirt_type": { "type": "str", "required": true },
             "network_type": { "type": "str", "required": true, "pattern": "/^flat$|^flatdhcp$|^dhcpvlan$/" },
