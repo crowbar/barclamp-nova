@@ -25,7 +25,7 @@ node.set_unless['nova']['db']['password'] = secure_password
 include_recipe "mysql::client"
 
 # find mysql server configured by mysql-client
-env_filter = " AND mysql_config_environment:#{node[:nova][:mysql_instance]}"
+env_filter = " AND mysql_config_environment:mysql-config-#{node[:nova][:mysql_instance]}"
 db_server = search(:node, "roles:mysql-server#{env_filter}")
 # if we found ourself, then use us.
 if db_server[0]['fqdn'] == node['fqdn']

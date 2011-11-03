@@ -38,7 +38,7 @@ package "nova-common" do
 end
 
 package "python-mysqldb"
-env_filter = " AND mysql_config_environment:#{node[:nova][:mysql_instance]}"
+env_filter = " AND mysql_config_environment:mysql-config-#{node[:nova][:mysql_instance]}"
 mysqls = search(:node, "roles:mysql-server#{env_filter}") || []
 if mysqls.length > 0
   mysql = mysqls[0]
