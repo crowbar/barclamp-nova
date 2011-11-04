@@ -47,7 +47,7 @@ class NovaService < ServiceObject
     base["attributes"]["nova"]["mysql_instance"] = ""
     begin
       mysqlService = MysqlService.new(@logger)
-      mysqls = mysqlService.list_active
+      mysqls = mysqlService.list_active[1]
       base["attributes"]["nova"]["mysql_instance"] = mysqls[0] unless mysqls.empty?
     rescue
       @logger.info("Nova create_proposal: no mysql found")
@@ -56,7 +56,7 @@ class NovaService < ServiceObject
     base["attributes"]["nova"]["keystone_instance"] = ""
     begin
       keystoneService = KeystoneService.new(@logger)
-      keystones = keystoneService.list_active
+      keystones = keystoneService.list_active[1]
       base["attributes"]["nova"]["keystone_instance"] = keystones[0] unless keystones.empty?
     rescue
       @logger.info("Nova create_proposal: no keystone found")
@@ -65,7 +65,7 @@ class NovaService < ServiceObject
     base["attributes"]["nova"]["glance_instance"] = ""
     begin
       glanceService = GlanceService.new(@logger)
-      glances = glanceService.list_active
+      glances = glanceService.list_active[1]
       base["attributes"]["nova"]["glance_instance"] = glances[0] unless glances.empty?
     rescue
       @logger.info("Nova create_proposal: no glance found")
