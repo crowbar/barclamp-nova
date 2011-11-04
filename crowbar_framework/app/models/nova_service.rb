@@ -44,6 +44,33 @@ class NovaService < ServiceObject
       }
     end
 
+    base["attributes"]["nova"]["mysql_instance"] = ""
+    begin
+      mysqlService = MysqlService.new(@logger)
+      mysqls = mysqlService.list_active
+      base["attributes"]["nova"]["mysql_instance"] = mysqls[0] unless mysqls.empty?
+    rescue
+      @logger.info("Nova create_proposal: no mysql found")
+    end
+
+    base["attributes"]["nova"]["keystone_instance"] = ""
+    begin
+      keystoneService = KeystoneService.new(@logger)
+      keystones = keystoneService.list_active
+      base["attributes"]["nova"]["keystone_instance"] = keystones[0] unless keystones.empty?
+    rescue
+      @logger.info("Nova create_proposal: no keystone found")
+    end
+
+    base["attributes"]["nova"]["glance_instance"] = ""
+    begin
+      glanceService = GlanceService.new(@logger)
+      glances = glanceService.list_active
+      base["attributes"]["nova"]["glance_instance"] = glances[0] unless glances.empty?
+    rescue
+      @logger.info("Nova create_proposal: no glance found")
+    end
+
     @logger.debug("Nova create_proposal: exiting")
     base
   end
