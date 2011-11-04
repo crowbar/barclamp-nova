@@ -43,8 +43,8 @@ locale_additions:
 
 debs:
   repos:
-#    - deb http://ops.rcb.me/packages maverick diablo-d5
-    - deb http://ops.monkeypuppetlabs.com/packages maverick diablo-d5
+#    - deb http://ops.rcb.me/packages maverick diablo-final
+    - deb http://ops.monkeypuppetlabs.com/packages maverick diablo-final
   pkgs:
     - euca2ools
     - unzip
@@ -71,6 +71,8 @@ debs:
     - openstack-dashboard
     - python-django
     - openstackx
+    - python-keystone
+    - nova-ajax-console-proxy
 
 extra_files:
   - http://uec-images.ubuntu.com/releases/11.04/release/ubuntu-11.04-server-cloudimg-amd64.tar.gz ami
