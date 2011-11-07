@@ -57,7 +57,7 @@ my_ipaddress = Chef::Recipe::Barclamp::Inventory.get_network_by_type(node, "admi
 
 keystone_register "register nova service" do
   host keystone_address
-  token node[:keystone][:admin][:token]
+  token keystone[:keystone][:admin][:token]
   service_name "nova"
   service_description "Openstack Nova Service"
   action :add_service
@@ -65,7 +65,7 @@ end
 
 keystone_register "register nova compat service" do
   host keystone_address
-  token node[:keystone][:admin][:token]
+  token keystone[:keystone][:admin][:token]
   service_name "nova_compat"
   service_description "Openstack Nova Compat Service"
   action :add_service
@@ -73,7 +73,7 @@ end
 
 keystone_register "register nova_compat endpoint" do
   host keystone_address
-  token node[:keystone][:admin][:token]
+  token keystone[:keystone][:admin][:token]
   endpoint_service "nova_compat"
   endpoint_region "RegionOne"
   endpoint_adminURL "http://#{my_ipaddress}:8774/v1.0"
@@ -86,7 +86,7 @@ end
 
 keystone_register "register nova endpoint" do
   host keystone_address
-  token node[:keystone][:admin][:token]
+  token keystone[:keystone][:admin][:token]
   endpoint_service "nova"
   endpoint_region "RegionOne"
   endpoint_adminURL "http://#{my_ipaddress}:8774/v1.1/%tenant_id%"
