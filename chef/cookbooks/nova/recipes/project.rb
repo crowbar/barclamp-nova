@@ -37,7 +37,7 @@ end
 
 execute "nova-manage network create --fixed_range_v4=#{node[:nova][:fixed_range]} --num_networks=#{node[:nova][:num_networks]} --network_size=#{node[:nova][:network_size]} --label nova_fixed" do
   user node[:nova][:user]
-  not_if "nova-manage network list | grep '#{node[:nova][:fixed_range]}'"
+  not_if "nova-manage network list | grep '#{node[:nova][:fixed_range]}' --multi_host=T"
 end
 
 execute "nova-manage floating create --ip_range=#{node[:nova][:floating_range]}" do
