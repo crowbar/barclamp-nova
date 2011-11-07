@@ -47,7 +47,7 @@ template "/etc/nova/api-paste.ini" do
   mode "0644"
   variables(
     :keystone_ip_address => keystone_address,
-    :keystone_admin_token => keystone[:keystone][:dashboard]['long-lived-token']
+    :keystone_admin_token => keystone[:keystone][:admin]['token']
   )
   notifies :restart, resources(:service => "nova-api"), :immediately
 end
