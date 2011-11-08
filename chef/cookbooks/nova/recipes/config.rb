@@ -18,18 +18,6 @@
 # limitations under the License.
 #
 
-# GREG: Fix this nicely
-if node[:crowbar].nil?
-  apt_repository "NovaCoreReleasePPA" do
-    uri "http://ppa.launchpad.net/nova-core/release/ubuntu"
-    distribution node["lsb"]["codename"]
-    components ["main"]
-    action :add
-  end
-end
-
-#include_recipe "nova::user"
-
 node[:nova][:my_ip] = Chef::Recipe::Barclamp::Inventory.get_network_by_type(node, "admin").address
 
 package "nova-common" do
@@ -45,7 +33,6 @@ if mysqls.length > 0
 else
   mysql = node
 end
-mysql_address = mysql[:mysql][:bind_address]
 mysql_address = Chef::Recipe::Barclamp::Inventory.get_network_by_type(mysql, "admin").address if mysql_address.nil?
 Chef::Log.info("Mysql server found at #{mysql_address}")
 sql_connection = "mysql://#{node[:nova][:db][:user]}:#{node[:nova][:db][:password]}@#{mysql_address}/#{node[:nova][:db][:database]}"
@@ -57,8 +44,6 @@ if rabbits.length > 0
 else
   rabbit = node
 end
-# GREG: Resolve this nicely
-rabbit_address = rabbit[:rabbitmq][:address]
 rabbit_address = Chef::Recipe::Barclamp::Inventory.get_network_by_type(rabbit, "admin").address if rabbit_address.nil? or rabbit_address == "0.0.0.0"
 Chef::Log.info("Rabbit server found at #{rabbit_address}")
 rabbit_settings = {
@@ -112,12 +97,6 @@ else
   glance_server_port = nil
 end
 Chef::Log.info("Glance server at #{glance_server_ip}")
-
-
-execute "nova-manage db sync" do
-  user node[:nova][:user]
-  action :nothing
-end
 
 cookbook_file "/etc/default/nova-common" do
   source "nova-common"
@@ -179,6 +158,4 @@ template "/etc/nova/nova.conf" do
             )
   notifies :run, resources(:execute => "nova-manage db sync"), :immediately
 end
-
-package "dnsmasq-base"
 
