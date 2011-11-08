@@ -19,8 +19,6 @@
 #
 
 include_recipe "nova::config"
-include_recipe "nova::api"        # For nova-ha
-include_recipe "nova::network"    # For nova-ha
 
 package "mysql-client"
 
