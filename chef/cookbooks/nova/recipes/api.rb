@@ -23,10 +23,6 @@ package "python-keystone" do
   action :install
 end
 
-package "openstackx" do
-  action :install
-end
-
 nova_package("api")
 
 env_filter = " AND keystone_config_environment:keystone-config-#{node[:nova][:keystone_instance]}"
