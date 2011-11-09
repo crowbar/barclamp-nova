@@ -20,6 +20,11 @@ class NovaService < ServiceObject
     @logger = thelogger
   end
 
+  def random_password(size = 12)
+    chars = (('a'..'z').to_a + ('0'..'9').to_a) - %w(i o 0 1 l 0)
+    (1..size).collect{|a| chars[rand(chars.size)] }.join
+  end
+
   #
   # Lots of enhancements here.  Like:
   #    * Don't reuse machines
@@ -70,6 +75,8 @@ class NovaService < ServiceObject
     rescue
       @logger.info("Nova create_proposal: no glance found")
     end
+
+    base["attributes"]["nova"]["db"]["password"] = random_password
 
     @logger.debug("Nova create_proposal: exiting")
     base

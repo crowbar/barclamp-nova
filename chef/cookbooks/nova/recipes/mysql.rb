@@ -20,8 +20,6 @@
 
 ::Chef::Recipe.send(:include, Opscode::OpenSSL::Password)
 
-node.set_unless['nova']['db']['password'] = secure_password
-
 include_recipe "mysql::client"
 
 # find mysql server configured by mysql-client
@@ -32,7 +30,7 @@ if db_server[0]['fqdn'] == node['fqdn']
   db_server = [ node ]
 end
 
-log "DBServer: #{node[:nova][:db][:dbserver]} -  #{db_server[0].mysql.api_bind_host}"
+log "DBServer: #{db_server[0].mysql.api_bind_host}"
 
 # Creates empty nova database
 mysql_database "create #{node[:nova][:db][:database]} database" do

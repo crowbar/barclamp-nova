@@ -37,7 +37,6 @@
         "password": "",
         "user": "nova",
         "database": "nova",
-        "dbserver": ""
       }
     }
   },
