@@ -7,5 +7,6 @@ version          "0.3"
 
 # depends "apt"
 depends "mysql"
+depends "keystone"
 depends "openssl"
 depends "rabbitmq"

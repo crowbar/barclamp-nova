@@ -162,6 +162,5 @@ template "/etc/nova/nova.conf" do
             :glance_server_ip => glance_server_ip,
             :glance_server_port => glance_server_port
             )
-  notifies :run, resources(:execute => "nova-manage db sync"), :immediately
 end
 
