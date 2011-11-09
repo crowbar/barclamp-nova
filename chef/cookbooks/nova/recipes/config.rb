@@ -30,6 +30,7 @@ env_filter = " AND mysql_config_environment:mysql-config-#{node[:nova][:mysql_in
 mysqls = search(:node, "roles:mysql-server#{env_filter}") || []
 if mysqls.length > 0
   mysql = mysqls[0]
+  mysql = node if mysql.name == node.name
 else
   mysql = node
 end
@@ -41,6 +42,7 @@ env_filter = " AND nova_config_environment:#{node[:nova][:config][:environment]}
 rabbits = search(:node, "recipes:nova\\:\\:rabbit#{env_filter}") || []
 if rabbits.length > 0
   rabbit = rabbits[0]
+  rabbit = node if rabbit.name == node.name
 else
   rabbit = node
 end
@@ -57,6 +59,7 @@ rabbit_settings = {
 apis = search(:node, "recipes:nova\\:\\:api#{env_filter}") || []
 if apis.length > 0
   api = apis[0]
+  api = node if api.name == node.name
 else
   api = node
 end
@@ -72,6 +75,7 @@ node[:nova][:public_interface] = "br#{fixed_net["vlan"]}"
 networks = search(:node, "recipes:nova\\:\\:network#{env_filter}") || []
 if networks.length > 0
   network = networks[0]
+  network = node if network.name == node.name
 else
   network = node
 end
@@ -81,6 +85,7 @@ Chef::Log.info("Network server found at #{network_public_ip}")
 dns_servers = search(:node, "roles:dns-server") || []
 if dns_servers.length > 0
   dns_server = dns_servers[0]
+  dns_server = node if dns_server.name == node.name
 else
   dns_server = node
 end
@@ -90,6 +95,7 @@ Chef::Log.info("DNS server found at #{dns_server_public_ip}")
 glance_servers = search(:node, "roles:glance-server") || []
 if glance_servers.length > 0
   glance_server = glance_servers[0]
+  glance_server = node if glance_server.name == node.name
   glance_server_ip = Chef::Recipe::Barclamp::Inventory.get_network_by_type(glance_server, "admin").address
   glance_server_port = glance_server[:glance][:api][:bind_port]
 else

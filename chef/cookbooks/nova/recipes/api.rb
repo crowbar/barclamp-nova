@@ -29,6 +29,7 @@ env_filter = " AND keystone_config_environment:keystone-config-#{node[:nova][:ke
 keystones = search(:node, "recipes:keystone\\:\\:server#{env_filter}") || []
 if keystones.length > 0
   keystone = keystones[0]
+  keystone = node if keystone.name == node.name
 else
   keystone = node
 end

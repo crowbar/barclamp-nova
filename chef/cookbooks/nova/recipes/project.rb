@@ -42,6 +42,7 @@ end
 if node[:nova][:network_type] != "dhcpvlan"
   env_filter = " AND mysql_config_environment:mysql-config-#{node[:nova][:mysql_instance]}"
   db_server = search(:node, "roles:mysql-server#{env_filter}")[0]
+  db_server = node if db_server.name == node.name
   execute "mysql-fix-ranges-fixed" do
     command "/usr/bin/mysql -u #{node[:nova][:db][:user]} -h #{db_server[:mysql][:api_bind_host]} -p#{node[:nova][:db][:password]} #{node[:nova][:db][:database]} < /etc/mysql/nova-fixed-range.sql"
     action :nothing
