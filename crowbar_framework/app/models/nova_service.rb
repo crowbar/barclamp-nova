@@ -86,19 +86,6 @@ class NovaService < ServiceObject
     @logger.debug("Nova apply_role_pre_chef_call: entering #{all_nodes.inspect}")
     return if all_nodes.empty?
 
-    nodes = NodeObject.find("roles:provisioner-server")
-    unless nodes.nil? or nodes.length < 1
-      admin_ip = nodes[0].get_network_by_type("admin")["address"]
-      web_port = nodes[0]["provisioner"]["web_port"]
-      # substitute the admin web portal
-      new_array = [] 
-      role.default_attributes["nova"]["images"].each do |item|
-        new_array << item.gsub("<ADMINWEB>", "#{admin_ip}:#{web_port}")
-      end
-      role.default_attributes["nova"]["images"] = new_array
-      role.save
-    end
-
     # Make sure that the front-end pieces have public ip addreses.
     net_svc = NetworkService.new @logger
     [ "nova-cloud-controller", "nova-multi-controller", "nova-head", "nova-single-machine" ].each do |element|

@@ -55,11 +55,6 @@
             "access_key": { "type": "str", "required": true },
             "secret_key": { "type": "str", "required": true },
             "user_dir": { "type": "str", "required": true },
-            "images": {
-              "type": "seq",
-              "required": true,
-              "sequence": [ { "type": "str" } ]
-            },
             "rabbit": {
               "type": "map",
               "required": true,
