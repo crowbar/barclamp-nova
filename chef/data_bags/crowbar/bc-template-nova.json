@@ -33,7 +33,7 @@
       "db": {
         "password": "",
         "user": "nova",
-        "database": "nova",
+        "database": "nova"
       }
     }
   },
