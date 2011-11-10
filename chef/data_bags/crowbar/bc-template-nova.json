@@ -14,6 +14,7 @@
       "user_dir": "/var/lib/nova",
       "access_key": "secure_password",
       "secret_key": "secure_password",
+      "allow_same_net_traffic": false,
       "network_type": "flat",
       "flat_network": {
         "flat_injected": true

@@ -17,6 +17,7 @@
             "mysql_instance": { "type": "str", "required": true },
             "use_barclamp": { "type": "bool", "required": true },
             "libvirt_type": { "type": "str", "required": true },
+            "allow_same_net_traffic": { "type": "bool", "required": true },
             "network_type": { "type": "str", "required": true, "pattern": "/^flat$|^flatdhcp$|^dhcpvlan$/" },
             "flat_network": {
               "type": "map",
