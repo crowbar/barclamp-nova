@@ -26,7 +26,7 @@
 
 # NETWORK
 --my_ip=<%= node[:nova][:my_ip] %>
---allow_same_net_traffic=<%= node[:nova][:allow_same_net_traffic] %>
+--allow_same_net_traffic=<%= node[:nova][:allow_same_net_traffic] ? "True" : "False" %>
 --iscsi_ip_prefix=<%= node[:nova][:my_ip].split('.')[0..2].join('.') %>
 --s3_host=<%= @s3_host %>
 --s3_dmz_host=<%= @s3_dmz_host %>
