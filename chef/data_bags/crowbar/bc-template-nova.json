@@ -43,9 +43,7 @@
       "elements": {},
       "element_order": [
         [ "nova-multi-controller" ],
-        [ "nova-rabbitmq-server" ],
-        [ "nova-multi-compute" ],
-        [ "nova-single-machine" ]
+        [ "nova-multi-compute" ]
       ],
       "config": {
         "environment": "nova-config-base",

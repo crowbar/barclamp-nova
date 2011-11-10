@@ -20,5 +20,5 @@
 
 include_recipe "nova::config" 
 
-nova_package("api")
+nova_package("network")
 
