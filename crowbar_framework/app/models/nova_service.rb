@@ -20,6 +20,10 @@ class NovaService < ServiceObject
     @logger = thelogger
   end
 
+  def self.allow_multiple_proposals?
+    true
+  end
+
   def random_password(size = 12)
     chars = (('a'..'z').to_a + ('0'..'9').to_a) - %w(i o 0 1 l 0)
     (1..size).collect{|a| chars[rand(chars.size)] }.join
