@@ -19,9 +19,8 @@
 
 include_recipe "nova::config"
 
-package "python-keystone" do
-  action :install
-end
+package "python-keystone"
+package "openstackx"
 
 nova_package("api")
 
