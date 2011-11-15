@@ -35,6 +35,7 @@ else
 end
 
 keystone_address = Chef::Recipe::Barclamp::Inventory.get_network_by_type(keystone, "admin").address if keystone_address.nil?
+keystone_token = keystone["keystone"]["admin"]["token"] rescue nil
 Chef::Log.info("Keystone server found at #{keystone_address}")
 
 template "/etc/nova/api-paste.ini" do
@@ -44,7 +45,7 @@ template "/etc/nova/api-paste.ini" do
   mode "0644"
   variables(
     :keystone_ip_address => keystone_address,
-    :keystone_admin_token => keystone[:keystone][:admin]['token']
+    :keystone_admin_token => keystone_token
   )
   notifies :restart, resources(:service => "nova-api"), :immediately
 end
@@ -54,7 +55,7 @@ my_ipaddress = Chef::Recipe::Barclamp::Inventory.get_network_by_type(node, "admi
 
 keystone_register "register nova service" do
   host keystone_address
-  token keystone[:keystone][:admin][:token]
+  token keystone_token
   service_name "nova"
   service_description "Openstack Nova Service"
   action :add_service
@@ -62,7 +63,7 @@ end
 
 keystone_register "register nova compat service" do
   host keystone_address
-  token keystone[:keystone][:admin][:token]
+  token keystone_token
   service_name "nova_compat"
   service_description "Openstack Nova Compat Service"
   action :add_service
@@ -70,7 +71,7 @@ end
 
 keystone_register "register nova_compat endpoint" do
   host keystone_address
-  token keystone[:keystone][:admin][:token]
+  token keystone_token
   endpoint_service "nova_compat"
   endpoint_region "RegionOne"
   endpoint_adminURL "http://#{my_ipaddress}:8774/v1.0"
@@ -83,7 +84,7 @@ end
 
 keystone_register "register nova endpoint" do
   host keystone_address
-  token keystone[:keystone][:admin][:token]
+  token keystone_token
   endpoint_service "nova"
   endpoint_region "RegionOne"
   endpoint_adminURL "http://#{my_ipaddress}:8774/v1.1/%tenant_id%"
