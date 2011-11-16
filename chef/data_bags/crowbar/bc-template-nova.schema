@@ -12,6 +12,7 @@
           "type": "map", 
           "required": true,
           "mapping": {
+            "ha_enabled": { "type": "bool", "required": true },
             "keystone_instance": { "type": "str", "required": true },
             "glance_instance": { "type": "str", "required": true },
             "mysql_instance": { "type": "str", "required": true },

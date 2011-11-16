@@ -21,6 +21,11 @@
 ::Chef::Node.send(:include, Opscode::OpenSSL::Password)
 
 #
+# High Availability (HA) networking settings
+#
+default[:nova][:ha_enabled] = true
+
+#
 # Database Settings
 #
 default[:nova][:db][:password] = nil

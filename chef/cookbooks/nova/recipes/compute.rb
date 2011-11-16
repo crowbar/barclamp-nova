@@ -24,3 +24,10 @@ package "mysql-client"
 
 nova_package("compute")
 
+# ha_enabled activates Nova High Availability (HA) networking.
+# The nova "network" and "api" recipes need to be included on the compute nodes and
+# we must specify the --multi_host=T switch on "nova-manage network create". 
+if node[:nova][:ha_enabled]
+  include_recipe "nova::api"
+  include_recipe "nova::network"
+end

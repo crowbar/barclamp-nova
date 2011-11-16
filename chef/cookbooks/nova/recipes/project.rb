@@ -27,7 +27,12 @@ execute "nova-manage db sync" do
   action :run
 end
 
-execute "nova-manage network create --fixed_range_v4=#{node[:nova][:fixed_range]} --num_networks=#{node[:nova][:num_networks]} --network_size=#{node[:nova][:network_size]} --label nova_fixed --multi_host=T" do
+# ha_enabled activates Nova High Availability (HA) networking.
+# The nova "network" and "api" recipes need to be included on the compute nodes and
+# we must specify the --multi_host=T switch on "nova-manage network create". 
+cmd = "nova-manage network create --fixed_range_v4=#{node[:nova][:fixed_range]} --num_networks=#{node[:nova][:num_networks]} --network_size=#{node[:nova][:network_size]} --label nova_fixed" 
+cmd << " --multi_host=T" if node[:nova][:ha_enabled]
+execute cmd do
   user node[:nova][:user]
   not_if "nova-manage network list | grep '#{node[:nova][:fixed_range]}'"
 end
