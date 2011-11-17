@@ -41,23 +41,18 @@ class NovaService < ServiceObject
 
     nodes = NodeObject.all
     nodes.delete_if { |n| n.nil? or n.admin? }
-    if nodes.size == 1
-      base["deployment"]["nova"]["elements"] = {
-        "nova-single-node" => [ nodes.first[:fqdn] ]
-      }
-    elsif nodes.size > 1
-      head = nodes.shift
-      base["deployment"]["nova"]["elements"] = {
-        "nova-multi-controller" => [ head.name ],
-        "nova-multi-compute" => nodes.map { |x| x.name }
-      }
-    end
+    head = nodes.shift
+    nodes = [ head ] if nodes.empty?
+    base["deployment"]["nova"]["elements"] = {
+      "nova-multi-controller" => [ head.name ],
+      "nova-multi-compute" => nodes.map { |x| x.name }
+    }
 
-    base["attributes"]["nova"]["mysql_instance"] = ""
+    base["attributes"]["nova"]["db"]["mysql_instance"] = ""
     begin
       mysqlService = MysqlService.new(@logger)
       mysqls = mysqlService.list_active[1]
-      base["attributes"]["nova"]["mysql_instance"] = mysqls[0] unless mysqls.empty?
+      base["attributes"]["nova"]["db"]["mysql_instance"] = mysqls[0] unless mysqls.empty?
     rescue
       @logger.info("Nova create_proposal: no mysql found")
     end
@@ -92,12 +87,11 @@ class NovaService < ServiceObject
 
     # Make sure that the front-end pieces have public ip addreses.
     net_svc = NetworkService.new @logger
-    [ "nova-cloud-controller", "nova-multi-controller", "nova-head", "nova-single-machine" ].each do |element|
-      tnodes = role.override_attributes["nova"]["elements"][element]
-      next if tnodes.nil? or tnodes.empty?
+    tnodes = role.override_attributes["nova"]["elements"]["nova-multi-controller"]
+    unless tnodes.nil? or tnodes.empty?
       tnodes.each do |n|
         net_svc.allocate_ip "default", "public", "host", n
-        if role.default_attributes["nova"]["network_type"] != "dhcpvlan"
+        unless role.default_attributes["nova"]["tenant_vlans"] 
           net_svc.allocate_ip "default", "nova_fixed", "router", n
         end
       end

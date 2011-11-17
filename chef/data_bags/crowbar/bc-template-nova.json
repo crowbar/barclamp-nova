@@ -3,36 +3,26 @@
   "description": "installs and configures the Openstack Nova component. It relies upon the network and glance barclamps for normal operation.",
   "attributes": {
     "nova": {
-      "ha_enabled": true,
       "keystone_instance": "none",
       "glance_instance": "none",
-      "mysql_instance": "none",
-      "use_barclamp": true,
       "libvirt_type": "kvm",
+      "verbose": true,
       "user": "nova",
-      "user_group": "nogroup",
-      "project": "admin",
-      "user_dir": "/var/lib/nova",
-      "access_key": "secure_password",
-      "secret_key": "secure_password",
-      "allow_same_net_traffic": false,
-      "network_type": "flat",
-      "flat_network": {
-        "flat_injected": true
+      "network": {
+        "ha_enabled": true,
+        "tenant_vlans": true,
+        "dhcp_enabled": true,
+        "allow_same_net_traffic": false,
+        "num_networks": 1,
+        "network_size": 256
       },
-      "flat_dhcp_network": {
-      },
-      "dhcp_vlan_network": {
-        "vpn_start": 1000
-      },
-      "num_networks": 1,
-      "network_size": 256,
       "rabbit": {
         "password": "secure_password",
         "user": "nova",
         "vhost": "/nova"
       },
       "db": {
+        "mysql_instance": "none",
         "password": "",
         "user": "nova",
         "database": "nova"

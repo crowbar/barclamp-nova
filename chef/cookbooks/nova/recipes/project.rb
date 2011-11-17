@@ -30,22 +30,22 @@ end
 # ha_enabled activates Nova High Availability (HA) networking.
 # The nova "network" and "api" recipes need to be included on the compute nodes and
 # we must specify the --multi_host=T switch on "nova-manage network create". 
-cmd = "nova-manage network create --fixed_range_v4=#{node[:nova][:fixed_range]} --num_networks=#{node[:nova][:num_networks]} --network_size=#{node[:nova][:network_size]} --label nova_fixed" 
-cmd << " --multi_host=T" if node[:nova][:ha_enabled]
+cmd = "nova-manage network create --fixed_range_v4=#{node[:nova][:network][:fixed_range]} --num_networks=#{node[:nova][:network][:num_networks]} --network_size=#{node[:nova][:network][:network_size]} --label nova_fixed" 
+cmd << " --multi_host=T" if node[:nova][:network][:ha_enabled]
 execute cmd do
   user node[:nova][:user]
-  not_if "nova-manage network list | grep '#{node[:nova][:fixed_range]}'"
+  not_if "nova-manage network list | grep '#{node[:nova][:network][:fixed_range]}'"
 end
 
 # Add private network one day.
 
-execute "nova-manage floating create --ip_range=#{node[:nova][:floating_range]}" do
+execute "nova-manage floating create --ip_range=#{node[:nova][:network][:floating_range]}" do
   user node[:nova][:user]
-  not_if "nova-manage floating list | grep '#{node[:nova][:floating_range].split("/")[0]}'"
+  not_if "nova-manage floating list | grep '#{node[:nova][:network][:floating_range].split("/")[0]}'"
 end
 
-if node[:nova][:network_type] != "dhcpvlan"
-  env_filter = " AND mysql_config_environment:mysql-config-#{node[:nova][:mysql_instance]}"
+unless node[:nova][:network][:tenant_vlans]
+  env_filter = " AND mysql_config_environment:mysql-config-#{node[:nova][:db][:mysql_instance]}"
   db_server = search(:node, "roles:mysql-server#{env_filter}")[0]
   db_server = node if db_server.name == node.name
   execute "mysql-fix-ranges-fixed" do

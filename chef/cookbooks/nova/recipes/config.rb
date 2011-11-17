@@ -22,11 +22,11 @@ node[:nova][:my_ip] = Chef::Recipe::Barclamp::Inventory.get_network_by_type(node
 
 package "nova-common" do
   options "--force-yes -o Dpkg::Options::=\"--force-confdef\""
-  action :install
+  action :upgrade
 end
 
 package "python-mysqldb"
-env_filter = " AND mysql_config_environment:mysql-config-#{node[:nova][:mysql_instance]}"
+env_filter = " AND mysql_config_environment:mysql-config-#{node[:nova][:db][:mysql_instance]}"
 mysqls = search(:node, "roles:mysql-server#{env_filter}") || []
 if mysqls.length > 0
   mysql = mysqls[0]
@@ -67,10 +67,6 @@ public_api_ip = api_ip = Chef::Recipe::Barclamp::Inventory.get_network_by_type(a
 admin_api_ip = api_ip = Chef::Recipe::Barclamp::Inventory.get_network_by_type(api, "admin").address
 node[:nova][:api] = public_api_ip
 Chef::Log.info("Api server found at #{public_api_ip} #{admin_api_ip}")
-
-# build the public_interface for the fixed net
-fixed_net = node["network"]["networks"]["nova_fixed"]
-node[:nova][:public_interface] = "br#{fixed_net["vlan"]}"
 
 networks = search(:node, "recipes:nova\\:\\:network#{env_filter}") || []
 if networks.length > 0
@@ -131,20 +127,28 @@ def mask_to_bits(mask)
   count
 end
 
-fixed_net = node[:network][:networks]["nova_fixed"]
+# build the public_interface for the fixed net
+public_net = node["network"]["networks"]["public"]
+fixed_net = node["network"]["networks"]["nova_fixed"]
 nova_floating = node[:network][:networks]["nova_floating"]
-node[:nova][:fixed_range] = "#{fixed_net["subnet"]}/#{mask_to_bits(fixed_net["netmask"])}"
-node[:nova][:floating_range] = "#{nova_floating["subnet"]}/#{mask_to_bits(nova_floating["netmask"])}"
 
-if node[:nova][:network_type] == "flat"
-  node[:nova][:flat_network][:flat_network_bridge] = "br#{fixed_net["vlan"]}"
-elsif node[:nova][:network_type] == "flatdhcp"
-  node[:nova][:flat_dhcp_network][:flat_network_bridge] = "br#{fixed_net["vlan"]}"
-  node[:nova][:flat_dhcp_network][:flat_network_dhcp_start] = fixed_net["ranges"]["dhcp"]["start"]
+node[:nova][:network][:fixed_range] = "#{fixed_net["subnet"]}/#{mask_to_bits(fixed_net["netmask"])}"
+node[:nova][:network][:floating_range] = "#{nova_floating["subnet"]}/#{mask_to_bits(nova_floating["netmask"])}"
+
+fixed_interface = Chef::Recipe::Barclamp::Inventory.get_network_by_type(network, "nova_fixed").interface_list.first rescue nil
+public_interface = Chef::Recipe::Barclamp::Inventory.get_network_by_type(network, "public").interface_list.first rescue nil
+
+node[:nova][:network][:public_interface] = public_interface
+if !node[:nova][:dhcp_enabled]
+  node[:nova][:network][:flat_network_bridge] = "br#{fixed_net["vlan"]}"
+  node[:nova][:network][:flat_interface] = fixed_interface
+elsif !node[:nova][:network][:tenant_vlans]
+  node[:nova][:network][:flat_network_bridge] = "br#{fixed_net["vlan"]}"
+  node[:nova][:network][:flat_network_dhcp_start] = fixed_net["ranges"]["dhcp"]["start"]
+  node[:nova][:network][:flat_interface] = fixed_interface
 elsif node[:nova][:network_type] == "dhcpvlan"
-  fixed_interface = Chef::Recipe::Barclamp::Inventory.get_network_by_type(network, "nova_fixed").interface_list.first
-  node[:nova][:dhcp_vlan_network][:vlan_interface] = fixed_interface
-  node[:nova][:dhcp_vlan_network][:vlan_start] = fixed_net["vlan"] + 1
+  node[:nova][:network][:vlan_interface] = fixed_interface
+  node[:nova][:network][:vlan_start] = fixed_net["vlan"]
 end
 
 template "/etc/nova/nova.conf" do

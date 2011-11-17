@@ -1,7 +1,9 @@
 
 # LOGS/STATE
 --daemonize=1
+<% if node[:nova][:verbose] -%>
 --verbose
+<% end -%>
 --dhcpbridge_flagfile=/etc/nova/nova.conf
 --dhcpbridge=/usr/bin/nova-dhcpbridge
 --logdir=/var/log/nova
@@ -26,37 +28,39 @@
 
 # NETWORK
 --my_ip=<%= node[:nova][:my_ip] %>
---allow_same_net_traffic=<%= node[:nova][:allow_same_net_traffic] ? "True" : "False" %>
---iscsi_ip_prefix=<%= node[:nova][:my_ip].split('.')[0..2].join('.') %>
---s3_host=<%= @s3_host %>
---s3_dmz_host=<%= @s3_dmz_host %>
+--allow_same_net_traffic=<%= node[:nova][:network][:allow_same_net_traffic] ? "True" : "False" %>
 --ec2_host=<%= @ec2_host %>
 --ec2_dmz_host=<%= @ec2_dmz_host %>
 --osapi_host=<%= @ec2_host %>
---FAKE_subdomain=ec2
---routing_source_ip=<%= @network_public_ip %>
---fixed_range=<%= node[:nova][:fixed_range] %>
---public_interface=<%= node[:nova][:public_interface] %>
---network_size=<%= node[:nova][:network_size] %>
---num_networks=<%= node[:nova][:num_networks] %>
-<% if node[:nova][:network_type] == "flatdhcp" -%>
---network_manager=nova.network.manager.FlatDHCPManager
---flat_network_bridge=<%= node[:nova][:flat_dhcp_network][:flat_network_bridge] %>
---flat_network_dhcp_start=<%= node[:nova][:flat_dhcp_network][:flat_network_dhcp_start] %>
---flat_network_dns=<%= @dns_server_public_ip %>
-<% elsif node[:nova][:network_type] == "flat" -%>
---network_manager=nova.network.manager.FlatManager
---flat_network_bridge=<%= node[:nova][:flat_network][:flat_network_bridge] %>
---flat_injected=<%= node[:nova][:flat_network][:flat_injected] %>
---flat_network_dns=<%= @dns_server_public_ip %>
-<% elsif node[:nova][:network_type] == "dhcpvlan" -%>
---network_manager=nova.network.manager.VlanManager
---vlan_interface=<%= node[:nova][:dhcp_vlan_network][:vlan_interface] %>
---vlan_start=<%= node[:nova][:dhcp_vlan_network][:vlan_start] %>
---vpn_start=<%= node[:nova][:dhcp_vlan_network][:vpn_start] %>
---vpn_ip=<%= @network_public_ip %>
+--fixed_range=<%= node[:nova][:network][:fixed_range] %>
+--floating_range=<%= node[:nova][:network][:floating_range] %>
+<% if node[:nova][:network][:public_interface] -%>
+--public_interface=<%= node[:nova][:network][:public_interface] %>
 <% end -%>
---floating_range=<%= node[:nova][:floating_range] %>
+--network_size=<%= node[:nova][:network][:network_size] %>
+--num_networks=<%= node[:nova][:network][:num_networks] %>
+
+<% if node[:nova][:network][:dhcp_enabled] -%>
+<% if node[:nova][:network][:tenant_vlans] -%>
+# DHCP Vlan Mode
+--network_manager=nova.network.manager.VlanManager
+--vlan_interface=<%= node[:nova][:network][:vlan_interface] %>
+--vlan_start=<%= node[:nova][:network][:vlan_start] %>
+<% else -%>
+# DHCP Flat Mode
+--network_manager=nova.network.manager.FlatDHCPManager
+--flat_network_dns=<%= @dns_server_public_ip %>
+--flat_network_dhcp_start=<%= node[:nova][:network][:flat_network_dhcp_start] %>
+--flat_interface=<%= node[:nova][:network][:flat_interface] %>
+<% end -%>
+<% else -%>
+# Flat Mode
+--network_manager=nova.network.manager.FlatManager
+--flat_interface=<%= node[:nova][:network][:flat_interface] %>
+--flat_network_bridge=<%= node[:nova][:network][:flat_network_bridge] %>
+--flat_network_dns=<%= @dns_server_public_ip %>
+--flat_injected=True
+<% end -%>
 
 # GLANCE
 <% unless @glance_server_ip.nil? -%>

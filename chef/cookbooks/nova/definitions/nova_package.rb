@@ -17,7 +17,7 @@ define :nova_package do
   nova_name="nova-#{params[:name]}"
   package nova_name do
     options "--force-yes -o Dpkg::Options::=\"--force-confdef\""
-    action :install
+    action :upgrade
   end
 
   service nova_name do

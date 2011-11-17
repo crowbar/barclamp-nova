@@ -12,51 +12,31 @@
           "type": "map", 
           "required": true,
           "mapping": {
-            "ha_enabled": { "type": "bool", "required": true },
             "keystone_instance": { "type": "str", "required": true },
             "glance_instance": { "type": "str", "required": true },
-            "mysql_instance": { "type": "str", "required": true },
-            "use_barclamp": { "type": "bool", "required": true },
             "libvirt_type": { "type": "str", "required": true },
-            "allow_same_net_traffic": { "type": "bool", "required": true },
-            "network_type": { "type": "str", "required": true, "pattern": "/^flat$|^flatdhcp$|^dhcpvlan$/" },
-            "flat_network": {
-              "type": "map",
-              "required": true,
-              "mapping": {
-                "flat_network_bridge": { "type": "str" },
-                "flat_injected": { "type": "bool" }
-              }
-            },
-            "flat_dhcp_network": {
-              "type": "map",
-              "required": true,
-              "mapping": {
-                "flat_network_bridge": { "type": "str" },
-                "flat_network_dhcp_start": { "type": "str" },
-                "flat_interface": { "type": "str" }
-              }
-            },
-            "dhcp_vlan_network": {
-              "type": "map",
-              "required": true,
-              "mapping": {
-                "vlan_interface": { "type": "str" },
-                "vlan_start": { "type": "int" },
-                "vpn_start": { "type": "int" }
-              }
-            },
-            "public_interface": { "type": "str" },
-            "fixed_range": { "type": "str" },
-            "floating_range": { "type": "str" },
-            "num_networks": { "type": "int" },
-            "network_size": { "type": "int" },
+            "verbose": { "type": "bool", "required": true },
             "user": { "type": "str", "required": true },
-            "user_group": { "type": "str", "required": true },
-            "project": { "type": "str", "required": true },
-            "access_key": { "type": "str", "required": true },
-            "secret_key": { "type": "str", "required": true },
-            "user_dir": { "type": "str", "required": true },
+            "network": {
+              "type": "map",
+              "required": true,
+              "mapping": {
+                "ha_enabled": { "type": "bool", "required": true },
+                "tenant_vlans": { "type": "bool", "required": true },
+                "dhcp_enabled": { "type": "bool", "required": true },
+                "allow_same_net_traffic": { "type": "bool", "required": true },
+                "public_interface": { "type": "str" },
+                "floating_range": { "type": "str" },
+                "fixed_range": { "type": "str" },
+                "num_networks": { "type": "int" },
+                "network_size": { "type": "int" },
+                "routing_source_ip": { "type": "str" },
+                "flat_network_bridge": { "type": "str" },
+                "flat_interface": { "type": "str" },
+                "flat_network_dhcp_start": { "type": "str" },
+                "vlan_start": { "type": "int" }
+              }
+            },
             "rabbit": {
               "type": "map",
               "required": true,
@@ -71,6 +51,7 @@
               "type": "map",
               "required": true,
               "mapping": {
+                "mysql_instance": { "type": "str", "required": true },
                 "password": { "type": "str", "required": true },
                 "user": { "type": "str", "required": true },
                 "database": { "type": "str", "required": true }
