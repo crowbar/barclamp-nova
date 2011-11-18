@@ -135,8 +135,20 @@ nova_floating = node[:network][:networks]["nova_floating"]
 node[:nova][:network][:fixed_range] = "#{fixed_net["subnet"]}/#{mask_to_bits(fixed_net["netmask"])}"
 node[:nova][:network][:floating_range] = "#{nova_floating["subnet"]}/#{mask_to_bits(nova_floating["netmask"])}"
 
-fixed_interface = Chef::Recipe::Barclamp::Inventory.get_network_by_type(network, "nova_fixed").interface_list.first rescue nil
-public_interface = Chef::Recipe::Barclamp::Inventory.get_network_by_type(network, "public").interface_list.first rescue nil
+fip = Chef::Recipe::Barclamp::Inventory.get_network_by_type(network, "nova_fixed")
+if fip
+  fixed_interface = fip.interface
+  fixed_interface = "#{fip.interface}.#{fip.vlan}" if fip.use_vlan
+else
+  fixed_interface = nil
+end
+pip = Chef::Recipe::Barclamp::Inventory.get_network_by_type(network, "public")
+if pip
+  public_interface = pip.interface
+  public_interface = "#{pip.interface}.#{pip.vlan}" if pip.use_vlan
+else
+  public_interface = nil
+end
 
 node[:nova][:network][:public_interface] = public_interface
 if !node[:nova][:dhcp_enabled]
@@ -146,7 +158,7 @@ elsif !node[:nova][:network][:tenant_vlans]
   node[:nova][:network][:flat_network_bridge] = "br#{fixed_net["vlan"]}"
   node[:nova][:network][:flat_network_dhcp_start] = fixed_net["ranges"]["dhcp"]["start"]
   node[:nova][:network][:flat_interface] = fixed_interface
-elsif node[:nova][:network_type] == "dhcpvlan"
+else
   node[:nova][:network][:vlan_interface] = fixed_interface
   node[:nova][:network][:vlan_start] = fixed_net["vlan"]
 end
