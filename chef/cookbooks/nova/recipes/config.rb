@@ -57,7 +57,7 @@ rabbit_settings = {
 }
 
 apis = search(:node, "recipes:nova\\:\\:api#{env_filter}") || []
-if apis.length > 0
+if apis.length > 0 and !node[:nova][:network][:ha_enabled]
   api = apis[0]
   api = node if api.name == node.name
 else
