@@ -85,21 +85,32 @@ class NovaService < ServiceObject
     @logger.debug("Nova apply_role_pre_chef_call: entering #{all_nodes.inspect}")
     return if all_nodes.empty?
 
+    # Handle addressing
+    #
     # Make sure that the front-end pieces have public ip addreses.
+    #   - if we are in HA mode, then that is all nodes.
+    #
+    # if tenants are enabled, we don't manage interfaces on nova-fixed.
+    #
     net_svc = NetworkService.new @logger
+
     tnodes = role.override_attributes["nova"]["elements"]["nova-multi-controller"]
+    tnodes = all_nodes if role.default_attributes["nova"]["network"]["ha_enabled"]
     unless tnodes.nil? or tnodes.empty?
       tnodes.each do |n|
         net_svc.allocate_ip "default", "public", "host", n
-        unless role.default_attributes["nova"]["tenant_vlans"] 
+        unless role.default_attributes["nova"]["network"]["tenant_vlans"] 
           net_svc.allocate_ip "default", "nova_fixed", "router", n
         end
       end
     end
 
-    all_nodes.each do |n|
-      net_svc.enable_interface "default", "nova_fixed", n
+    unless role.default_attributes["nova"]["network"]["tenant_vlans"] 
+      all_nodes.each do |n|
+        net_svc.enable_interface "default", "nova_fixed", n
+      end
     end
+
     @logger.debug("Nova apply_role_pre_chef_call: leaving")
   end
 
