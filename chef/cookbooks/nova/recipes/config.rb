@@ -151,7 +151,7 @@ else
 end
 
 node[:nova][:network][:public_interface] = public_interface
-if !node[:nova][:dhcp_enabled]
+if !node[:nova][:network][:dhcp_enabled]
   node[:nova][:network][:flat_network_bridge] = "br#{fixed_net["vlan"]}"
   node[:nova][:network][:flat_interface] = fixed_interface
 elsif !node[:nova][:network][:tenant_vlans]
@@ -159,7 +159,7 @@ elsif !node[:nova][:network][:tenant_vlans]
   node[:nova][:network][:flat_network_dhcp_start] = fixed_net["ranges"]["dhcp"]["start"]
   node[:nova][:network][:flat_interface] = fixed_interface
 else
-  node[:nova][:network][:vlan_interface] = fixed_interface
+  node[:nova][:network][:vlan_interface] = fip.interface rescue nil
   node[:nova][:network][:vlan_start] = fixed_net["vlan"]
 end
 
