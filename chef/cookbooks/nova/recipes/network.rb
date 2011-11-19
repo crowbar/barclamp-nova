@@ -25,7 +25,7 @@ nova_package("network")
 
 # Crowbar uses the network node as the gateway in flat non-dhcp modes, add the
 # firewall rule for UEC images to be able to fetch metadata info
-unless nova[:nova][:network][:dhcp_enabled]
+unless node[:nova][:network][:dhcp_enabled]
   execute "iptables -t nat -A PREROUTING -d 169.254.169.254/32 -p tcp -m tcp --dport 80 -j DNAT --to-destination #{node[:nova][:my_ip]}:8773"
 end
 
