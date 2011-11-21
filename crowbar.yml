@@ -38,6 +38,18 @@ locale_additions:
       nova:
         edit_attributes: 
           attributes: Attributes
+          mysql_instance: MySQL
+          keystone_instance: Keystone
+          glance_instance: Glance
+          verbose: Verbose
+          dhcp_enabled: DHCP Enabled
+          ha_enabled: High Availability Enabled
+          tenant_vlans: Use Tenant Vlans
+          libvirt_type: Hypervisor
+          network_header: Network Options
+          allow_same_net_traffic: Allow Same-Network Traffic
+          num_networks: Number of Networks
+          network_size: Network Size
         edit_deployment: 
           deployment: Deployment
 
