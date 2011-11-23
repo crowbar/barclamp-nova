@@ -10,7 +10,7 @@
       "user": "nova",
       "network": {
         "ha_enabled": true,
-        "tenant_vlans": true,
+        "tenant_vlans": false,
         "dhcp_enabled": true,
         "allow_same_net_traffic": false,
         "num_networks": 1,
