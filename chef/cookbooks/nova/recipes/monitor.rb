@@ -58,6 +58,6 @@ template "/etc/nagios/nrpe.d/nova_nrpe.cfg" do
   variables( {
     :nova_scale => nova_scale
   })    
-   notifies :restart, resources(:service => "nagios-nrpe-server")
+   notifies :restart, "service[nagios-nrpe-server]"
 end if node["roles"].include?("nagios-client")    
 
