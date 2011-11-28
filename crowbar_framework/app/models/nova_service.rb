@@ -29,6 +29,14 @@ class NovaService < ServiceObject
     (1..size).collect{|a| chars[rand(chars.size)] }.join
   end
 
+  def proposal_dependencies(role)
+    answer = []
+    answer << { "barclamp" => "mysql", "inst" => role.default_attributes["nova"]["db"]["mysql_instance"] }
+    answer << { "barclamp" => "keystone", "inst" => role.default_attributes["nova"]["keystone_instance"] }
+    answer << { "barclamp" => "glance", "inst" => role.default_attributes["nova"]["glance_instance"] }
+    answer
+  end
+
   #
   # Lots of enhancements here.  Like:
   #    * Don't reuse machines
@@ -52,6 +60,10 @@ class NovaService < ServiceObject
     begin
       mysqlService = MysqlService.new(@logger)
       mysqls = mysqlService.list_active[1]
+      if mysqls.empty?
+        # No actives, look for proposals
+        mysqls = mysqlService.proposals[1]
+      end
       base["attributes"]["nova"]["db"]["mysql_instance"] = mysqls[0] unless mysqls.empty?
     rescue
       @logger.info("Nova create_proposal: no mysql found")
@@ -61,6 +73,10 @@ class NovaService < ServiceObject
     begin
       keystoneService = KeystoneService.new(@logger)
       keystones = keystoneService.list_active[1]
+      if keystones.empty?
+        # No actives, look for proposals
+        keystones = keystoneService.proposals[1]
+      end
       base["attributes"]["nova"]["keystone_instance"] = keystones[0] unless keystones.empty?
     rescue
       @logger.info("Nova create_proposal: no keystone found")
@@ -70,6 +86,10 @@ class NovaService < ServiceObject
     begin
       glanceService = GlanceService.new(@logger)
       glances = glanceService.list_active[1]
+      if glances.empty?
+        # No actives, look for proposals
+        glances = glanceService.proposals[1]
+      end
       base["attributes"]["nova"]["glance_instance"] = glances[0] unless glances.empty?
     rescue
       @logger.info("Nova create_proposal: no glance found")
