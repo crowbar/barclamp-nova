@@ -24,7 +24,7 @@ barclamp:
     - mysql
     - glance
     - keystone
-    - kong
+    - nova_dashboard
   member:
     - openstack 
 

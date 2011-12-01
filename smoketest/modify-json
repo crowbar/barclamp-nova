@@ -13,18 +13,4 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # 
-cd "$HOME/testing/cli"
-echo "Deploying Nova..."
-crowbar nova proposal create cluster1
-crowbar nova proposal show cluster1 >"$LOGDIR/nova-default.json"
-sed '/libvirt_type/ s/kvm/qemu/' < "$LOGDIR/nova-default.json" \
-    > "$LOGDIR/nova-qemu.json"
-crowbar nova --file "$LOGDIR/nova-qemu.json" proposal edit cluster1
-if ! crowbar nova proposal commit cluster1; then
-   echo "Nova failed to deploy."
-   crowbar nova proposal show cluster1 >"$LOGDIR/nova-failed.json"
-   exit 1
-fi
-echo "Nova deployed."
-crowbar nova show cluster1 >"$LOGDIR/nova-deployed.json"
-exit 0   
+sed '/libvirt_type/ s/kvm/qemu/'

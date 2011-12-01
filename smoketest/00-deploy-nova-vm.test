@@ -23,23 +23,19 @@ nova_do() {
     local address="$1" 
     shift
     [[ $1 ]] || return 1
-    run_on "$address" -- sudo -u nova -H -i "$@"
+    run_on "$address" -- sudo -u nova -i "$@"
 }
 
 echo "Deploying Nova VMs."
 echo "Finding Nova controller..."
-read controller < <(crowbar nova show cluster1 |sed -n '/"nova-multi-controller": \[/ { n; p }')
-controller="${controller//\"/}."
-addr_re='Address: ([0-9.]+)'
-if [[ ! $(nslookup "$controller" "$CROWBAR_IP") =~ $addr_re ]]; then
-    echo "Could not find IP address of the nova controller ($controller)"
-    crowbar nova show cluster1 >"$LOGDIR/nova-failed.json"
+nova_ip=$(knife_node_find 'roles:nova-multi-controller' FQDN)
+if ! [[ $nova_ip ]]; then
+    echo "Could not find nova controller."
     exit 1
 fi
-nova_ip="${BASH_REMATCH[1]}"
 echo "Controller at $nova_ip. Verifying nova services..."
 
-while read node node_type node_enabled node_status rest; do
+while read node_type node zone node_enabled node_status rest; do
     case $node_type in
 	nova-network) [[ $node_enabled = enabled && \
 	    $node_status = ':-)' ]] && nova_network=true;;
@@ -54,9 +50,15 @@ if ! [[ $nova_network && $nova_compute && $nova_scheduler ]]; then
     echo "Nova services do not report as healthy!"
     exit 1
 fi
+
 echo "Nova services healthy. Finding test image to launch..."
 test_image=''
 ami_re='(ami-[0-9]+)'
+
+###
+# Things after here are broken.
+###
+
 while read line;do
     [[ $line =~ $ami_re ]] || continue
     img_id="${BASH_REMATCH[1]}"
@@ -69,6 +71,7 @@ if [[ ! $test_image ]]; then
     echo "Could not find a test image to run on Nova"
     exit 1
 fi
+
 echo "Launching $test_image..." 
 nova_do "$nova_ip" euca-run-instances "$test_image" -k mykey -t m1.tiny |tee \
     "$LOGDIR/nova-run-instance.status"
