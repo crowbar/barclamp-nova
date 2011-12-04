@@ -56,6 +56,7 @@ keystone_register "register nova service" do
   host keystone_address
   token keystone_token
   service_name "nova"
+  service_type "compute"
   service_description "Openstack Nova Service"
   action :add_service
 end
@@ -64,6 +65,7 @@ keystone_register "register nova compat service" do
   host keystone_address
   token keystone_token
   service_name "nova_compat"
+  service_type "compute"
   service_description "Openstack Nova Compat Service"
   action :add_service
 end
