@@ -13,8 +13,6 @@
 
 [[ $DEBUG ]] && set -x
 
-cd "$HOME/testing/cli"
-
 die() { res=$1; shift; echo "$@"; exit $res; }
 
 nova_do() {
@@ -23,7 +21,7 @@ nova_do() {
     local address="$1" 
     shift
     [[ $1 ]] || return 1
-    run_on "$address" -- sudo -u nova -i "$@"
+    run_on "$address" sudo -u nova -i "$@"
 }
 
 echo "Deploying Nova VMs."
