@@ -46,8 +46,8 @@ execute "rabbitmqctl set_user_tags #{node[:nova][:rabbit][:user]} management" do
 end
 
 bash "replace parts of alertness tools" do
-  code <<-EOH
-sed -i "s/Management: Web UI/RabbitMQ Management/g" /usr/lib/nagios/plugins/check_rabbitmq_aliveness
+  code <<-'EOH'
+sed -ie "s/Management: Web UI/RabbitMQ Management/g" /usr/lib/nagios/plugins/check_rabbitmq_aliveness
 exit 0
 EOH
   action :run
