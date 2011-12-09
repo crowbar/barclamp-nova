@@ -50,6 +50,8 @@ unless node[:nova_environment].nil?
   # As other nova and swift roles come on-line we should add them here.
 end
 
+include_recipe "nagios::common" if node["roles"].include?("nagios-client")
+
 template "/etc/nagios/nrpe.d/nova_nrpe.cfg" do
   source "nova_nrpe.cfg.erb"
   mode "0644"
