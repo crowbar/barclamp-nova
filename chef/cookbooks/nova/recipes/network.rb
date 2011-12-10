@@ -29,3 +29,17 @@ unless node[:nova][:network][:dhcp_enabled]
   execute "iptables -t nat -A PREROUTING -d 169.254.169.254/32 -p tcp -m tcp --dport 80 -j DNAT --to-destination #{node[:nova][:my_ip]}:8773"
 end
 
+# To make floating ip works, turn on routing.
+bash "turn on routing" do
+  code <<-'EOH'
+sysctl -w net.ipv4.conf.all.forwarding=1
+EOH
+end
+
+file "/etc/sysctl.d/50-iprouting" do
+  owner "root"
+  group "root"
+  mode "0644"
+  action :create
+end
+
