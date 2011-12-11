@@ -24,11 +24,6 @@ class NovaService < ServiceObject
     true
   end
 
-  def random_password(size = 12)
-    chars = (('a'..'z').to_a + ('0'..'9').to_a) - %w(i o 0 1 l 0)
-    (1..size).collect{|a| chars[rand(chars.size)] }.join
-  end
-
   def proposal_dependencies(role)
     answer = []
     answer << { "barclamp" => "mysql", "inst" => role.default_attributes["nova"]["db"]["mysql_instance"] }
