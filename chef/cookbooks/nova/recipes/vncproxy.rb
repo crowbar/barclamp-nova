@@ -38,12 +38,12 @@ end
 # This is a hack to get around back rcb packages.
 patch_files=%w{ /var/lib/nova/noVNC/vnc_auto.html /var/lib/nova/noVNC/include/websock.js /var/lib/nova/noVNC/include/rfb.js }
 patch_files.each do |item|
-  file item do
+  cookbook_file item do
     owner  "root"
     group  "root"
     mode   "0644"
     action :create
-    notifies :restart, "service[nova-vncproxy']", :delayed
+    notifies :restart, "service[nova-vncproxy]", :delayed
   end
 end
 
