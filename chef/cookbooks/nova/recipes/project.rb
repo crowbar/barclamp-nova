@@ -34,7 +34,7 @@ cmd = "nova-manage network create --fixed_range_v4=#{node[:nova][:network][:fixe
 cmd << " --multi_host=T" if node[:nova][:network][:ha_enabled]
 execute cmd do
   user node[:nova][:user]
-  not_if "nova-manage network list | grep '#{node[:nova][:network][:fixed_range]}'"
+  not_if "nova-manage network list | grep '#{node[:nova][:network][:fixed_range].split("/")[0]}'"
 end
 
 # Add private network one day.
