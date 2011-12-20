@@ -61,7 +61,7 @@ debs:
       - deb http://ops.rcb.me/packages maverick diablo-final
   ubuntu-11.04:
     repos:
-      - deb http://ops.rcb.me/packages ubuntu diablo-final
+      - deb http://ops.rcb.me/packages natty diablo-final
   ubuntu-11.10:
     repos:
       - deb http://ops.rcb.me/packages oneiric diablo-final
