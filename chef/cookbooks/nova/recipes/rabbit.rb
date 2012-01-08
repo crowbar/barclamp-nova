@@ -42,6 +42,7 @@ rabbitmq_user node[:nova][:rabbit][:user] do
 end
 
 execute "rabbitmqctl set_user_tags #{node[:nova][:rabbit][:user]} management" do
+  not_if "rabbitmqctl list_users | grep #{node[:nova][:rabbit][:user]} | grep -q management"
   action :run
 end
 
