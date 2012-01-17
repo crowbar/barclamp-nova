@@ -85,3 +85,35 @@ unless node[:nova][:network][:tenant_vlans]
   end
 end
 
+# Setup administrator credentials file
+env_filter = " AND keystone_config_environment:keystone-config-#{node[:nova][:keystone_instance]}"
+keystones = search(:node, "recipes:keystone\\:\\:server#{env_filter}") || []
+if keystones.length > 0
+  keystone = keystones[0]
+  keystone = node if keystone.name == node.name
+else
+  keystone = node
+end
+
+keystone_address = Chef::Recipe::Barclamp::Inventory.get_network_by_type(keystone, "admin").address if keystone_address.nil?
+keystone_token = keystone["keystone"]["admin"]["token"] rescue nil
+admin_username = keystone["keystone"]["admin"]["username"] rescue nil
+admin_password = keystone["keystone"]["admin"]["password"] rescue nil
+default_tenant = keystone["keystone"]["default"]["tenant"] rescue nil
+keystone_service_port = keystone["keystone"]["api"]["service_port"] rescue nil
+Chef::Log.info("Keystone server found at #{keystone_address}")
+
+template "/root/.novarc" do
+  source "novarc.erb"
+  owner root
+  group root
+  mode 0600
+  variables(
+    :keystone_ip_address => keystone_address,
+    :keystone_service_port => keystone_service_port,
+    :admin_username => admin_username,
+    :admin_password => admin_password,
+    :default_tenant => default_tenant
+  )
+end
+
