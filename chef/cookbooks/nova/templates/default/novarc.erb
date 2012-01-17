@@ -1,6 +1,6 @@
 # NOVA ENV VARIABLES
 export NOVA_USERNAME=<%= @admin_username %>
-export NOVA_PASSWORD=<%= admin_password %>
+export NOVA_PASSWORD=<%= @admin_password %>
 export NOVA_PROJECT_ID=<%= @default_tenant %>
 export NOVA_API_KEY=${NOVA_PASSWORD}
 export NOVA_URL=http://<%= @keystone_ip_address %>:<%= @keystone_service_port %>/v2.0/

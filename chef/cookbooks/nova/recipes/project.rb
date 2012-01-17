@@ -105,8 +105,8 @@ Chef::Log.info("Keystone server found at #{keystone_address}")
 
 template "/root/.novarc" do
   source "novarc.erb"
-  owner root
-  group root
+  owner "root"
+  group "root"
   mode 0600
   variables(
     :keystone_ip_address => keystone_address,
