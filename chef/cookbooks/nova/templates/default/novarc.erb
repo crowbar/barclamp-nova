@@ -13,3 +13,8 @@ export OS_AUTH_KEY=${NOVA_PASSWORD}
 export OS_AUTH_TENANT=${NOVA_PROJECT_ID}
 export OS_AUTH_URL=${NOVA_URL}
 export OS_AUTH_STRATEGY=keystone
+
+# EUCA2OOLs ENV VARIABLES
+export EC2_ACCESS_KEY=${NOVA_USERNAME}
+export EC2_SECRET_KEY=${NOVA_PASSWORD}
+export EC2_URL=http://<%= @nova_api_ip_address %>:8773/services/Cloud

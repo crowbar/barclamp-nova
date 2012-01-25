@@ -103,6 +103,16 @@ default_tenant = keystone["keystone"]["default"]["tenant"] rescue nil
 keystone_service_port = keystone["keystone"]["api"]["service_port"] rescue nil
 Chef::Log.info("Keystone server found at #{keystone_address}")
 
+apis = search(:node, "recipes:nova\\:\\:api#{env_filter}") || []
+if apis.length > 0 and !node[:nova][:network][:ha_enabled]
+  api = apis[0]
+  api = node if api.name == node.name
+else
+  api = node
+end
+admin_api_ip = Chef::Recipe::Barclamp::Inventory.get_network_by_type(api, "admin").address
+Chef::Log.info("Admin API server found at #{admin_api_ip}")
+
 template "/root/.novarc" do
   source "novarc.erb"
   owner "root"
@@ -113,7 +123,8 @@ template "/root/.novarc" do
     :keystone_service_port => keystone_service_port,
     :admin_username => admin_username,
     :admin_password => admin_password,
-    :default_tenant => default_tenant
+    :default_tenant => default_tenant,
+    :nova_api_ip_address => admin_api_ip
   )
 end
 
