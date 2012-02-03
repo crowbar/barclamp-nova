@@ -53,8 +53,15 @@ template "/etc/nova/api-paste.ini" do
   notifies :restart, resources(:service => "nova-api"), :immediately
 end
 
-my_ipaddress = Chef::Recipe::Barclamp::Inventory.get_network_by_type(node, "admin").address
-
+apis = search(:node, "recipes:nova\\:\\:api#{env_filter}") || []
+if apis.length > 0 and !node[:nova][:network][:ha_enabled]
+  api = apis[0]
+  api = node if api.name == node.name
+else
+  api = node
+end
+public_api_ip = Chef::Recipe::Barclamp::Inventory.get_network_by_type(api, "public").address
+admin_api_ip = Chef::Recipe::Barclamp::Inventory.get_network_by_type(api, "admin").address
 
 keystone_register "register nova service" do
   host keystone_address
@@ -82,9 +89,9 @@ keystone_register "register nova_compat endpoint" do
   token keystone_token
   endpoint_service "nova_compat"
   endpoint_region "RegionOne"
-  endpoint_adminURL "http://#{my_ipaddress}:8774/v1.0"
-  endpoint_internalURL "http://#{my_ipaddress}:8774/v1.0"
-  endpoint_publicURL "http://#{my_ipaddress}:8774/v1.0"
+  endpoint_adminURL "http://#{admin_api_ip}:8774/v1.0"
+  endpoint_internalURL "http://#{admin_api_ip}:8774/v1.0"
+  endpoint_publicURL "http://#{public_api_ip}:8774/v1.0"
 #  endpoint_global true
 #  endpoint_enabled true
   action :add_endpoint_template
@@ -96,9 +103,9 @@ keystone_register "register nova endpoint" do
   token keystone_token
   endpoint_service "nova"
   endpoint_region "RegionOne"
-  endpoint_adminURL "http://#{my_ipaddress}:8774/v1.1/%tenant_id%"
-  endpoint_internalURL "http://#{my_ipaddress}:8774/v1.1/%tenant_id%"
-  endpoint_publicURL "http://#{my_ipaddress}:8774/v1.1/%tenant_id%"
+  endpoint_adminURL "http://#{admin_api_ip}:8774/v1.1/%tenant_id%"
+  endpoint_internalURL "http://#{admin_api_ip}:8774/v1.1/%tenant_id%"
+  endpoint_publicURL "http://#{public_api_ip}:8774/v1.1/%tenant_id%"
 #  endpoint_global true
 #  endpoint_enabled true
   action :add_endpoint_template
