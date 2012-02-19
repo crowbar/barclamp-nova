@@ -83,15 +83,9 @@ debs:
     - nova-volume
     - nova-scheduler
     - nova-doc
-    - nova-novnc
     - nova-vncproxy
+    - nova-ajax-console-proxy
     - python-eventlet
     - bzr
-    # dashboard stuff.  Will be moved to its own barclamp.
-    - openstack-dashboard
-    - python-django
-    - openstackx
-    - python-keystone
-    - nova-ajax-console-proxy
     - mysql-client
 
