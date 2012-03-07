@@ -37,6 +37,16 @@
                 "vlan_start": { "type": "int" }
               }
             },
+            "volume": {
+              "type": "map",
+              "required": true,
+              "mapping": {
+                "volume_name": { "type": "string", "required": true },
+                "type": { "type": "string", "required": true },
+                "local_file": { "type": "string", "required": true },
+                "local_size": { "type": "string", "required": int }
+              }
+            },
             "rabbit": {
               "type": "map",
               "required": true,

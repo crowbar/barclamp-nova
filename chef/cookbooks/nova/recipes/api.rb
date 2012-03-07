@@ -51,6 +51,9 @@ template "/etc/nova/api-paste.ini" do
     :keystone_ip_address => keystone_address,
     :keystone_admin_token => keystone_token,
     :keystone_service_port => keystone_service_port,
+    :keystone_service_tenant => keystone_service_tenant,
+    :keystone_service_user => keystone_service_user,
+    :keystone_service_password => keystone_service_password,
     :keystone_admin_port => keystone_admin_port
   )
   notifies :restart, resources(:service => "nova-api"), :immediately
@@ -110,6 +113,16 @@ keystone_register "register nova compat service" do
   service_name "nova_compat"
   service_type "compute"
   service_description "Openstack Nova Compat Service"
+  action :add_service
+end
+
+keystone_register "register ec2 service" do
+  host keystone_address
+  port keystone_admin_port
+  token keystone_token
+  service_name "ec2"
+  service_type "ec2"
+  service_description "EC2 Compatibility Layer"
   action :add_service
 end
 
