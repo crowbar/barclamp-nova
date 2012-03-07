@@ -34,9 +34,12 @@ else
 end
 
 keystone_address = Chef::Recipe::Barclamp::Inventory.get_network_by_type(keystone, "admin").address if keystone_address.nil?
-keystone_token = keystone["keystone"]["admin"]["token"] rescue nil
-keystone_service_port = keystone["keystone"]["api"]["service_port"] rescue nil
-keystone_admin_port = keystone["keystone"]["api"]["admin_port"] rescue nil
+keystone_token = keystone["keystone"]["service"]["token"]
+keystone_service_port = keystone["keystone"]["api"]["service_port"]
+keystone_admin_port = keystone["keystone"]["api"]["admin_port"]
+keystone_service_tenant = keystone["keystone"]["service"]["tenant"]
+keystone_service_user = "nova" # GREG: Fix this
+keystone_service_password = "fredfred" # GREG: Fix this
 Chef::Log.info("Keystone server found at #{keystone_address}")
 
 template "/etc/nova/api-paste.ini" do
@@ -62,6 +65,33 @@ else
 end
 public_api_ip = Chef::Recipe::Barclamp::Inventory.get_network_by_type(api, "public").address
 admin_api_ip = Chef::Recipe::Barclamp::Inventory.get_network_by_type(api, "admin").address
+
+keystone_register "nova api wakeup keystone" do
+  host keystone_address
+  port keystone_admin_port
+  token keystone_token
+  action :wakeup
+end
+
+keystone_register "register nova user" do
+  host keystone_address
+  port keystone_admin_port
+  token keystone_token
+  user_name keystone_service_user
+  user_password keystone_service_password
+  tenant_name keystone_service_tenant
+  action :add_user
+end
+
+keystone_register "give nova user access" do
+  host keystone_address
+  port keystone_admin_port
+  token keystone_token
+  user_name keystone_service_user
+  tenant_name keystone_service_tenant
+  role_name "admin"
+  action :add_access
+end
 
 keystone_register "register nova service" do
   host keystone_address
