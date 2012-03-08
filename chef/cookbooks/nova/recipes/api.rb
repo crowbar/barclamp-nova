@@ -51,6 +51,9 @@ template "/etc/nova/api-paste.ini" do
     :keystone_ip_address => keystone_address,
     :keystone_admin_token => keystone_token,
     :keystone_service_port => keystone_service_port,
+    :keystone_service_tenant => keystone_service_tenant,
+    :keystone_service_user => keystone_service_user,
+    :keystone_service_password => keystone_service_password,
     :keystone_admin_port => keystone_admin_port
   )
   notifies :restart, resources(:service => "nova-api"), :immediately
@@ -103,28 +106,14 @@ keystone_register "register nova service" do
   action :add_service
 end
 
-keystone_register "register nova compat service" do
+keystone_register "register ec2 service" do
   host keystone_address
   port keystone_admin_port
   token keystone_token
-  service_name "nova_compat"
-  service_type "compute"
-  service_description "Openstack Nova Compat Service"
+  service_name "ec2"
+  service_type "ec2"
+  service_description "EC2 Compatibility Layer"
   action :add_service
-end
-
-keystone_register "register nova_compat endpoint" do
-  host keystone_address
-  port keystone_admin_port
-  token keystone_token
-  endpoint_service "nova_compat"
-  endpoint_region "RegionOne"
-  endpoint_adminURL "http://#{admin_api_ip}:8774/v1.0"
-  endpoint_internalURL "http://#{admin_api_ip}:8774/v1.0"
-  endpoint_publicURL "http://#{public_api_ip}:8774/v1.0"
-#  endpoint_global true
-#  endpoint_enabled true
-  action :add_endpoint_template
 end
 
 keystone_register "register nova endpoint" do
@@ -133,11 +122,24 @@ keystone_register "register nova endpoint" do
   token keystone_token
   endpoint_service "nova"
   endpoint_region "RegionOne"
-  endpoint_adminURL "http://#{admin_api_ip}:8774/v1.1/%tenant_id%"
-  endpoint_internalURL "http://#{admin_api_ip}:8774/v1.1/%tenant_id%"
-  endpoint_publicURL "http://#{public_api_ip}:8774/v1.1/%tenant_id%"
+  endpoint_publicURL "http://#{public_api_ip}:8774/v2/$(tenant_id)s"
+  endpoint_adminURL "http://#{admin_api_ip}:8774/v2/$(tenant_id)s"
+  endpoint_internalURL "http://#{admin_api_ip}:8774/v2/$(tenant_id)s"
 #  endpoint_global true
 #  endpoint_enabled true
   action :add_endpoint_template
 end
 
+keystone_register "register nova ec2 endpoint" do
+  host keystone_address
+  port keystone_admin_port
+  token keystone_token
+  endpoint_service "ec2"
+  endpoint_region "RegionOne"
+  endpoint_publicURL "http://#{public_api_ip}:8773/services/Cloud"
+  endpoint_adminURL "http://#{admin_api_ip}:8773/services/Admin"
+  endpoint_internalURL "http://#{admin_api_ip}:8773/services/Cloud"
+#  endpoint_global true
+#  endpoint_enabled true
+  action :add_endpoint_template
+end
