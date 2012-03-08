@@ -89,6 +89,9 @@ keystone_register "register nova-volume service" do
   action :add_service
 end
 
+public_api_ip = Chef::Recipe::Barclamp::Inventory.get_network_by_type(node, "public").address
+admin_api_ip = Chef::Recipe::Barclamp::Inventory.get_network_by_type(node, "admin").address
+
 keystone_register "register nova-volume endpoint" do
   host keystone_address
   port keystone_admin_port
