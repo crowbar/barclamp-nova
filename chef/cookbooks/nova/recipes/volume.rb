@@ -19,29 +19,39 @@
 
 include_recipe "nova::config"
 
-fname = node[:nova][:volume][:local_name]
-fsize = node[:nova][:volume][:local_size]
-volname = node[:nova][:volume][:volume_name]
+fname = node["nova"]["volume"]["local_file"]
+fsize = node["nova"]["volume"]["local_size"]
+volname = node["nova"]["volume"]["volume_name"]
 
 if node[:nova][:volume][:type] == "local"
   bash "create local volume" do
     code <<-EOH
       # Only create if the file doesn't already exists
       [[ -f #{fname} ]] || truncate -s #{fsize} #{fname}
-      DEV=`sudo losetup -f --show #{fname}`
+      DEV=`losetup -f --show #{fname}`
       # Only create if the loopback device doesn't contain #{volname}
-      if ! sudo vgs #{volname}; then sudo vgcreate #{volname} $DEV; fi
+      if ! vgs #{volname}; then sudo vgcreate #{volname} $DEV; fi
 EOH
-    not_if "[[ ! sudo vgs #{volname} ]]"
+    not_if "[[ ! vgs #{volname} ]]"
   end
 end
 
 package "tgt"
 nova_package("volume")
 
+# Restart doesn't work correct for this service.
+bash "restart-tgt" do
+  code <<-EOH
+    stop tgt
+    start tgt
+EOH
+  action :nothing
+end
+
 service "tgt" do
   supports :status => true, :restart => true, :reload => true
-  action :nothing
+  action :enable
+  notifies :run, "bash[restart-tgt]"
 end
 
 env_filter = " AND keystone_config_environment:keystone-config-#{node[:nova][:keystone_instance]}"
