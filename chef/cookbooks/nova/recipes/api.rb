@@ -106,16 +106,6 @@ keystone_register "register nova service" do
   action :add_service
 end
 
-keystone_register "register nova compat service" do
-  host keystone_address
-  port keystone_admin_port
-  token keystone_token
-  service_name "nova_compat"
-  service_type "compute"
-  service_description "Openstack Nova Compat Service"
-  action :add_service
-end
-
 keystone_register "register ec2 service" do
   host keystone_address
   port keystone_admin_port
@@ -126,31 +116,30 @@ keystone_register "register ec2 service" do
   action :add_service
 end
 
-keystone_register "register nova_compat endpoint" do
-  host keystone_address
-  port keystone_admin_port
-  token keystone_token
-  endpoint_service "nova_compat"
-  endpoint_region "RegionOne"
-  endpoint_adminURL "http://#{admin_api_ip}:8774/v1.0"
-  endpoint_internalURL "http://#{admin_api_ip}:8774/v1.0"
-  endpoint_publicURL "http://#{public_api_ip}:8774/v1.0"
-#  endpoint_global true
-#  endpoint_enabled true
-  action :add_endpoint_template
-end
-
 keystone_register "register nova endpoint" do
   host keystone_address
   port keystone_admin_port
   token keystone_token
   endpoint_service "nova"
   endpoint_region "RegionOne"
-  endpoint_adminURL "http://#{admin_api_ip}:8774/v1.1/%tenant_id%"
-  endpoint_internalURL "http://#{admin_api_ip}:8774/v1.1/%tenant_id%"
-  endpoint_publicURL "http://#{public_api_ip}:8774/v1.1/%tenant_id%"
+  endpoint_adminURL "http://#{admin_api_ip}:8774/v2/$(tenant_id)s"
+  endpoint_internalURL "http://#{admin_api_ip}:8774/v2/$(tenant_id)s"
+  endpoint_publicURL "http://#{public_api_ip}:8774/v2/$(tenant_id)s"
 #  endpoint_global true
 #  endpoint_enabled true
   action :add_endpoint_template
 end
 
+keystone_register "register nova ec2 endpoint" do
+  host keystone_address
+  port keystone_admin_port
+  token keystone_token
+  endpoint_service "ec2"
+  endpoint_region "RegionOne"
+  endpoint_adminURL "http://#{admin_api_ip}:8773/services/Cloud"
+  endpoint_internalURL "http://#{admin_api_ip}:8773/services/Admin"
+  endpoint_publicURL "http://#{public_api_ip}:8773/services/Cloud"
+#  endpoint_global true
+#  endpoint_enabled true
+  action :add_endpoint_template
+end
