@@ -21,7 +21,7 @@
         "type": "local",
         "local_file": "/var/lib/nova/volume.raw",
         "local_size": 2000000000
-      }
+      },
       "rabbit": {
         "password": "secure_password",
         "user": "nova",
