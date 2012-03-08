@@ -65,6 +65,9 @@ debs:
   ubuntu-11.10:
     repos:
       - deb http://ops.rcb.me/packages oneiric diablo-final
+  ubuntu-12.04:
+    pkgs:
+      - tgt
   pkgs:
     - euca2ools
     - unzip
