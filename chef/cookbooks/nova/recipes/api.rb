@@ -122,9 +122,9 @@ keystone_register "register nova endpoint" do
   token keystone_token
   endpoint_service "nova"
   endpoint_region "RegionOne"
+  endpoint_publicURL "http://#{public_api_ip}:8774/v2/$(tenant_id)s"
   endpoint_adminURL "http://#{admin_api_ip}:8774/v2/$(tenant_id)s"
   endpoint_internalURL "http://#{admin_api_ip}:8774/v2/$(tenant_id)s"
-  endpoint_publicURL "http://#{public_api_ip}:8774/v2/$(tenant_id)s"
 #  endpoint_global true
 #  endpoint_enabled true
   action :add_endpoint_template
@@ -136,9 +136,9 @@ keystone_register "register nova ec2 endpoint" do
   token keystone_token
   endpoint_service "ec2"
   endpoint_region "RegionOne"
-  endpoint_adminURL "http://#{admin_api_ip}:8773/services/Cloud"
-  endpoint_internalURL "http://#{admin_api_ip}:8773/services/Admin"
   endpoint_publicURL "http://#{public_api_ip}:8773/services/Cloud"
+  endpoint_adminURL "http://#{admin_api_ip}:8773/services/Admin"
+  endpoint_internalURL "http://#{admin_api_ip}:8773/services/Cloud"
 #  endpoint_global true
 #  endpoint_enabled true
   action :add_endpoint_template
