@@ -10,6 +10,8 @@
 --state_path=/var/lib/nova
 --lock_path=/var/lock/nova
 --use_syslog
+--root_helper=sudo nova-rootwrap
+
 
 # RABBITMQ
 <% if @rabbit_settings -%>
