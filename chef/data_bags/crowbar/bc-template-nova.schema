@@ -41,10 +41,10 @@
               "type": "map",
               "required": true,
               "mapping": {
-                "volume_name": { "type": "string", "required": true },
-                "type": { "type": "string", "required": true },
-                "local_file": { "type": "string", "required": true },
-                "local_size": { "type": "string", "required": int }
+                "volume_name": { "type": "str", "required": true },
+                "type": { "type": "str", "required": true },
+                "local_file": { "type": "str", "required": true },
+                "local_size": { "type": "int", "required": true }
               }
             },
             "rabbit": {
