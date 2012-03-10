@@ -101,7 +101,7 @@ pipeline = faultwrap authtoken keystonecontext ratelimit osapi_compute_app_v2
 # pipeline = faultwrap authtoken keystonecontext ratelimit osapi_compute_app_v2
 
 [pipeline:openstack_volume_api_v1]
-pipeline = faultwrap authtoken keystonecontext $OSAPI_RATE_LIMIT osapi_volume_app_v1
+pipeline = faultwrap authtoken keystonecontext ratelimit osapi_volume_app_v1
 # NOTE(vish): use the following pipeline for deprecated auth
 # pipeline = faultwrap auth ratelimit osapi_volume_app_v1
 # NOTE(vish): use the following pipeline for keystone auth
@@ -153,12 +153,7 @@ auth_host = <%= @keystone_ip_address %>
 auth_port = <%= @keystone_admin_port %>
 auth_protocol = http
 auth_uri = http://<%= @keystone_ip_address %>:<%= @keystone_service_port %>/
-# NOTE: you will have to replace the values below with an actual token
-# or user:password combination.
-# admin_user = %SERVICE_USER%
-# admin_password = %SERVICE_PASSWORD%
-admin_token = <%= @keystone_admin_token %>
 admin_user = <%= @keystone_service_user %>
 admin_password = <%= @keystone_service_password %>
-admin_tenant = <%= @keystone_service_tenant %>
+admin_tenant_name = <%= @keystone_service_tenant %>
 

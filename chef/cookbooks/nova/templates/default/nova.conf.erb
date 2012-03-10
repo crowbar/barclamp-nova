@@ -1,103 +1,100 @@
-
+[DEFAULT]
 # LOGS/STATE
---daemonize=1
-<% if node[:nova][:verbose] -%>
---verbose
-<% end -%>
---dhcpbridge_flagfile=/etc/nova/nova.conf
---dhcpbridge=/usr/bin/nova-dhcpbridge
---logdir=/var/log/nova
---state_path=/var/lib/nova
---lock_path=/var/lock/nova
---use_syslog
---root_helper=sudo nova-rootwrap
+daemonize=Treu
+verbose=<%= node[:nova][:verbose] ? 'True' : 'False' %>
+dhcpbridge_flagfile=/etc/nova/nova.conf
+dhcpbridge=/usr/bin/nova-dhcpbridge
+logdir=/var/log/nova
+state_path=/var/lib/nova
+lock_path=/var/lock/nova
+use_syslog=True
+root_helper=sudo nova-rootwrap
 
 
 # RABBITMQ
 <% if @rabbit_settings -%>
---rabbit_host=<%= @rabbit_settings[:address] %>
+rabbit_host=<%= @rabbit_settings[:address] %>
 <% unless @rabbit_settings[:port].nil? -%>
---rabbit_port=<%= @rabbit_settings[:port] %>
+rabbit_port=<%= @rabbit_settings[:port] %>
 <% end -%>
---rabbit_userid=<%= @rabbit_settings[:user] %>
---rabbit_password=<%= @rabbit_settings[:password] %>
---rabbit_virtual_host=<%= @rabbit_settings[:vhost] %>
+rabbit_userid=<%= @rabbit_settings[:user] %>
+rabbit_password=<%= @rabbit_settings[:password] %>
+rabbit_virtual_host=<%= @rabbit_settings[:vhost] %>
 <% end -%>
 
 # SCHEDULER
-#--scheduler_manager=nova.scheduler.abstract_scheduler.AbstractScheduler
---scheduler_driver=nova.scheduler.simple.SimpleScheduler
+scheduler_driver=nova.scheduler.filter_scheduler.FilterScheduler
 
 # API
---osapi_compute_extension=nova.api.openstack.compute.contrib.standard_extensions
+osapi_compute_extension=nova.api.openstack.compute.contrib.standard_extensions
 
 # NETWORK
---my_ip=<%= node[:nova][:my_ip] %>
---allow_same_net_traffic=<%= node[:nova][:network][:allow_same_net_traffic] ? "True" : "False" %>
---ec2_host=<%= @ec2_host %>
---ec2_dmz_host=<%= @ec2_dmz_host %>
---osapi_host=<%= @ec2_host %>
---fixed_range=<%= node[:nova][:network][:fixed_range] %>
---floating_range=<%= node[:nova][:network][:floating_range] %>
+my_ip=<%= node[:nova][:my_ip] %>
+allow_same_net_traffic=<%= node[:nova][:network][:allow_same_net_traffic] ? "True" : "False" %>
+ec2_host=<%= @ec2_host %>
+ec2_dmz_host=<%= @ec2_dmz_host %>
+osapi_host=<%= @ec2_host %>
+fixed_range=<%= node[:nova][:network][:fixed_range] %>
+floating_range=<%= node[:nova][:network][:floating_range] %>
 <% if node[:nova][:network][:public_interface] -%>
---public_interface=<%= node[:nova][:network][:public_interface] %>
+public_interface=<%= node[:nova][:network][:public_interface] %>
 <% end -%>
---network_size=<%= node[:nova][:network][:network_size] %>
---num_networks=<%= node[:nova][:network][:num_networks] %>
+network_size=<%= node[:nova][:network][:network_size] %>
+num_networks=<%= node[:nova][:network][:num_networks] %>
 
 <% if node[:nova][:network][:dhcp_enabled] -%>
 <% if node[:nova][:network][:tenant_vlans] -%>
 # DHCP Vlan Mode
---network_manager=nova.network.manager.VlanManager
---vlan_interface=<%= node[:nova][:network][:vlan_interface] %>
---vlan_start=<%= node[:nova][:network][:vlan_start] %>
+network_manager=nova.network.manager.VlanManager
+vlan_interface=<%= node[:nova][:network][:vlan_interface] %>
+vlan_start=<%= node[:nova][:network][:vlan_start] %>
 <% else -%>
 # DHCP Flat Mode
---network_manager=nova.network.manager.FlatDHCPManager
---flat_network_dns=<%= @dns_server_public_ip %>
---flat_network_dhcp_start=<%= node[:nova][:network][:flat_network_dhcp_start] %>
---flat_interface=<%= node[:nova][:network][:flat_interface] %>
---flat_network_bridge=<%= node[:nova][:network][:flat_network_bridge] %>
+network_manager=nova.network.manager.FlatDHCPManager
+flat_network_dns=<%= @dns_server_public_ip %>
+flat_network_dhcp_start=<%= node[:nova][:network][:flat_network_dhcp_start] %>
+flat_interface=<%= node[:nova][:network][:flat_interface] %>
+flat_network_bridge=<%= node[:nova][:network][:flat_network_bridge] %>
 <% end -%>
 <% else -%>
 # Flat Mode
---network_manager=nova.network.manager.FlatManager
---flat_interface=<%= node[:nova][:network][:flat_interface] %>
---flat_network_bridge=<%= node[:nova][:network][:flat_network_bridge] %>
---flat_network_dns=<%= @dns_server_public_ip %>
---flat_injected=True
+network_manager=nova.network.manager.FlatManager
+flat_interface=<%= node[:nova][:network][:flat_interface] %>
+flat_network_bridge=<%= node[:nova][:network][:flat_network_bridge] %>
+flat_network_dns=<%= @dns_server_public_ip %>
+flat_injected=True
 <% end -%>
 
 # GLANCE
 <% unless @glance_server_ip.nil? -%>
---image_service=nova.image.glance.GlanceImageService
---glance_api_servers=<%= @glance_server_ip %>:<%= @glance_server_port %>
+image_service=nova.image.glance.GlanceImageService
+glance_api_servers=<%= @glance_server_ip %>:<%= @glance_server_port %>
 <% end -%>
 
 # COMPUTE
 <% if @sql_connection -%>
---sql_connection=<%= @sql_connection %>
+sql_connection=<%= @sql_connection %>
 <% end -%>
 <% if node[:nova][:libvirt_type] %>
---libvirt_type=<%= node[:nova][:libvirt_type] %>
+libvirt_type=<%= node[:nova][:libvirt_type] %>
 <% end -%>
---connection_type=libvirt
---firewall_driver=nova.virt.libvirt.firewall.IptablesFirewallDriver
---compute_manager=nova.compute.manager.ComputeManager
---instance_name_template=instance-%08x
+connection_type=libvirt
+firewall_driver=nova.virt.libvirt.firewall.IptablesFirewallDriver
+compute_manager=nova.compute.manager.ComputeManager
+instance_name_template=instance-%08x
 
 # VNCPROXY
---novncproxy_url=http://<%= @ec2_host %>:6080/vnc_auto.html
---xvpvncproxy_base_url=http://<%= @ec2_host %>:6081/console
---vncserver_listen=<%= node[:nova][:my_ip] %>
---vncserver_proxyclient_address=127.0.0.1
+novncproxy_url=http://<%= @ec2_host %>:6080/vnc_auto.html
+xvpvncproxy_base_url=http://<%= @ec2_host %>:6081/console
+vncserver_listen=<%= node[:nova][:my_ip] %>
+vncserver_proxyclient_address=127.0.0.1
 
 # MISC
---use_deprecated_auth=false
---allow_admin_api=true
---enable_zone_routing=true
+use_deprecated_auth=false
+allow_admin_api=true
+enable_zone_routing=true
 
 # VOLUME
---volume_group=<%= node[:nova][:volume][:volume_name] %>
---volume_name_template=volume-%08x
---iscsi_helper=tgtadm
+volume_group=<%= node[:nova][:volume][:volume_name] %>
+volume_name_template=volume-%08x
+iscsi_helper=tgtadm
