@@ -93,6 +93,7 @@ vncserver_proxyclient_address=127.0.0.1
 use_deprecated_auth=false
 allow_admin_api=true
 enable_zone_routing=true
+auth_strategy=keystone
 
 # VOLUME
 volume_group=<%= node[:nova][:volume][:volume_name] %>
