@@ -75,9 +75,6 @@ glance_api_servers=<%= @glance_server_ip %>:<%= @glance_server_port %>
 <% if @sql_connection -%>
 sql_connection=<%= @sql_connection %>
 <% end -%>
-<% if node[:nova][:libvirt_type] %>
-libvirt_type=<%= node[:nova][:libvirt_type] %>
-<% end -%>
 connection_type=libvirt
 firewall_driver=nova.virt.libvirt.firewall.IptablesFirewallDriver
 compute_manager=nova.compute.manager.ComputeManager
