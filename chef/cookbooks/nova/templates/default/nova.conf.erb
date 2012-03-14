@@ -23,7 +23,7 @@ rabbit_virtual_host=<%= @rabbit_settings[:vhost] %>
 <% end -%>
 
 # SCHEDULER
-scheduler_driver=nova.scheduler.filter_scheduler.FilterScheduler
+# Default to multi-scheduler so that volume and compute can override
 
 # API
 osapi_compute_extension=nova.api.openstack.compute.contrib.standard_extensions
@@ -82,6 +82,7 @@ connection_type=libvirt
 firewall_driver=nova.virt.libvirt.firewall.IptablesFirewallDriver
 compute_manager=nova.compute.manager.ComputeManager
 instance_name_template=instance-%08x
+compute_scheduler_driver=nova.scheduler.filter_scheduler.FilterScheduler
 
 # VNCPROXY
 novncproxy_url=http://<%= @ec2_host %>:6080/vnc_auto.html
