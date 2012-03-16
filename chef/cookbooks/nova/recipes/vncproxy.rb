@@ -20,9 +20,12 @@
 
 include_recipe "nova::config"
 
-package "nova-vncproxy" do
-  action :install
-  options "--force-yes"
+pkgs=%w[python-numpy nova-vncproxy nova-console]
+pkgs.each do |pkg|
+  package pkg do
+    action :upgrade
+    options "--force-yes"
+  end
 end
 
 execute "Fix permission Bug" do
@@ -31,6 +34,12 @@ execute "Fix permission Bug" do
 end
 
 service "nova-vncproxy" do
+  supports :status => true, :restart => true
+  action :enable
+  subscribes :restart, resources(:template => "/etc/nova/nova.conf"), :delayed
+end
+
+service "nova-consoleauth" do
   supports :status => true, :restart => true
   action :enable
   subscribes :restart, resources(:template => "/etc/nova/nova.conf"), :delayed
