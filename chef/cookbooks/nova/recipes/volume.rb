@@ -38,7 +38,7 @@ if node[:nova][:volume][:type] == "local"
   end
 
   bash "create volume group" do
-    code "vgcreate #{volname} `losetup -f --show #{fname}`"
+    code "vgcreate #{volname} `losetup -j #{fname} | cut -f1 -d:`"
     not_if "vgs #{volname}"
   end
 
