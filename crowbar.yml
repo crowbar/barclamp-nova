@@ -68,6 +68,19 @@ debs:
   ubuntu-12.04:
     pkgs:
       - tgt
+      - nova-compute-lxc
+      - nova-compute-xen
+      - nova-compute-xcp
+      - nova-compute-kvm
+      - nova-compute-uml
+      - nova-compute-qemu
+      - nova-api-os-compute
+      - nova-api-os-volume
+      - nova-api-ec2
+      - nova-api-metadata
+      - nova-doc
+      - nova-console
+      - nova-xcp-network
   pkgs:
     - euca2ools
     - unzip
