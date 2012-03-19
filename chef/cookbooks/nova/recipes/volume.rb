@@ -24,16 +24,24 @@ fsize = node["nova"]["volume"]["local_size"]
 volname = node["nova"]["volume"]["volume_name"]
 
 if node[:nova][:volume][:type] == "local"
-  bash "create local volume" do
-    code <<-EOH
-      # Only create if the file doesn't already exists
-      [[ -f #{fname} ]] || truncate -s #{fsize} #{fname}
-      DEV=`losetup -f --show #{fname}`
-      # Only create if the loopback device doesn't contain #{volname}
-      if ! vgs #{volname}; then sudo vgcreate #{volname} $DEV; fi
-EOH
-    not_if "[[ ! vgs #{volname} ]]"
+
+  bash "create local volume file" do
+    code "truncate -s #{fsize} #{fname}"
+    not_if do
+      File.exists?(fname)
+    end
   end
+
+  bash "setup loop device for volume" do
+    code "losetup -f --show #{fname}"
+    not_if "losetup -j #{fname} | grep #{fname}"
+  end
+
+  bash "create volume group" do
+    code "vgcreate #{volname} `losetup -j #{fname} | cut -f1 -d:`"
+    not_if "vgs #{volname}"
+  end
+
 end
 
 package "tgt"
