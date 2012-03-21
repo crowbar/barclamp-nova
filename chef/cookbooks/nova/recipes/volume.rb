@@ -72,6 +72,7 @@ else
 
     bash "create physical volume" do
       code "pvcreate #{disk_list.join(' ')}"
+      not_if "pvs #{disk_list.join(' ')}"
     end
 
     bash "create volume group" do
