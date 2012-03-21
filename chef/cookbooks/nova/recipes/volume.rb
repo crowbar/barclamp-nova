@@ -19,11 +19,18 @@
 
 include_recipe "nova::config"
 
-fname = node["nova"]["volume"]["local_file"]
-fsize = node["nova"]["volume"]["local_size"]
 volname = node["nova"]["volume"]["volume_name"]
 
-if node[:nova][:volume][:type] == "local"
+checked_disks = []
+
+node[:crowbar][:disks].each do |disk, value|
+  checked_disks << disk if File.exists?("/dev/#{disk}") and node[:crowbar][:disks][disk]["usage"] == "Storage"
+end
+
+if checked_disks.empty?
+  # only OS disk is exists, will use file storage 
+  fname = node["nova"]["volume"]["local_file"]
+  fsize = node["nova"]["volume"]["local_size"]
 
   bash "create local volume file" do
     code "truncate -s #{fsize} #{fname}"
@@ -41,8 +48,38 @@ if node[:nova][:volume][:type] == "local"
     code "vgcreate #{volname} `losetup -j #{fname} | cut -f1 -d:`"
     not_if "vgs #{volname}"
   end
+  
+else
+  if node[:nova][:volume][:nova_volume_disks] == "none"
+    # use first non-OS disk for vg
+    dname = "/dev/#{checked_disks.first}"
 
+    bash "create physical volume" do
+      code "pvcreate #{dname}"
+    end
+
+    bash "create volume group" do
+      code "vgcreate #{volname} #{dname}"
+      not_if "vgs #{volname}"
+    end
+  else
+    # use this disk list
+    disk_list = []
+    node[:nova][:volume][:nova_volume_disks].each do |disk|
+      disk_list << disk if checked_disks.include?(disk) 
+    end
+
+    bash "create physical volume" do
+      code "pvcreate #{disk_list.join(' ')}"
+    end
+
+    bash "create volume group" do
+      code "vgcreate #{volname} #{disk_list.join(' ')}"
+      not_if "vgs #{volname}"
+    end
+  end
 end
+
 
 package "tgt"
 nova_package("volume")
