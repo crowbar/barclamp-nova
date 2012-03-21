@@ -28,7 +28,7 @@ node[:crowbar][:disks].each do |disk, value|
 end
 
 if checked_disks.empty?
-  # only OS disk is exists, will use file storage 
+  # only OS disk is exists, will use file storage
   fname = node["nova"]["volume"]["local_file"]
   fsize = node["nova"]["volume"]["local_size"]
 
@@ -50,36 +50,30 @@ if checked_disks.empty?
   end
   
 else
+
   if node[:nova][:volume][:nova_volume_disks].empty?
     # use first non-OS disk for vg
     dname = "/dev/#{checked_disks.first}"
-
-    bash "create physical volume" do
-      code "pvcreate #{dname}"
-      not_if "pvs #{dname}"
-    end
-
-    bash "create volume group" do
-      code "vgcreate #{volname} #{dname}"
-      not_if "vgs #{volname}"
-    end
   else
     # use this disk list
     disk_list = []
     node[:nova][:volume][:nova_volume_disks].each do |disk|
-      disk_list << disk if checked_disks.include?(disk) 
+      disk_list << "/dev/#{disk}" if checked_disks.include?(disk)
     end
-
-    bash "create physical volume" do
-      code "pvcreate #{disk_list.join(' ')}"
-      not_if "pvs #{disk_list.join(' ')}"
-    end
-
-    bash "create volume group" do
-      code "vgcreate #{volname} #{disk_list.join(' ')}"
-      not_if "vgs #{volname}"
-    end
+    raise "Can't access any disk from the given list" if disk_list.empty?
+    dname = disk_list.join(' ')
   end
+
+  bash "create physical volume" do
+    code "pvcreate #{dname}"
+    not_if "pvs #{dname}"
+  end
+
+  bash "create volume group" do
+    code "vgcreate #{volname} #{dname}"
+    not_if "vgs #{volname}"
+  end
+
 end
 
 
