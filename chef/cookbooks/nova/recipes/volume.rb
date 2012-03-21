@@ -56,6 +56,7 @@ else
 
     bash "create physical volume" do
       code "pvcreate #{dname}"
+      not_if "pvs #{dname}"
     end
 
     bash "create volume group" do
