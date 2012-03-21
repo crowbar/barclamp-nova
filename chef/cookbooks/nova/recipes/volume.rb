@@ -50,7 +50,7 @@ if checked_disks.empty?
   end
   
 else
-  if node[:nova][:volume][:nova_volume_disks] == "none"
+  if node[:nova][:volume][:nova_volume_disks].empty?
     # use first non-OS disk for vg
     dname = "/dev/#{checked_disks.first}"
 
