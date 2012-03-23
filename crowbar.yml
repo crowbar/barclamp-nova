@@ -81,6 +81,8 @@ debs:
       - nova-doc
       - nova-console
       - nova-xcp-network
+      - python-numpy
+      - nova-consoleauth
   pkgs:
     - euca2ools
     - unzip
