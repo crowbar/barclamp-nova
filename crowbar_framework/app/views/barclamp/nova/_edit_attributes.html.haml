@@ -48,9 +48,11 @@
 
   var volume_role = 'nova-multi-controller';
   var volume_path = 'div.column_50 div ul#' + volume_role + '.ddlist';
+  var volume_disk_list_path = 'ul#nova_volume_disks_list';
+
 
   function update_nova_disks(){
-    var listItems = $("li input", "ul#nova_volume_disks_list");
+    var listItems = $("li input", volume_disk_list_path);
     var disks = [];
     var i = 0;
     while ( i < listItems.size()){
@@ -67,9 +69,9 @@
   }
 
   function make_disk_list(data){
-    $("ul#nova_volume_disks_list").empty();
+    $(volume_disk_list_path).empty();
     if (jQuery.isEmptyObject(data)){
-      $("ul#nova_volume_disks_list").append('<li>'
+      $(volume_disk_list_path).append('<li>'
       + "can't find any disks for nova-volume storage!<br>"
       + "please choose another node for  "
       + volume_role + " role"
@@ -77,7 +79,7 @@
       );
     }
     $.each(data, function(disk, size){
-      $("ul#nova_volume_disks_list").append('<li>'
+      $(volume_disk_list_path).append('<li>'
         + '<input type="checkbox"'
         + 'name="'+ disk + '" '
         + 'value="' + disk + '" '
@@ -85,8 +87,8 @@
         + ">" 
         + disk
         + ", size: "
-        + size
-        + "<br>"
+        + (parseInt(size) / 1024 / 1024 / 2).toPrecision(3)
+        + " GiBs<br>"
         + '</li>'
       );
     });
@@ -119,7 +121,7 @@
     this.remove_item = function(name, list) {
             var vall = org_remove_item(name, list);
             if (list == volume_role) {
-              $("ul#nova_volume_disks_list").empty();
+              $(volume_disk_list_path).empty();
             }
             return vall;
     }
