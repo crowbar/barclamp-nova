@@ -40,3 +40,88 @@
       %p
         %label{ :for => :network_size }= t('.network_size')
         %input#network_size{:type => "text", :name => "network_size", :'data-default' => @proposal.raw_data['attributes'][@proposal.barclamp]["network"]["network_size"], :onchange => "update_value('network/network_size','network_size', 'integer')"}
+    %div{ :id => 'nova_volume_disks', :class => 'container' }
+      %label{ :for => :volume_disks }= t('.nova_volume_disks')
+      %ul{ :id => 'nova_volume_disks_list'}
+
+:javascript
+
+  var volume_role = 'nova-multi-controller';
+  var volume_path = 'div.column_50 div ul#' + volume_role + '.ddlist';
+
+  function update_nova_disks(){
+    var listItems = $("li input", "ul#nova_volume_disks_list");
+    var disks = [];
+    var i = 0;
+    while ( i < listItems.size()){
+      if (listItems[i].checked){
+        disks.push(listItems[i].name);
+      }
+      i = i + 1;
+    }
+    var proposal_input = $("input#proposal_attributes"); 
+    var proposal_data = JSON.parse(proposal_input.val());
+    proposal_data['volume']['nova_volume_disks'] = disks;
+    proposal_input.val(JSON.stringify(proposal_data));
+    return disks;
+  }
+
+  function make_disk_list(data){
+    $("ul#nova_volume_disks_list").empty();
+    if (jQuery.isEmptyObject(data)){
+      $("ul#nova_volume_disks_list").append('<li>'
+      + "can't find any disks for nova-volume storage!<br>"
+      + "please choose another node for  "
+      + volume_role + " role"
+      + "</li>"
+      );
+    }
+    $.each(data, function(disk, size){
+      $("ul#nova_volume_disks_list").append('<li>'
+        + '<input type="checkbox"'
+        + 'name="'+ disk + '" '
+        + 'value="' + disk + '" '
+        + 'onclick=update_nova_disks()'
+        + ">" 
+        + disk
+        + ", size: "
+        + size
+        + "<br>"
+        + '</li>'
+      );
+    });
+  }
+
+  function on_role_change() {
+    var node = $('li', volume_path).text();
+    if (node) {
+      $.getJSON('/nova/node_disks/' + node,
+        function(data){
+          make_disk_list(data);
+        });
+    }
+  }
+
+  // HACK HACK HACK
+  // TODO: figure out the better way of overriding this functions
+  window.setTimeout(function(){
+
+    var org_drop_item = this.drop_item;
+    var org_remove_item = this.remove_item;
+    this.drop_item = function(name, list) {
+            var vall = org_drop_item(name, list);
+            if (list == volume_role) {
+              on_role_change();
+            }
+            return vall;
+    }
+
+    this.remove_item = function(name, list) {
+            var vall = org_remove_item(name, list);
+            if (list == volume_role) {
+              $("ul#nova_volume_disks_list").empty();
+            }
+            return vall;
+    }
+
+  }, 1000);
