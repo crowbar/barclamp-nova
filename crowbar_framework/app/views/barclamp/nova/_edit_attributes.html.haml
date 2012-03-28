@@ -72,9 +72,10 @@
     $(volume_disk_list_path).empty();
     if (jQuery.isEmptyObject(data)){
       $(volume_disk_list_path).append('<li>'
-      + "can't find any disks for nova-volume storage!<br>"
-      + "please choose another node for  "
-      + volume_role + " role"
+      + "Can't find any disks for nova-volume storage!<br>"
+      + "Please choose another node for "
+      + volume_role + " role "
+      + "or regular file will be used for volume group"
       + "</li>"
       );
     }
