@@ -94,35 +94,34 @@
     });
   }
 
-  function on_role_change() {
+  function on_role_change(callback, params) {
     var node = $('li', volume_path).text();
     if (node) {
       $.getJSON('/nova/node_disks/' + node,
         function(data){
           make_disk_list(data);
+          callback(params);
         });
     }
   }
 
-  function load_proposal_attrs() {
+  function check_disks_loaded_from_proposal(disks){
+    var listItems = $("li input", volume_disk_list_path);
+    var i = 0;
+      while ( i < listItems.size()){
+        if (jQuery.inArray(listItems[i].name, disks) != -1 ){
+          listItems[i].checked = true;
+        };
+        i = i + 1;
+      }
+  }
+
+  function load_proposal_disk_attrs() {
     var proposal_data = JSON.parse($("input#proposal_attributes").val()); 
     var disks = proposal_data['volume']['nova_volume_disks'];
-    var node = $('li', volume_path).text();
-    if (node) {
-      $.getJSON('/nova/node_disks/' + node,
-        function(data){
-          make_disk_list(data);
-          var listItems = $("li input", volume_disk_list_path);
-          var i = 0;
-          while ( i < listItems.size()){
-            if (jQuery.inArray(listItems[i].name, disks) != -1 ){
-              listItems[i].checked = true;
-            };
-            i = i + 1;
-          }
-        });
-    }
-
+   
+    on_role_change(check_disks_loaded_from_proposal, disks);      
+ 
   }
 
   // HACK HACK HACK
@@ -148,5 +147,5 @@
             return vall;
     }
 
-    load_proposal_attrs();
+    load_proposal_disk_attrs();
   }, 1000);
