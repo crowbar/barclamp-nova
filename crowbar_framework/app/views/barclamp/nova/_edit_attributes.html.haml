@@ -104,6 +104,27 @@
     }
   }
 
+  function load_proposal_attrs() {
+    var proposal_data = JSON.parse($("input#proposal_attributes").val()); 
+    var disks = proposal_data['volume']['nova_volume_disks'];
+    var node = $('li', volume_path).text();
+    if (node) {
+      $.getJSON('/nova/node_disks/' + node,
+        function(data){
+          make_disk_list(data);
+          var listItems = $("li input", volume_disk_list_path);
+          var i = 0;
+          while ( i < listItems.size()){
+            if (jQuery.inArray(listItems[i].name, disks) != -1 ){
+              listItems[i].checked = true;
+            };
+            i = i + 1;
+          }
+        });
+    }
+
+  }
+
   // HACK HACK HACK
   // TODO: figure out the better way of overriding this functions
   window.setTimeout(function(){
@@ -112,7 +133,7 @@
     var org_remove_item = this.remove_item;
     this.drop_item = function(name, list) {
             var vall = org_drop_item(name, list);
-            if (list == volume_role) {
+            if (vall && list == volume_role) {
               on_role_change();
             }
             return vall;
@@ -122,8 +143,10 @@
             var vall = org_remove_item(name, list);
             if (list == volume_role) {
               $(volume_disk_list_path).empty();
+              update_nova_disks();
             }
             return vall;
     }
 
+    load_proposal_attrs();
   }, 1000);
