@@ -23,8 +23,8 @@ volname = node["nova"]["volume"]["volume_name"]
 
 checked_disks = []
 
-node[:crowbar][:disks].each do |disk, value|
-  checked_disks << disk if File.exists?("/dev/#{disk}") and node[:crowbar][:disks][disk]["usage"] == "Storage"
+node[:crowbar][:disks].each do |disk, data|
+  checked_disks << disk if File.exists?("/dev/#{disk}") and data["usage"] == "Storage"
 end
 
 if checked_disks.empty?
