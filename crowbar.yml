@@ -52,6 +52,7 @@ locale_additions:
           allow_same_net_traffic: Allow Same-Network Traffic
           num_networks: Number of Networks
           network_size: Network Size
+          nova_volume_disks: Choose disks for nova-volume storage volume group
         edit_deployment: 
           deployment: Deployment
 
