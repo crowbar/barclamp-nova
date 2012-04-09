@@ -64,7 +64,7 @@ else
     node[:nova][:volume][:nova_volume_disks].each do |disk|
       disk_list << "/dev/#{disk}" if checked_disks.include?(disk)
       bash "wipe partitions" do
-        code "dd if=/dev/zero of=#{dname} bs=1024 count=1"
+        code "dd if=/dev/zero of=#{disk} bs=1024 count=1"
         not_if "vgs #{volname}"
       end
     end
