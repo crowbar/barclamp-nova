@@ -22,11 +22,6 @@
 include_recipe "nova::mysql"
 include_recipe "nova::config"
 
-execute "nova-manage db sync" do
-  command "nova-manage db sync"
-  action :run
-end
-
 # ha_enabled activates Nova High Availability (HA) networking.
 # The nova "network" and "api" recipes need to be included on the compute nodes and
 # we must specify the --multi_host=T switch on "nova-manage network create". 
