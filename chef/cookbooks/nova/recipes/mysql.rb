@@ -50,6 +50,11 @@ mysql_database "create nova database user" do
   sql "GRANT SELECT, INSERT, UPDATE, DELETE, CREATE, DROP, INDEX, ALTER ON #{node[:nova][:db][:database]}.* TO '#{node[:nova][:db][:user]}'@'%' IDENTIFIED BY '#{node[:nova][:db][:password]}';"
 end
 
+execute "nova-manage db sync" do
+  command "nova-manage db sync"
+  action :run
+end
+
 # save data so it can be found by search
 node.save
 
