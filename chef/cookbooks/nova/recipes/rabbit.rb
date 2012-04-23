@@ -41,9 +41,11 @@ rabbitmq_user node[:nova][:rabbit][:user] do
   action :set_permissions
 end
 
-execute "rabbitmqctl set_user_tags #{node[:nova][:rabbit][:user]} management" do
-  not_if "rabbitmqctl list_users | grep #{node[:nova][:rabbit][:user]} | grep -q management"
-  action :run
+if node.platform != "suse" #suse doesn't support this
+  execute "rabbitmqctl set_user_tags #{node[:nova][:rabbit][:user]} management" do
+    not_if "rabbitmqctl list_users | grep #{node[:nova][:rabbit][:user]} | grep -q management"
+    action :run
+  end
 end
 
 # save data so it can be found by search

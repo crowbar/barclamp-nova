@@ -99,14 +99,22 @@ nova_package("volume")
 
 # Restart doesn't work correct for this service.
 bash "restart-tgt" do
-  code <<-EOH
-    stop tgt
-    start tgt
+  if node.platform == "suse"
+    code <<-EOH
+      service tgtd stop
+      service tgtd start
 EOH
+  else
+    code <<-EOH
+      stop tgt
+      start tgt
+EOH
+  end
   action :nothing
 end
 
 service "tgt" do
+  service_name "tgtd" if node.platform == "suse"
   supports :status => true, :restart => true, :reload => true
   action :enable
   notifies :run, "bash[restart-tgt]"
