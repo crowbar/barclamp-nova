@@ -20,26 +20,35 @@
 
 include_recipe "nova::config"
 
-pkgs=%w[python-numpy nova-vncproxy nova-console nova-consoleauth]
+if node.platform == "suse"
+    pkgs=%w[openstack-nova-vncproxy]
+else
+    pkgs=%w[python-numpy nova-vncproxy nova-console nova-consoleauth]
+end
+
 pkgs.each do |pkg|
   package pkg do
     action :upgrade
-    options "--force-yes"
+    options "--force-yes" if node.platform != "suse"
   end
 end
 
-execute "Fix permission Bug" do
-  command "sed -i 's/nova$/root/g' /etc/init/nova-vncproxy.conf"
-  action :run
+if node.platform != "suse"
+  execute "Fix permission Bug" do
+    command "sed -i 's/nova$/root/g' /etc/init/nova-vncproxy.conf"
+    action :run
+  end
 end
 
 service "nova-vncproxy" do
+  service_name "openstack-nova-vncproxy" if node.platform == "suse"
   supports :status => true, :restart => true
   action :enable
   subscribes :restart, resources(:template => "/etc/nova/nova.conf"), :delayed
 end
 
 service "nova-consoleauth" do
+  service_name "openstack-nova-consoleauth" if node.platform == "suse"
   supports :status => true, :restart => true
   action :enable
   subscribes :restart, resources(:template => "/etc/nova/nova.conf"), :delayed
