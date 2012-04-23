@@ -20,7 +20,7 @@
 include_recipe "nova::config"
 
 package "python-keystone"
-package "openstackx"
+package "python-novaclient"
 
 nova_package("api")
 
