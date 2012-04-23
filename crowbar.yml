@@ -57,32 +57,54 @@ locale_additions:
           deployment: Deployment
 
 debs:
+  ubuntu-10.10:
+    repos:
+      - deb http://ops.rcb.me/packages maverick diablo-final
+  ubuntu-11.04:
+    repos:
+      - deb http://ops.rcb.me/packages natty diablo-final
+  ubuntu-11.10:
+    repos:
+      - deb http://ops.rcb.me/packages oneiric diablo-final
+  ubuntu-12.04:
+    pkgs:
+      - tgt
+      - nova-compute-lxc
+      - nova-compute-xen
+      - nova-compute-xcp
+      - nova-compute-kvm
+      - nova-compute-uml
+      - nova-compute-qemu
+      - nova-api-os-compute
+      - nova-api-os-volume
+      - nova-api-ec2
+      - nova-api-metadata
+      - nova-doc
+      - nova-console
+      - nova-xcp-network
+      - python-numpy
+      - nova-consoleauth
   pkgs:
-    - nova-api
-    - nova-common
-    - nova-objectstore
-    - nova-xcp-plugins
-    - nova-consoleauth
-    - python-nova
-    - nova-network
-    - nova-ajax-console-proxy
-    - nova-compute-kvm
-    - nova-doc
-    - nova-volume
-    - nova-vncproxy
-    - nova-scheduler
-    - nova-console
-    - nova-xcp-network
-    - nova-cert
-    - nova-compute
     - euca2ools
     - unzip
+    - iscsitarget
+    - nova-volume
     - libvirt-bin
+    - nova-compute
+    - kvm
+    - nova-network
+    - nova-common
     - python-mysqldb
     - dnsmasq-base
+    - python-nova
+    - nova-api
+    - nova-objectstore
+    - nova-volume
+    - nova-scheduler
+    - nova-doc
+    - nova-vncproxy
+    - nova-ajax-console-proxy
+    - python-eventlet
     - bzr
     - mysql-client
-    - tgt
-    - python-numpy
-
 
