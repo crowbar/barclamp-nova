@@ -35,6 +35,21 @@ end
 include_recipe "nova::config"
 include_recipe "database::client"
 
+if node.platform == "suse"
+  package "libvirt"
+
+  service "libvirtd" do
+    action [:enable, :restart]
+  end
+
+  case node[:nova][:libvirt_type]
+    when "kvm"
+      package "kvm"
+    when "qemu"
+      package "qemu"
+  end
+end
+
 nova_package("compute")
 
 # ha_enabled activates Nova High Availability (HA) networking.

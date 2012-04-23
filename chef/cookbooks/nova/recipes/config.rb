@@ -270,6 +270,12 @@ else
 end
 Chef::Log.info("Quantum server at #{quantum_server_ip}")
 
+directory "/var/lock/nova" do
+  action :create
+  owner "nova"
+  group "root"
+end
+
 template "/etc/nova/nova.conf" do
   source "nova.conf.erb"
   owner node[:nova][:user]

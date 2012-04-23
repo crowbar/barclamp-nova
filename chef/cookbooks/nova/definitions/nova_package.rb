@@ -21,12 +21,14 @@ define :nova_package do
     end
   else
     package nova_name do
-      options "--force-yes -o Dpkg::Options::=\"--force-confdef\""
+      package_name "openstack-#{nova_name}" if node.platform == "suse"
+      options "--force-yes -o Dpkg::Options::=\"--force-confdef\"" if node.platform != "suse"
       action :upgrade
     end
   end
 
   service nova_name do
+    service_name "openstack-#{nova_name}" if node.platform == "suse"
     if (platform?("ubuntu") && node.platform_version.to_f >= 10.04)
       restart_command "stop #{nova_name} ; start #{nova_name}"
       stop_command "stop #{nova_name}"
