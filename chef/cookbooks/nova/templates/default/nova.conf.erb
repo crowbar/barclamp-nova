@@ -7,8 +7,10 @@ dhcpbridge=/usr/bin/nova-dhcpbridge
 logdir=/var/log/nova
 state_path=/var/lib/nova
 lock_path=/var/lock/nova
+<% if node[:platform] != "suse" %>
 use_syslog=True
 root_helper=sudo nova-rootwrap
+<% end -%>
 
 
 # RABBITMQ
