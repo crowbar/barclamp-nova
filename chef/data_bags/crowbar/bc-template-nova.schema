@@ -22,6 +22,7 @@
             "libvirt_type": { "type": "str", "required": true },
             "use_novnc": { "type": "bool", "required": true },
             "verbose": { "type": "bool", "required": true },
+            "use_syslog": { "type": "bool", "required": true },
             "gitrepo": { "type": "str", "required": true },
             "git_instance": { "type": "str", "required": true },
             "git_refspec": { "type": "str", "required": true },

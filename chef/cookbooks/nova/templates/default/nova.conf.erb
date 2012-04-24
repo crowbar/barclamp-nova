@@ -7,8 +7,9 @@ dhcpbridge=<%= @dhcpbridge %>
 logdir=/var/log/nova
 state_path=/var/lib/nova
 lock_path=/var/lock/nova
-use_syslog=True
+use_syslog=<%= node[:nova][:use_syslog] ? 'True' : 'False' %>
 rootwrap_config=/etc/nova/rootwrap.conf
+root_helper=sudo nova-rootwrap
 
 
 # RABBITMQ
