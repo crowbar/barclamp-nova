@@ -32,22 +32,36 @@ end
 
 log "DBServer: #{db_server[0].mysql.api_bind_host}"
 
+db_conn = { :host => db_server[0]['mysql']['api_bind_host'],
+            :username => "db_maker",
+            :password => db_server[0]['mysql']['db_maker_password'] }
+
 # Creates empty nova database
-mysql_database "create #{node[:nova][:db][:database]} database" do
-  host     db_server[0]['mysql']['api_bind_host']
-  username "db_maker"
-  password db_server[0]['mysql']['db_maker_password']
-  database node[:nova][:db][:database]
-  action :create_db
+database "create #{node[:nova][:db][:database]} database" do
+  connection db_conn
+  database_name node[:nova][:db][:database]
+  provider Chef::Provider::Database::Mysql
+  action :create
 end
 
-mysql_database "create nova database user" do
-  host     db_server[0]['mysql']['api_bind_host']
-  username "db_maker"
-  password db_server[0]['mysql']['db_maker_password']
-  database node[:nova][:db][:database]
-  action :query
-  sql "GRANT SELECT, INSERT, UPDATE, DELETE, CREATE, DROP, INDEX, ALTER ON #{node[:nova][:db][:database]}.* TO '#{node[:nova][:db][:user]}'@'%' IDENTIFIED BY '#{node[:nova][:db][:password]}';"
+database_user "create nova database user" do
+  connection db_conn
+  username node[:nova][:db][:user]
+  password node[:nova][:db][:password]
+  provider Chef::Provider::Database::MysqlUser
+  action :create
+end
+
+database_user "create nova database user" do
+  connection db_conn
+  database_name node[:nova][:db][:database]
+  username node[:nova][:db][:user]
+  password node[:nova][:db][:password]
+  host db_server[0]['mysql']['api_bind_host']
+  privileges [ "SELECT", "INSERT", "UPDATE", "DELETE", "CREATE",
+               "DROP", "INDEX", "ALTER" ]
+  provider Chef::Provider::Database::MysqlUser
+  action :grant
 end
 
 execute "nova-manage db sync" do
