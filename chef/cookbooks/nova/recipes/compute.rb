@@ -23,17 +23,17 @@ include_recipe "nova::config"
 package "mysql-client"
 
 if node.platform == "suse"
-  package "libvirt"
-
-  service "libvirtd" do
-    action [:enable, :restart]
-  end
-
   case node[:nova][:libvirt_type]
     when "kvm"
       package "kvm"
     when "qemu"
       package "qemu"
+  end
+
+  package "libvirt"
+
+  service "libvirtd" do
+    action [:enable, :restart]
   end
 end
 
