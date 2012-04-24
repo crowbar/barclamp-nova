@@ -31,7 +31,7 @@ define :nova_package do
     end
     supports :status => true, :restart => true
     action [:enable, :start]
-    subscribes :restart, resources(:template => "/etc/nova/nova.conf"), :immediately
+    subscribes :restart, resources(:template => "/etc/nova/nova.conf")
   end
 
 end
