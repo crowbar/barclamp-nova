@@ -29,7 +29,8 @@
         "vhost": "/nova"
       },
       "db": {
-        "mysql_instance": "none",
+        "sql_engine": "none",
+        "sql_instance": "none",
         "password": "",
         "user": "nova",
         "database": "nova"

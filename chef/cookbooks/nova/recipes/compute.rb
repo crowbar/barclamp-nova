@@ -19,8 +19,7 @@
 #
 
 include_recipe "nova::config"
-
-package "mysql-client"
+include_recipe "nova::database"
 
 if node.platform == "suse"
   case node[:nova][:libvirt_type]

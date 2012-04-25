@@ -29,18 +29,25 @@ package "nova-common" do
   action :upgrade
 end
 
-package "python-mysqldb"
-env_filter = " AND mysql_config_environment:mysql-config-#{node[:nova][:db][:mysql_instance]}"
-mysqls = search(:node, "roles:mysql-server#{env_filter}") || []
-if mysqls.length > 0
-  mysql = mysqls[0]
-  mysql = node if mysql.name == node.name
-else
-  mysql = node
+sql_engine=node[:nova][:db][:sql_engine]
+case sql_engine
+  when "mysql"
+    package "python-mysqldb"
+  when "postgresql"
+    package "python-psycopg2"
 end
-mysql_address = Chef::Recipe::Barclamp::Inventory.get_network_by_type(mysql, "admin").address if mysql_address.nil?
-Chef::Log.info("Mysql server found at #{mysql_address}")
-sql_connection = "mysql://#{node[:nova][:db][:user]}:#{node[:nova][:db][:password]}@#{mysql_address}/#{node[:nova][:db][:database]}"
+
+env_filter = " AND #{sql_engine}_config_environment:#{sql_engine}-config-#{node[:nova][:db][:sql_instance]}"
+sqls = search(:node, "roles:#{sql_engine}-server#{env_filter}") || []
+if sqls.length > 0
+  sql = sqls[0]
+  sql = node if sql.name == node.name
+else
+  sql = node
+end
+sql_address = Chef::Recipe::Barclamp::Inventory.get_network_by_type(sql, "admin").address if sql_address.nil?
+Chef::Log.info("#{sql_engine} server found at #{sql_address}")
+sql_connection = "#{sql_engine}://#{node[:nova][:db][:user]}:#{node[:nova][:db][:password]}@#{sql_address}/#{node[:nova][:db][:database]}"
 
 env_filter = " AND nova_config_environment:#{node[:nova][:config][:environment]}"
 rabbits = search(:node, "recipes:nova\\:\\:rabbit#{env_filter}") || []

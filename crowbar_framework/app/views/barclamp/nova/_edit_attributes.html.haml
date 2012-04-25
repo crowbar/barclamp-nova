@@ -5,8 +5,12 @@
   = link_to t('raw'), proposal_barclamp_path(:id => @proposal.name, :controller => @proposal.barclamp, :dep_raw => @dep_raw, :attr_raw => true), :style => "float: right;"
   %div.container
     %p
-      %label{ :for => :mysql_instance }= t('.mysql_instance')
-      = instance_selector("mysql", :mysql_instance, "mysql_instance", @proposal)
+      %label{ :for => :sql_engine }= t('.sql_engine')
+      = select_tag :sql_engine, options_for_select([['MySQL', 'mysql'], ['PostgreSQL', 'postgresql']], @proposal.raw_data['attributes'][@proposal.barclamp]["db"]["sql_engine"]), :onchange => "update_value('sql_engine', 'sql_engine', 'string')"
+    %p
+      %label{ :for => :sql_instance }= t('.sql_instance')
+      = instance_selector(@proposal.raw_data['attributes'][@proposal.barclamp]["db"]["sql_engine"],
+                          :sql_instance, "sql_instance", @proposal)
     %p
       %label{ :for => :keystone_instance }= t('.keystone_instance')
       = instance_selector("keystone", :keystone_instance, "keystone_instance", @proposal)

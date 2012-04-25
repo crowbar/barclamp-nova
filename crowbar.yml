@@ -40,7 +40,8 @@ locale_additions:
       nova:
         edit_attributes: 
           attributes: Attributes
-          mysql_instance: MySQL
+          sql_engine: SQL Engine
+          sql_instance: SQL Instance
           keystone_instance: Keystone
           glance_instance: Glance
           verbose: Verbose
