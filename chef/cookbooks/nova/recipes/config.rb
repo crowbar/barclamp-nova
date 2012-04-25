@@ -112,9 +112,9 @@ Chef::Log.info("VNCProxy server at #{vncproxy_public_ip}")
 
 cookbook_file "/etc/default/nova-common" do
   source "nova-common"
-  owner "root"
+  owner "nova"
   group "root"
-  mode 0644
+  mode 0640
   action :nothing
 end
 
@@ -175,9 +175,9 @@ end
 
 template "/etc/nova/nova.conf" do
   source "nova.conf.erb"
-  owner "root"
+  owner "nova"
   group "root"
-  mode 0644
+  mode 0640
   variables(
             :sql_connection => sql_connection,
             :rabbit_settings => rabbit_settings,
