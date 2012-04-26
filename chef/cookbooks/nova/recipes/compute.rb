@@ -42,19 +42,15 @@ template "/etc/nova/nova-compute.conf" do
 end
 
 # enable or disable the ksm setting (performance)
-if node[:nova][:libvirt_type] == "kvm"
   
-  template "/etc/default/qemu-kvm" do
-    source "qemu-kvm.erb" 
-    variables({ 
-      :kvm => node[:nova][:kvm] 
-    })
-    mode "0644"
-  end
-
-  execute "set ksm value" do
-    command "echo #{node[:nova][:kvm][:ksm_enabled]} > /sys/kernel/mm/ksm/run"
-    only_if "test -f /sys/kernel/mm/ksm/run"
-  end  
-  
+template "/etc/default/qemu-kvm" do
+  source "qemu-kvm.erb" 
+  variables({ 
+    :kvm => node[:nova][:kvm] 
+  })
+  mode "0644"
 end
+
+execute "set ksm value" do
+  command "echo #{node[:nova][:kvm][:ksm_enabled]} > /sys/kernel/mm/ksm/run"
+end  
