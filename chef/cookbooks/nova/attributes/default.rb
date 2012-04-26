@@ -38,7 +38,14 @@ default[:nova][:rabbit][:vhost] = "/nova"
 #
 # Hypervisor Settings
 #
-default[:nova][:libvirt_type] = "kvm"
+default[:nova][:libvirt_type] = "kvm"    
+
+#
+# KVM Settings                       
+# 
+
+default[:nova][:kvm][:ksm_enabled] = 0  # 0 = disable, 1 = enable
+
 
 #
 # Shared Settings

@@ -1,0 +1,19 @@
+# To disable qemu-kvm's page merging feature, set KSM_ENABLED=0 and
+# sudo restart qemu-kvm
+
+KSM_ENABLED=<%= @kvm[:ksm_enabled] %>
+SLEEP_MILLISECS=200
+
+# To load the vhost_net module, which in some cases can speed up
+# network performance, set VHOST_NET_ENABLED to 1.
+VHOST_NET_ENABLED=0
+
+# By default, enable nested kvm for intel cpus.  (AMD cpus always have
+# it enabled).  If you want to disable nested kvm, comment the first
+# line and uncomment the second.
+KVM_NESTED=" nested=1"
+#KVM_NESTED=""
+
+# Uncomment this if you want to specify a bridge for qemu-ifup to use
+# for tap devices
+#TAPBR=virbr0
