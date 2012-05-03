@@ -39,6 +39,9 @@ if node.platform == "suse"
   case node[:nova][:libvirt_type]
     when "kvm"
       package "kvm"
+      execute "loading kvm modules" do
+        command "grep -q vmx /proc/cpuinfo && /sbin/modprobe kvm-intel; grep -q svm /proc/cpuinfo && /sbin/modprobe kvm-amd; /sbin/modprobe vhost-net"
+      end
     when "qemu"
       package "qemu"
   end
