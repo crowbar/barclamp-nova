@@ -160,12 +160,14 @@ else
   public_interface = nil
 end
 
+flat_network_bridge = fixed_net["use_vlan"] ? "br#{fixed_net["vlan"]}" : "br#{fixed_interface}"
+
 node[:nova][:network][:public_interface] = public_interface
 if !node[:nova][:network][:dhcp_enabled]
-  node[:nova][:network][:flat_network_bridge] = "br#{fixed_net["vlan"]}"
+  node[:nova][:network][:flat_network_bridge] = flat_network_bridge
   node[:nova][:network][:flat_interface] = fixed_interface
 elsif !node[:nova][:network][:tenant_vlans]
-  node[:nova][:network][:flat_network_bridge] = "br#{fixed_net["vlan"]}"
+  node[:nova][:network][:flat_network_bridge] = flat_network_bridge
   node[:nova][:network][:flat_network_dhcp_start] = fixed_net["ranges"]["dhcp"]["start"]
   node[:nova][:network][:flat_interface] = fixed_interface
 else
