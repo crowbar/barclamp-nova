@@ -40,3 +40,117 @@
       %p
         %label{ :for => :network_size }= t('.network_size')
         %input#network_size{:type => "text", :name => "network_size", :'data-default' => @proposal.raw_data['attributes'][@proposal.barclamp]["network"]["network_size"], :onchange => "update_value('network/network_size','network_size', 'integer')"}
+    %div{ :id => 'nova_volume_disks', :class => 'container' }
+      %label{ :for => :volume_disks }= t('.nova_volume_disks')
+      %ul{ :id => 'nova_volume_disks_list'}
+
+:javascript
+
+  var volume_role = 'nova-multi-controller';
+  var volume_path = 'div.column_50 div ul#' + volume_role + '.ddlist';
+  var volume_disk_list_path = 'ul#nova_volume_disks_list';
+
+  function update_nova_disks(){
+    var listItems = $("li input", volume_disk_list_path);
+    var disks = [];
+    var i = 0;
+    var checked_count = 0;
+    while ( i < listItems.size()){
+      if (listItems[i].checked){
+        disks.push(listItems[i].name);
+        checked_count = checked_count + 1;
+      }
+      i = i + 1;
+    }
+    if (listItems.size() > 0 && checked_count == 0){
+      i18n_msg('no_disks_checked');
+    }
+    var proposal_input = $("input#proposal_attributes"); 
+    var proposal_data = JSON.parse(proposal_input.val());
+    proposal_data['volume']['nova_volume_disks'] = disks;
+    proposal_input.val(JSON.stringify(proposal_data));
+    return disks;
+  }
+
+  function make_disk_list(data, node){
+    $(volume_disk_list_path).empty();
+    if (jQuery.isEmptyObject(data)){
+      i18n_msg('warning', node, volume_role, 'It has no suitable disk for nova-volume storage. '
+                                           + 'If applyed, regular file will be used for volume group');
+    }
+    $.each(data, function(disk, size){
+      $(volume_disk_list_path).append('<li>'
+        + '<input type="checkbox"'
+        + 'name="'+ disk + '" '
+        + 'value="' + disk + '" '
+        + 'onclick=update_nova_disks()'
+        + ">" 
+        + disk
+        + ", size: "
+        + size
+        + " sectors<br>"
+        + '</li>'
+      );
+    });
+    update_nova_disks();
+  }
+
+  function on_role_change(callback, params) {
+    var node = $('li', volume_path).text();
+    if (node) {
+      $.getJSON('/nova/node_disks/' + node,
+        function(data){
+          make_disk_list(data, node);
+          callback(params);
+        });
+    }
+  }
+
+  function check_disks_loaded_from_proposal(disks){
+    var listItems = $("li input", volume_disk_list_path);
+    var i = 0;
+      while ( i < listItems.size()){
+        if (jQuery.inArray(listItems[i].name, disks) != -1 ){
+          listItems[i].checked = true;
+        };
+        i = i + 1;
+      }
+  }
+
+  function load_proposal_disk_attrs() {
+    var proposal_data = JSON.parse($("input#proposal_attributes").val()); 
+    var disks = proposal_data['volume']['nova_volume_disks'];
+    
+    on_role_change(check_disks_loaded_from_proposal, disks);      
+ 
+  }
+
+  // HACK HACK HACK
+  // TODO: figure out the better way of overriding this functions
+  window.setTimeout(function(){
+
+    messages['warning'] = 'Warning: Avoid using Node [0] to Role [1]. [2]';
+    messages['no_disks_checked'] = 'Warning: If no one of disks from the list are checked, '
+                                 + 'will use any suitable disk from it for the volume group';
+  
+    var org_drop_item = this.drop_item;
+    var org_remove_item = this.remove_item;
+    this.drop_item = function(name, list) {
+            var vall = org_drop_item(name, list);
+            if (vall && list == volume_role) {
+              on_role_change(function(){});
+            }
+            return vall;
+    }
+
+    this.remove_item = function(name, list) {
+            var vall = org_remove_item(name, list);
+            if (list == volume_role) {
+              $(volume_disk_list_path).empty();
+              update_nova_disks();
+            }
+            return vall;
+    }
+
+    load_proposal_disk_attrs();
+  }, 1000);

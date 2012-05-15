@@ -52,6 +52,7 @@ locale_additions:
           allow_same_net_traffic: Allow Same-Network Traffic
           num_networks: Number of Networks
           network_size: Network Size
+          nova_volume_disks: Choose disks for nova-volume storage volume group
         edit_deployment: 
           deployment: Deployment
 
@@ -65,6 +66,24 @@ debs:
   ubuntu-11.10:
     repos:
       - deb http://ops.rcb.me/packages oneiric diablo-final
+  ubuntu-12.04:
+    pkgs:
+      - tgt
+      - nova-compute-lxc
+      - nova-compute-xen
+      - nova-compute-xcp
+      - nova-compute-kvm
+      - nova-compute-uml
+      - nova-compute-qemu
+      - nova-api-os-compute
+      - nova-api-os-volume
+      - nova-api-ec2
+      - nova-api-metadata
+      - nova-doc
+      - nova-console
+      - nova-xcp-network
+      - python-numpy
+      - nova-consoleauth
   pkgs:
     - euca2ools
     - unzip
@@ -83,15 +102,9 @@ debs:
     - nova-volume
     - nova-scheduler
     - nova-doc
-    - nova-novnc
     - nova-vncproxy
+    - nova-ajax-console-proxy
     - python-eventlet
     - bzr
-    # dashboard stuff.  Will be moved to its own barclamp.
-    - openstack-dashboard
-    - python-django
-    - openstackx
-    - python-keystone
-    - nova-ajax-console-proxy
     - mysql-client
 
