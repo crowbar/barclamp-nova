@@ -26,8 +26,31 @@ nova_package("compute")
 
 # ha_enabled activates Nova High Availability (HA) networking.
 # The nova "network" and "api" recipes need to be included on the compute nodes and
-# we must specify the --multi_host=T switch on "nova-manage network create". 
+# we must specify the --multi_host=T switch on "nova-manage network create".     
+
 if node[:nova][:network][:ha_enabled]
   include_recipe "nova::api"
   include_recipe "nova::network"
 end
+
+template "/etc/nova/nova-compute.conf" do
+  source "nova-compute.conf.erb"
+  owner "root"
+  group "root"
+  mode 0644
+  notifies :restart, "service[nova-compute]"
+end
+
+# enable or disable the ksm setting (performance)
+  
+template "/etc/default/qemu-kvm" do
+  source "qemu-kvm.erb" 
+  variables({ 
+    :kvm => node[:nova][:kvm] 
+  })
+  mode "0644"
+end
+
+execute "set ksm value" do
+  command "echo #{node[:nova][:kvm][:ksm_enabled]} > /sys/kernel/mm/ksm/run"
+end  

@@ -16,6 +16,13 @@
         "num_networks": 1,
         "network_size": 256
       },
+      "volume": {
+        "nova_volume_disks": [],
+        "volume_name": "nova-volumes",
+        "type": "local",
+        "local_file": "/var/lib/nova/volume.raw",
+        "local_size": 2000000000
+      },
       "rabbit": {
         "password": "secure_password",
         "user": "nova",

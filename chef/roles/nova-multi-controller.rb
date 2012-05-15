@@ -10,6 +10,7 @@ run_list(
          "recipe[nova::network]",
          "recipe[nova::scheduler]",
          "recipe[nova::vncproxy]",
+         "recipe[nova::volume]",
          "recipe[nova::project]",
          "recipe[nova::monitor]"
          )

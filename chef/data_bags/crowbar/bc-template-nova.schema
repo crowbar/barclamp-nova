@@ -37,6 +37,17 @@
                 "vlan_start": { "type": "int" }
               }
             },
+            "volume": {
+              "type": "map",
+              "required": true,
+              "mapping": {
+                "volume_name": { "type": "str", "required": true },
+                "type": { "type": "str", "required": true },
+                "local_file": { "type": "str", "required": true },
+                "nova_volume_disks": { "type": "seq", "required": true, "sequence": [ { "type": "str" } ]},
+                "local_size": { "type": "int", "required": true }
+              }
+            },
             "rabbit": {
               "type": "map",
               "required": true,

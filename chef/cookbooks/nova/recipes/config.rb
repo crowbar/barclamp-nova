@@ -100,11 +100,21 @@ else
 end
 Chef::Log.info("Glance server at #{glance_server_ip}")
 
+vncproxies = search(:node, "recipes:nova\\:\\:vncproxy#{env_filter}") || []
+if vncproxies.length > 0
+  vncproxy = vncproxies[0]
+  vncproxy = node if vncproxy.name == node.name
+  vncproxy_public_ip = Chef::Recipe::Barclamp::Inventory.get_network_by_type(vncproxy, "public").address
+else
+  vncproxy_public_ip = nil
+end
+Chef::Log.info("VNCProxy server at #{vncproxy_public_ip}")
+
 cookbook_file "/etc/default/nova-common" do
   source "nova-common"
-  owner "root"
+  owner "nova"
   group "root"
-  mode 0644
+  mode 0640
   action :nothing
 end
 
@@ -150,12 +160,14 @@ else
   public_interface = nil
 end
 
+flat_network_bridge = fixed_net["use_vlan"] ? "br#{fixed_net["vlan"]}" : "br#{fixed_interface}"
+
 node[:nova][:network][:public_interface] = public_interface
 if !node[:nova][:network][:dhcp_enabled]
-  node[:nova][:network][:flat_network_bridge] = "br#{fixed_net["vlan"]}"
+  node[:nova][:network][:flat_network_bridge] = flat_network_bridge
   node[:nova][:network][:flat_interface] = fixed_interface
 elsif !node[:nova][:network][:tenant_vlans]
-  node[:nova][:network][:flat_network_bridge] = "br#{fixed_net["vlan"]}"
+  node[:nova][:network][:flat_network_bridge] = flat_network_bridge
   node[:nova][:network][:flat_network_dhcp_start] = fixed_net["ranges"]["dhcp"]["start"]
   node[:nova][:network][:flat_interface] = fixed_interface
 else
@@ -165,9 +177,9 @@ end
 
 template "/etc/nova/nova.conf" do
   source "nova.conf.erb"
-  owner "root"
+  owner "nova"
   group "root"
-  mode 0644
+  mode 0640
   variables(
             :sql_connection => sql_connection,
             :rabbit_settings => rabbit_settings,
@@ -176,7 +188,8 @@ template "/etc/nova/nova.conf" do
             :network_public_ip => network_public_ip,
             :dns_server_public_ip => dns_server_public_ip,
             :glance_server_ip => glance_server_ip,
-            :glance_server_port => glance_server_port
+            :glance_server_port => glance_server_port,
+            :vncproxy_public_ip => vncproxy_public_ip
             )
 end
 
