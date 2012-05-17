@@ -13,6 +13,8 @@
           "required": true,
           "mapping": {
             "keystone_instance": { "type": "str", "required": true },
+            "service_user": { "type": "str", "required": true },
+            "service_password": { "type": "str" },
             "glance_instance": { "type": "str", "required": true },
             "libvirt_type": { "type": "str", "required": true },
             "verbose": { "type": "bool", "required": true },

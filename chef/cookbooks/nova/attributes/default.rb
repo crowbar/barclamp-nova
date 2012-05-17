@@ -77,3 +77,5 @@ default[:nova][:network][:flat_network_dhcp_start] = "10.0.0.2"
 default[:nova][:network][:vlan_interface] = "eth1"
 default[:nova][:network][:vlan_start] = 100
 
+default[:nova][:service_user] = "nova"
+default[:nova][:service_password] = "nova"

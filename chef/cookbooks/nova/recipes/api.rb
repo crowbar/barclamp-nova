@@ -38,8 +38,8 @@ keystone_token = keystone["keystone"]["service"]["token"]
 keystone_service_port = keystone["keystone"]["api"]["service_port"]
 keystone_admin_port = keystone["keystone"]["api"]["admin_port"]
 keystone_service_tenant = keystone["keystone"]["service"]["tenant"]
-keystone_service_user = "nova" # GREG: Fix this
-keystone_service_password = "fredfred" # GREG: Fix this
+keystone_service_user = node["nova"]["service_user"]
+keystone_service_password = node["nova"]["service_password"]
 Chef::Log.info("Keystone server found at #{keystone_address}")
 
 template "/etc/nova/api-paste.ini" do
