@@ -42,6 +42,8 @@ locale_additions:
           attributes: Attributes
           mysql_instance: MySQL
           keystone_instance: Keystone
+          service_user: Keystone Service User
+          service_password: Keystone Service Password
           glance_instance: Glance
           verbose: Verbose
           dhcp_enabled: DHCP Enabled

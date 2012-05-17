@@ -4,6 +4,7 @@
   "attributes": {
     "nova": {
       "keystone_instance": "none",
+      "service_user": "nova",
       "glance_instance": "none",
       "libvirt_type": "kvm",
       "verbose": true,
