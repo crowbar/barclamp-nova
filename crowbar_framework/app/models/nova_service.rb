@@ -76,6 +76,7 @@ class NovaService < ServiceObject
     rescue
       @logger.info("Nova create_proposal: no keystone found")
     end
+    base["attributes"]["nova"]["service_password"] = '%012d' % rand(1e12)
 
     base["attributes"]["nova"]["glance_instance"] = ""
     begin
