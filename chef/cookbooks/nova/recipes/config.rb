@@ -104,10 +104,10 @@ vncproxies = search(:node, "recipes:nova\\:\\:vncproxy#{env_filter}") || []
 if vncproxies.length > 0
   vncproxy = vncproxies[0]
   vncproxy = node if vncproxy.name == node.name
-  vncproxy_public_ip = Chef::Recipe::Barclamp::Inventory.get_network_by_type(vncproxy, "public").address
 else
-  vncproxy_public_ip = nil
+  vncproxy = node
 end
+vncproxy_public_ip = Chef::Recipe::Barclamp::Inventory.get_network_by_type(vncproxy, "public").address
 Chef::Log.info("VNCProxy server at #{vncproxy_public_ip}")
 
 cookbook_file "/etc/default/nova-common" do

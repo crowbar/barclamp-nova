@@ -59,14 +59,12 @@
   function update_nova_disks(){
     var listItems = $("li input", volume_disk_list_path);
     var disks = [];
-    var i = 0;
     var checked_count = 0;
-    while ( i < listItems.size()){
+    for (var i = 0; i < listItems.size(); ++i){
       if (listItems[i].checked){
         disks.push(listItems[i].name);
         checked_count = checked_count + 1;
       }
-      i = i + 1;
     }
     if (listItems.size() > 0 && checked_count == 0){
       i18n_msg('no_disks_checked');
@@ -75,52 +73,49 @@
     var proposal_data = JSON.parse(proposal_input.val());
     proposal_data['volume']['nova_volume_disks'] = disks;
     proposal_input.val(JSON.stringify(proposal_data));
-    return disks;
   }
 
   function make_disk_list(data, node){
     $(volume_disk_list_path).empty();
-    if (jQuery.isEmptyObject(data)){
+    if ($.isEmptyObject(data)){
       i18n_msg('warning', node, volume_role, 'It has no suitable disk for nova-volume storage. '
                                            + 'If applyed, regular file will be used for volume group');
     }
     $.each(data, function(disk, size){
-      $(volume_disk_list_path).append('<li>'
-        + '<input type="checkbox"'
-        + 'name="'+ disk + '" '
-        + 'value="' + disk + '" '
-        + 'onclick=update_nova_disks()'
-        + ">" 
-        + disk
-        + ", size: "
-        + size
-        + " sectors<br>"
-        + '</li>'
-      );
+      var li = document.createElement('li');
+      var inp = document.createElement('input');
+      var label = document.createTextNode(disk + ", size: " + size + " sectors");
+      inp.type = "checkbox";
+      inp.name = disk;
+      inp.value = disk;
+      inp.onclick = update_nova_disks;
+      li.appendChild(inp);
+      li.appendChild(label);
+      $(volume_disk_list_path).append(li);
     });
     update_nova_disks();
   }
 
-  function on_role_change(callback, params) {
+  function on_role_change(callback, param) {
     var node = $('li', volume_path).text();
     if (node) {
       $.getJSON('/nova/node_disks/' + node,
         function(data){
           make_disk_list(data, node);
-          callback(params);
+          if (callback){
+            callback(param);
+          }
         });
     }
   }
 
   function check_disks_loaded_from_proposal(disks){
     var listItems = $("li input", volume_disk_list_path);
-    var i = 0;
-      while ( i < listItems.size()){
-        if (jQuery.inArray(listItems[i].name, disks) != -1 ){
-          listItems[i].checked = true;
-        };
-        i = i + 1;
-      }
+    for (var i = 0; i < listItems.size(); ++i){
+      if ($.inArray(listItems[i].name, disks) != -1 ){
+        listItems[i].checked = true;
+      };
+    }
   }
 
   function load_proposal_disk_attrs() {
@@ -144,7 +139,7 @@
     this.drop_item = function(name, list) {
             var vall = org_drop_item(name, list);
             if (vall && list == volume_role) {
-              on_role_change(function(){});
+              on_role_change();
             }
             return vall;
     }
@@ -159,4 +154,4 @@
     }
 
     load_proposal_disk_attrs();
-  }, 1000);
+  }, 0);
