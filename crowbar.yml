@@ -71,6 +71,7 @@ debs:
   ubuntu-12.04:
     pkgs:
       - tgt
+      - novnc
       - nova-compute-lxc
       - nova-compute-xen
       - nova-compute-xcp
