@@ -20,7 +20,7 @@
 
 include_recipe "nova::config"
 
-pkgs=%w[python-numpy nova-vncproxy nova-console nova-consoleauth]
+pkgs=%w[python-numpy nova-vncproxy nova-console nova-consoleauth novnc]
 pkgs.each do |pkg|
   package pkg do
     action :upgrade
