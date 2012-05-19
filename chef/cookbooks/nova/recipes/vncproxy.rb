@@ -20,7 +20,7 @@
 
 include_recipe "nova::config"
 
-pkgs=%w[python-numpy nova-vncproxy nova-console nova-consoleauth novnc]
+pkgs=%w[python-numpy nova-console nova-consoleauth]
 pkgs.each do |pkg|
   package pkg do
     action :upgrade
@@ -28,19 +28,30 @@ pkgs.each do |pkg|
   end
 end
 
-execute "Fix permission Bug" do
-  command "sed -i 's/nova$/root/g' /etc/init/nova-vncproxy.conf"
-  action :run
-end
+nonvc = true
+if novnc
+  package novnc
+  service "novnc" do
+    supports :status => true, :restart => true
+    action [:enable, :start]
+    subscribes :restart, resources(:template => "/etc/nova/nova.conf"), :delayed
+  end
+else
+  package nova-vncproxy
+  execute "Fix permission Bug" do
+    command "sed -i 's/nova$/root/g' /etc/init/nova-vncproxy.conf"
+    action :run
+  end
 
-service "nova-vncproxy" do
-  supports :status => true, :restart => true
-  action :enable
-  subscribes :restart, resources(:template => "/etc/nova/nova.conf"), :delayed
+  service "nova-vncproxy" do
+    supports :status => true, :restart => true
+    action [:enable, :start]
+    subscribes :restart, resources(:template => "/etc/nova/nova.conf"), :delayed
+  end
 end
 
 service "nova-consoleauth" do
   supports :status => true, :restart => true
-  action :enable
+  action [:enable, :start]
   subscribes :restart, resources(:template => "/etc/nova/nova.conf"), :delayed
 end
