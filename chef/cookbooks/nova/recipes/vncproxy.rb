@@ -28,7 +28,7 @@ pkgs.each do |pkg|
   end
 end
 
-nonvc = true
+nonvc = node[:nova][:use_novnc]
 if novnc
   package novnc
   service "novnc" do
