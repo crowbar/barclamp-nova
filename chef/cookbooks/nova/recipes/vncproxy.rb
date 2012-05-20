@@ -28,16 +28,21 @@ pkgs.each do |pkg|
   end
 end
 
-nonvc = node[:nova][:use_novnc]
-if novnc
-  package novnc
+if node[:nova][:use_novnc]
+  package "novnc" do
+    action :upgrade
+    options "--force-yes"
+  end
   service "novnc" do
     supports :status => true, :restart => true
     action [:enable, :start]
     subscribes :restart, resources(:template => "/etc/nova/nova.conf"), :delayed
   end
 else
-  package nova-vncproxy
+  package "nova-vncproxy" do
+    action :upgrade
+    options "--force-yes"
+  end
   execute "Fix permission Bug" do
     command "sed -i 's/nova$/root/g' /etc/init/nova-vncproxy.conf"
     action :run
