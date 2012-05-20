@@ -17,6 +17,7 @@
             "service_password": { "type": "str" },
             "glance_instance": { "type": "str", "required": true },
             "libvirt_type": { "type": "str", "required": true },
+            "use_novnc": { "type": "bool", "required": true },
             "verbose": { "type": "bool", "required": true },
             "user": { "type": "str", "required": true },
             "network": {

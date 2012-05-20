@@ -83,8 +83,11 @@ compute_scheduler_driver=nova.scheduler.filter_scheduler.FilterScheduler
 
 # VNCPROXY
 <% unless @vncproxy_public_ip.nil? -%>
+<% if node[:nova][:use_novnc] -%>
 novncproxy_base_url=http://<%= @vncproxy_public_ip %>:6080/vnc_auto.html
+<% else -%>
 xvpvncproxy_base_url=http://<%= @vncproxy_public_ip %>:6081/console
+<% end -%>
 <% end -%>
 vncserver_listen=<%= node[:nova][:my_ip] %>
 vncserver_proxyclient_address=<%= node[:nova][:my_ip] %>
