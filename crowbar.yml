@@ -55,7 +55,14 @@ locale_additions:
           allow_same_net_traffic: Allow Same-Network Traffic
           num_networks: Number of Networks
           network_size: Network Size
-          nova_volume_disks: Choose disks for nova-volume storage volume group
+          volume_header: Volume Options
+          volume_type: Type of Volume
+          volume_name: Name of Volume
+          volume_file_name: Volume File Name
+          volume_file_size: Maximum File Size
+          volume_file_location: Volume File Location
+          volume_raw_mode: Disk selection method
+          nova_volume_disks: Disks for nova-volume storage volume group
         edit_deployment: 
           deployment: Deployment
 

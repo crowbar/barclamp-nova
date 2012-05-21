@@ -27,10 +27,15 @@ node[:crowbar][:disks].each do |disk, data|
   checked_disks << disk if File.exists?("/dev/#{disk}") and data["usage"] == "Storage"
 end
 
-if checked_disks.empty?
+if checked_disks.empty? or node[:nova][:volume][:volume_type] == "local"
   # only OS disk is exists, will use file storage
   fname = node["nova"]["volume"]["local_file"]
+  fdir = ::File.dirname(fname)
   fsize = node["nova"]["volume"]["local_size"]
+
+  # Cap size at 90% of free space
+  max_fsize = ((`df -Pk #{fdir}`.split("\n")[1].split(" ")[3].to_i * 1024) * 0.90).to_i rescue 0
+  fsize = max_fsize if fsize > max_fsize
 
   bash "create local volume file" do
     code "truncate -s #{fsize} #{fname}"
@@ -50,8 +55,12 @@ if checked_disks.empty?
   end
   
 else
+  raw_mode = node[:nova][:volume][:nova_raw_method]
+  raw_list = node[:nova][:volume][:nova_volume_disks]
+  # if all, then just use the checked_list
+  raw_list = checked_disks if raw_mode == "all"
 
-  if node[:nova][:volume][:nova_volume_disks].empty?
+  if raw_list.empty? or raw_mode == "first"
     # use first non-OS disk for vg
     dname = "/dev/#{checked_disks.first}"
     bash "wipe partitions" do
@@ -61,9 +70,9 @@ else
   else
     # use this disk list
     disk_list = []
-    node[:nova][:volume][:nova_volume_disks].each do |disk|
+    raw_list.each do |disk|
       disk_list << "/dev/#{disk}" if checked_disks.include?(disk)
-      bash "wipe partitions" do
+      bash "wipe partitions #{disk}" do
         code "dd if=/dev/zero of=#{disk} bs=1024 count=1"
         not_if "vgs #{volname}"
       end
