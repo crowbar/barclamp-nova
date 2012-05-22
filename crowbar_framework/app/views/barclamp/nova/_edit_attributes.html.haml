@@ -49,13 +49,31 @@
       %p
         %label{ :for => :network_size }= t('.network_size')
         %input#network_size{:type => "text", :name => "network_size", :'data-default' => @proposal.raw_data['attributes'][@proposal.barclamp]["network"]["network_size"], :onchange => "update_value('network/network_size','network_size', 'integer')"}
-    %div{ :id => 'nova_volume_disks', :class => 'container' }
-      %label{ :for => :volume_disks }= t('.nova_volume_disks')
-      %ul{ :id => 'nova_volume_disks_list'}
+    %p
+      %label{ :for => :volume_header }= t('.volume_header')
+    %div.container
+      %p
+        %label{ :for => :volume_name }= t('.volume_name')
+        %input#volume_name{:type => "text", :name => "volume_name", :'data-default' => @proposal.raw_data['attributes'][@proposal.barclamp]["volume"]["volume_name"], :onchange => "update_value('volume/volume_name','volume_name', 'string')"}
+      %p
+        %label{ :for => :volume_type }= t('.volume_type')
+        = select_tag :volume_type, options_for_select([['raw','raw'], ['local', 'local']], @proposal.raw_data['attributes'][@proposal.barclamp]["volume"]["volume_type"].to_s), :onchange => "update_value('volume/volume_type', 'volume_type', 'string')"
+      %p
+        %label{ :for => :local_file }= t('.volume_file_name')
+        %input#local_file{:type => "text", :name => "local_file", :'data-default' => @proposal.raw_data['attributes'][@proposal.barclamp]["volume"]["local_file"], :onchange => "update_value('volume/local_file','local_file', 'string')"}
+      %p
+        %label{ :for => :local_size }= t('.volume_file_size')
+        %input#local_size{:type => "text", :name => "local_size", :'data-default' => @proposal.raw_data['attributes'][@proposal.barclamp]["volume"]["local_size"], :onchange => "update_value('volume/local_size','local_size', 'integer')"}
+      %p
+        %label{ :for => :nova_raw_method }= t('.volume_raw_mode')
+        = select_tag :nova_raw_method, options_for_select([['first','first'], ['all', 'all'], ['selected', 'selected']], @proposal.raw_data['attributes'][@proposal.barclamp]["volume"]["nova_raw_method"].to_s), :onchange => "update_value('volume/nova_raw_method', 'nova_raw_method', 'string')"
+      %div{ :id => 'nova_volume_disks', :class => 'container' }
+        %label{ :for => :volume_disks }= t('.nova_volume_disks')
+        %ul{ :id => 'nova_volume_disks_list'}
 
 :javascript
 
-  var volume_role = 'nova-multi-controller';
+  var volume_role = 'nova-multi-volume';
   var volume_path = 'div.column_50 div ul#' + volume_role + '.ddlist';
   var volume_disk_list_path = 'ul#nova_volume_disks_list';
 
