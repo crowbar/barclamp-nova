@@ -43,14 +43,13 @@ class NovaService < ServiceObject
     @logger.debug("Nova create_proposal: done with base")
 
     nodes = NodeObject.all
-    nodes.delete_if { |n| n.nil? or n.admin? }
+    nodes.delete_if { |n| n.nil? }
+    nodes.delete_if { |n| n.admin? } if nodes.size > 1
     head = nodes.shift
-    second = nodes.shift
     nodes = [ head ] if nodes.empty?
-    second = head unless second
     base["deployment"]["nova"]["elements"] = {
       "nova-multi-controller" => [ head.name ],
-      "nova-multi-volume" => [ second.name ],
+      "nova-multi-volume" => [ head.name ],
       "nova-multi-compute" => nodes.map { |x| x.name }
     }
 
