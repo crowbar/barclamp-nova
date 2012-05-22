@@ -45,9 +45,12 @@ class NovaService < ServiceObject
     nodes = NodeObject.all
     nodes.delete_if { |n| n.nil? or n.admin? }
     head = nodes.shift
+    second = nodes.shift
     nodes = [ head ] if nodes.empty?
+    second = head unless second
     base["deployment"]["nova"]["elements"] = {
       "nova-multi-controller" => [ head.name ],
+      "nova-multi-volume" => [ second.name ],
       "nova-multi-compute" => nodes.map { |x| x.name }
     }
 

@@ -6,6 +6,7 @@
   $(document).ready(function(){
     var constraints = {  
       "nova-multi-controller": { "unique": false, "count": 1 },
+      "nova-multi-volume": { "unique": false, "count": 1 },
       "nova-multi-compute": { "unique": false, "count": -1 }
     };
     node_selector($('#drag_drop'), constraints);
