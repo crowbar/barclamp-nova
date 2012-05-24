@@ -52,6 +52,13 @@ class NovaService < ServiceObject
       "nova-multi-volume" => [ head.name ],
       "nova-multi-compute" => nodes.map { |x| x.name }
     }
+    # automatically swap to qemu if using VMs for testing (relies on node.virtual to detect VMs)
+    nodes.each do |n|
+      if n.virtual?
+        base["attributes"]["nova"]["libvirt_type"] = "qemu"
+        break
+      end
+    end
 
     base["attributes"]["nova"]["db"]["mysql_instance"] = ""
     begin
