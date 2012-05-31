@@ -285,6 +285,7 @@ template "/etc/nova/nova.conf" do
             :dhcpbridge => "#{node[:nova][:use_gitrepo] ? nova_path:"/usr"}/bin/nova-dhcpbridge",
             :database_connection => database_connection,
             :rabbit_settings => rabbit_settings,
+            :libvirt_type => node[:nova][:libvirt_type],
             :ec2_host => admin_api_ip,
             :ec2_dmz_host => public_api_ip,
             :dns_server_public_ip => dns_server_public_ip,

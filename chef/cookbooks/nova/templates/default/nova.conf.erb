@@ -98,6 +98,7 @@ glance_api_servers=<%= @glance_server_ip %>:<%= @glance_server_port %>
 sql_connection=<%= @database_connection %>
 <% end -%>
 connection_type=libvirt
+libvirt_type=<%= @libvirt_type %>
 compute_manager=nova.compute.manager.ComputeManager
 instance_name_template=instance-%08x
 compute_scheduler_driver=nova.scheduler.filter_scheduler.FilterScheduler
