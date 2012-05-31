@@ -21,7 +21,7 @@
 include_recipe "nova::config"
 
 if node.platform == "suse"
-    pkgs=%w[openstack-nova-vncproxy]
+    pkgs=%w[openstack-novncproxy]
 else
     pkgs=%w[python-numpy nova-vncproxy nova-console nova-consoleauth]
 end
@@ -41,7 +41,7 @@ if node.platform != "suse"
 end
 
 service "nova-vncproxy" do
-  service_name "openstack-nova-vncproxy" if node.platform == "suse"
+  service_name "openstack-novncproxy" if node.platform == "suse"
   supports :status => true, :restart => true
   action :enable
   subscribes :restart, resources(:template => "/etc/nova/nova.conf"), :delayed
