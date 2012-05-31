@@ -197,6 +197,7 @@ template "/etc/nova/nova.conf" do
   variables(
             :sql_connection => sql_connection,
             :rabbit_settings => rabbit_settings,
+            :libvirt_type => node[:nova][:libvirt_type],
             :ec2_host => admin_api_ip,
             :ec2_dmz_host => public_api_ip,
             :network_public_ip => network_public_ip,
