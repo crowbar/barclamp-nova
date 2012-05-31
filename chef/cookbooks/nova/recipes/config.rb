@@ -40,12 +40,16 @@ _r = {}
   :dns  => "roles:dns-server",
   :glance  => "roles:glance-server"
 }.each{|role,query|
-  if n = search(:node, query)[0]
+  list = search(:node,query) || []
+  if n = list.detect{|n| n[:fqdn] == node[:fqdn]}
+    Chef::Log.info("Preferring myself for #{role.to_s}")
+  elsif n = list.first
     Chef::Log.info("Found node #{n[:fqdn]} with role #{role.to_s}")
   else
     Chef::Log.info("Could not find node for #{role}, using myself instead")
+    n = node
   end
-  _r[role] = n || node
+  _r[role] = n
 }
 
 public_api_ip = api_ip = _r[:api].address("public").addr
@@ -95,8 +99,8 @@ elsif !node[:nova][:network][:tenant_vlans]
   node[:nova][:network][:flat_network_bridge] = fixed_interface
   node[:nova][:network][:flat_network_dhcp_start] = fixed_net["ranges"]["dhcp"]["start"]
 else
-  node[:nova][:network][:vlan_interface] = fixed_interface
-  node[:nova][:network][:vlan_start] = fixed_net["vlan"]
+  node[:nova][:network][:vlan_interface] = _r[:network].interfaces("nova_fixed").first.name
+  node[:nova][:network][:vlan_start] = (fixed_net["vlan"].to_i + 1)
 end
 
 directory "/var/lock/nova" do
