@@ -121,7 +121,7 @@ else
   keystone = node
 end
 
-keystone_address = Chef::Recipe::Barclamp::Inventory.get_network_by_type(keystone, "admin").address if keystone_address.nil?
+keystone_address = keystone.address.addr
 keystone_token = keystone["keystone"]["service"]["token"]
 keystone_service_port = keystone["keystone"]["api"]["service_port"]
 keystone_admin_port = keystone["keystone"]["api"]["admin_port"]
@@ -147,8 +147,8 @@ keystone_register "register nova-volume service" do
   action :add_service
 end
 
-public_api_ip = Chef::Recipe::Barclamp::Inventory.get_network_by_type(node, "public").address
-admin_api_ip = Chef::Recipe::Barclamp::Inventory.get_network_by_type(node, "admin").address
+public_api_ip = node.address("public").addr
+admin_api_ip = node.address.addr
 
 keystone_register "register nova-volume endpoint" do
   host keystone_address

@@ -124,13 +124,10 @@ class NovaService < ServiceObject
     unless tnodes.nil? or tnodes.empty?
       tnodes.each do |n|
         net_svc.allocate_ip "default", "public", "host", n
-        unless role.default_attributes["nova"]["network"]["tenant_vlans"] 
-          net_svc.allocate_ip "default", "nova_fixed", "router", n
-        end
       end
     end
 
-    unless role.default_attributes["nova"]["network"]["tenant_vlans"] 
+    unless role.default_attributes["nova"]["network"]["tenant_vlans"]
       all_nodes.each do |n|
         net_svc.enable_interface "default", "nova_fixed", n
       end

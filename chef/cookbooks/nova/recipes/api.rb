@@ -33,7 +33,7 @@ else
   keystone = node
 end
 
-keystone_address = Chef::Recipe::Barclamp::Inventory.get_network_by_type(keystone, "admin").address if keystone_address.nil?
+keystone_address = keystone.address.addr
 keystone_token = keystone["keystone"]["service"]["token"]
 keystone_service_port = keystone["keystone"]["api"]["service_port"]
 keystone_admin_port = keystone["keystone"]["api"]["admin_port"]
@@ -66,8 +66,8 @@ if apis.length > 0 and !node[:nova][:network][:ha_enabled]
 else
   api = node
 end
-public_api_ip = Chef::Recipe::Barclamp::Inventory.get_network_by_type(api, "public").address
-admin_api_ip = Chef::Recipe::Barclamp::Inventory.get_network_by_type(api, "admin").address
+public_api_ip = api.address("public").addr
+admin_api_ip = api.address.addr
 
 keystone_register "nova api wakeup keystone" do
   host keystone_address
