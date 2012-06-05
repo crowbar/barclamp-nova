@@ -48,12 +48,3 @@ if node[:nova][:network][:ha_enabled]
   include_recipe "nova::api"
   include_recipe "nova::network"
 end
-
-template "/etc/nova/nova-compute.conf" do
-  source "nova-compute.conf.erb"
-  owner "root"
-  group "root"
-  mode 0644
-  notifies :restart, "service[nova-compute]"
-end
-
