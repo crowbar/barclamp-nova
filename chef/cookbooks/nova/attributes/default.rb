@@ -46,7 +46,7 @@ default[:nova][:libvirt_type] = "kvm"
 default[:nova][:hostname] = "nova"
 default[:nova][:my_ip] = ipaddress
 default[:nova][:api] = ""
-default[:nova][:user] = "nova"
+default[:nova][:user] = "openstack-nova"
 
 #
 # General network parameters
