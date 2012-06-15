@@ -272,7 +272,7 @@ Chef::Log.info("Quantum server at #{quantum_server_ip}")
 
 directory "/var/lock/nova" do
   action :create
-  owner "nova"
+  owner node[:nova][:user]
   group "root"
 end
 
