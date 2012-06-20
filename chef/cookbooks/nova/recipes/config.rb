@@ -21,7 +21,11 @@
 node[:nova][:my_ip] = Chef::Recipe::Barclamp::Inventory.get_network_by_type(node, "admin").address
 
 package "nova-common" do
-  options "--force-yes -o Dpkg::Options::=\"--force-confdef\""
+  if node.platform == "suse"
+    package_name "openstack-nova"
+  else
+    options "--force-yes -o Dpkg::Options::=\"--force-confdef\""
+  end
   action :upgrade
 end
 
@@ -175,6 +179,11 @@ else
   node[:nova][:network][:vlan_start] = fixed_net["vlan"]
 end
 
+directory "/var/lock/nova" do
+  action :create
+  owner "nova"
+  group "root"
+end
 template "/etc/nova/nova.conf" do
   source "nova.conf.erb"
   owner node[:nova][:user]

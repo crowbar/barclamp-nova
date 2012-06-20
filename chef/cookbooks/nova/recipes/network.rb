@@ -36,10 +36,19 @@ sysctl -w net.ipv4.conf.all.forwarding=1
 EOH
 end
 
-file "/etc/sysctl.d/50-iprouting" do
-  owner "root"
-  group "root"
-  mode "0644"
-  action :create
+if node.platform != "suse"
+  file "/etc/sysctl.d/50-iprouting" do
+    owner "root"
+    group "root"
+    mode "0644"
+    action :create
+  end
+else
+  ruby_block "edit sysconfig syslog" do
+    block do
+      rc = Chef::Util::FileEdit.new("/etc/sysconfig/sysctl")
+      rc.search_file_replace_line(/^IP_FORWARD=/, 'IP_FORWARD="yes"')
+      rc.write_file
+    end
+  end
 end
-
