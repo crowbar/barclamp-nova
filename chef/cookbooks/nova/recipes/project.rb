@@ -28,14 +28,14 @@ include_recipe "nova::config"
 cmd = "nova-manage network create --fixed_range_v4=#{node[:nova][:network][:fixed_range]} --num_networks=#{node[:nova][:network][:num_networks]} --network_size=#{node[:nova][:network][:network_size]} --label nova_fixed" 
 cmd << " --multi_host=T" if node[:nova][:network][:ha_enabled]
 execute cmd do
-  user node[:nova][:user]
+  user node[:nova][:user] if node.platform != "suse"
   not_if "nova-manage network list | grep '#{node[:nova][:network][:fixed_range].split("/")[0]}'"
 end
 
 # Add private network one day.
 
 execute "nova-manage floating create --ip_range=#{node[:nova][:network][:floating_range]}" do
-  user node[:nova][:user]
+  user node[:nova][:user] if node.platform != "suse"
   not_if "nova-manage floating list | grep '#{node[:nova][:network][:floating_range].split("/")[0]}'"
 end
 

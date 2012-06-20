@@ -20,20 +20,25 @@
 
 include_recipe "nova::config"
 
-pkgs=%w[python-numpy nova-console nova-consoleauth]
-pkgs.each do |pkg|
-  package pkg do
-    action :upgrade
-    options "--force-yes"
+if node.platform != "suse"
+  pkgs=%w[python-numpy nova-console nova-consoleauth]
+  pkgs.each do |pkg|
+    package pkg do
+      action :upgrade
+      options "--force-yes"
+    end
   end
 end
 
-if node[:nova][:use_novnc]
+# forcing novnc is deliberate on suse
+if node[:nova][:use_novnc] || node.platform == "suse"
   package "novnc" do
+    package_name "openstack-novncproxy" if node.platform == "suse"
     action :upgrade
-    options "--force-yes"
+    options "--force-yes" if node.platform != "suse"
   end
   service "novnc" do
+    service_name "openstack-novncproxy" if node.platform == "suse"
     supports :status => true, :restart => true
     action [:enable, :start]
     subscribes :restart, resources(:template => "/etc/nova/nova.conf"), :delayed
@@ -56,6 +61,7 @@ else
 end
 
 service "nova-consoleauth" do
+  service_name "openstack-nova-consoleauth" if node.platform == "suse"
   supports :status => true, :restart => true
   action [:enable, :start]
   subscribes :restart, resources(:template => "/etc/nova/nova.conf"), :delayed
