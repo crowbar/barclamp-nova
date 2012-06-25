@@ -18,7 +18,7 @@
 # limitations under the License.
 #
 
-node[:rabbitmq][:address] = Chef::Recipe::Barclamp::Inventory.get_network_by_type(node, "admin").address
+node[:rabbitmq][:address] = node.address.addr
 
 include_recipe "rabbitmq"
 
