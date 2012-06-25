@@ -90,7 +90,7 @@ else
   keystone = node
 end
 
-keystone_address = Chef::Recipe::Barclamp::Inventory.get_network_by_type(keystone, "admin").address if keystone_address.nil?
+keystone_address = keystone.address.addr
 keystone_token = keystone["keystone"]["admin"]["token"] rescue nil
 admin_username = keystone["keystone"]["admin"]["username"] rescue nil
 admin_password = keystone["keystone"]["admin"]["password"] rescue nil
@@ -105,7 +105,7 @@ if apis.length > 0 and !node[:nova][:network][:ha_enabled]
 else
   api = node
 end
-admin_api_ip = Chef::Recipe::Barclamp::Inventory.get_network_by_type(api, "admin").address
+admin_api_ip = api.address.addr
 Chef::Log.info("Admin API server found at #{admin_api_ip}")
 
 template "/root/.openrc" do

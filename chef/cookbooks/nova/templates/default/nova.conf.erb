@@ -55,13 +55,11 @@ vlan_start=<%= node[:nova][:network][:vlan_start] %>
 network_manager=nova.network.manager.FlatDHCPManager
 flat_network_dns=<%= @dns_server_public_ip %>
 flat_network_dhcp_start=<%= node[:nova][:network][:flat_network_dhcp_start] %>
-flat_interface=<%= node[:nova][:network][:flat_interface] %>
 flat_network_bridge=<%= node[:nova][:network][:flat_network_bridge] %>
 <% end -%>
 <% else -%>
 # Flat Mode
 network_manager=nova.network.manager.FlatManager
-flat_interface=<%= node[:nova][:network][:flat_interface] %>
 flat_network_bridge=<%= node[:nova][:network][:flat_network_bridge] %>
 flat_network_dns=<%= @dns_server_public_ip %>
 flat_injected=True
