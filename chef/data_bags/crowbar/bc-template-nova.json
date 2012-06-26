@@ -7,7 +7,7 @@
       "glance_instance": "none",
       "libvirt_type": "kvm",
       "verbose": true,
-      "user": "nova",
+      "user": "openstack-nova",
       "network": {
         "ha_enabled": true,
         "tenant_vlans": false,
