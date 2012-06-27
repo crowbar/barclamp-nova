@@ -21,7 +21,7 @@ barclamp:
   version: 0
   requires:
     - @crowbar
-    - mysql
+    - database
     - glance
     - keystone
     - nova_dashboard
