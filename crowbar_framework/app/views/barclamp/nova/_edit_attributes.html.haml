@@ -6,7 +6,7 @@
   %div.container
     %p
       %label{ :for => :sql_engine }= t('.sql_engine')
-      = select_tag :sql_engine, options_for_select([['MySQL', 'mysql'], ['PostgreSQL', 'postgresql']], @proposal.raw_data['attributes'][@proposal.barclamp]["db"]["sql_engine"]), :onchange => "update_value('sql_engine', 'sql_engine', 'string')"
+      = select_tag :sql_engine, options_for_select([['PostgreSQL/MySQL', 'database']], @proposal.raw_data['attributes'][@proposal.barclamp]["db"]["sql_engine"]), :onchange => "update_value('sql_engine', 'sql_engine', 'string')"
     %p
       %label{ :for => :sql_instance }= t('.sql_instance')
       = instance_selector(@proposal.raw_data['attributes'][@proposal.barclamp]["db"]["sql_engine"],

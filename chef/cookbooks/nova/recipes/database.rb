@@ -21,37 +21,28 @@
 
 ::Chef::Recipe.send(:include, Opscode::OpenSSL::Password)
 
-sql_engine = node[:nova][:db][:sql_engine]
-
-include_recipe "#{sql_engine}::client"
+include_recipe "database::client"
 
 # find sql server
-env_filter = " AND #{sql_engine}_config_environment:#{sql_engine}-config-#{node[:nova][:db][:sql_instance]}"
-db_server = search(:node, "roles:#{sql_engine}-server#{env_filter}")
+env_filter = " AND database_config_environment:database-config-#{node[:nova][:db][:sql_instance]}"
+sqls = search(:node, "roles:database-server#{env_filter}")
 # if we found ourself, then use us.
-if db_server[0]['fqdn'] == node['fqdn']
-  db_server = [ node ]
+if sqls.length > 0
+    sql = sqls[0]
+    sql = node if sql.name == node.name
+else
+    sql = node
 end
 
-log "DBServer: #{db_server[0][sql_engine].api_bind_host}"
+log "DBServer: #{sql["database"].api_bind_host}"
 
-db_conn = { :host => db_server[0][sql_engine]['api_bind_host'],
+db_conn = { :host => sql["database"]['api_bind_host'],
             :username => "db_maker",
-            :password => db_server[0][sql_engine]['db_maker_password'] }
-db_provider=nil
-db_user_provider=nil
+            :password => sql["database"]['db_maker_password'] }
 
-case sql_engine
-  when "mysql"
-    db_provider=Chef::Provider::Database::Mysql
-    db_user_provider=Chef::Provider::Database::MysqlUser
-    privs = [ "SELECT", "INSERT", "UPDATE", "DELETE", "CREATE",
-              "DROP", "INDEX", "ALTER" ]
-  when "postgresql"
-    db_provider=Chef::Provider::Database::Postgresql
-    db_user_provider=Chef::Provider::Database::PostgresqlUser
-    privs = [ "CREATE", "CONNECT", "TEMP" ]
-end
+db_provider = Chef::Recipe::Database::Util.get_database_provider(sql)
+db_user_provider = Chef::Recipe::Database::Util.get_user_provider(sql)
+privs = Chef::Recipe::Database::Util.get_default_priviledges(sql)
 
 # Creates empty nova database
 database "create #{node[:nova][:db][:database]} database" do

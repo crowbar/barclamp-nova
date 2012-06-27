@@ -26,8 +26,7 @@ class NovaService < ServiceObject
 
   def proposal_dependencies(role)
     answer = []
-    sql_engine = role.default_attributes["nova"]["db"]["sql_engine"]
-    answer << { "barclamp" => sql_engine, "inst" => role.default_attributes["nova"]["db"]["sql_instance"] }
+    answer << { "barclamp" => "database", "inst" => role.default_attributes["nova"]["db"]["sql_instance"] }
     answer << { "barclamp" => "keystone", "inst" => role.default_attributes["nova"]["keystone_instance"] }
     answer << { "barclamp" => "glance", "inst" => role.default_attributes["nova"]["glance_instance"] }
     answer
@@ -55,44 +54,21 @@ class NovaService < ServiceObject
     base["attributes"]["nova"]["db"]["sql_engine"] = ""
     base["attributes"]["nova"]["db"]["sql_instance"] = ""
     begin
-      mysqlService = MysqlService.new(@logger)
-      mysqls = mysqlService.list_active[1]
-      if mysqls.empty?
+      databaseService = DatabaseService.new(@logger)
+      dbs = databaseService.list_active[1]
+      if dbs.empty?
         # No actives, look for proposals
-        mysqls = mysqlService.proposals[1]
+        dbs = databaseService.proposals[1]
       end
-      if mysqls.empty?
-        @logger.info("Nova create_proposal: no mysql proposal found")
+      if dbs.empty?
+        @logger.info("Nova create_proposal: no database proposal found")
         base["attributes"]["nova"]["db"]["sql_engine"] = ""
       else
-        base["attributes"]["nova"]["db"]["sql_instance"] = mysqls[0]
-        base["attributes"]["nova"]["db"]["sql_engine"] = "mysql"
+        base["attributes"]["nova"]["db"]["sql_instance"] = dbs[0]
+        base["attributes"]["nova"]["db"]["sql_engine"] = "database"
       end
     rescue
-      @logger.info("Nova create_proposal: no mysql found")
-    end
-    if base["attributes"]["nova"]["db"]["sql_engine"] == ""
-      begin
-        pgsqlService = PostgresqlService.new(@logger)
-        # Look for active roles
-        pgsqls = pgsqlService.list_active[1]
-        if pgsqls.empty?
-          @logger.info("Nova create_proposal: no active postgresql proposal found")
-          # No actives, look for proposals
-          pgsqls = pgsqlService.proposals[1]
-        end
-        if pgsqls.empty?
-          @logger.info("Nova create_proposal: no postgressql proposal found")
-          base["attributes"]["nova"]["db"]["sql_engine"] = ""
-        else
-          @logger.info("Nova create_proposal: postgresql instance #{pgsqls[0]}")
-          base["attributes"]["nova"]["db"]["sql_instance"] = pgsqls[0]
-          base["attributes"]["nova"]["db"]["sql_engine"] = "postgresql"
-        end
-      rescue
-        @logger.info("Keystone create_proposal: no postgresql found")
-        base["attributes"]["keystone"]["sql_engine"] = ""
-      end
+      @logger.info("Nova create_proposal: no database found")
     end
 
     base["attributes"]["nova"]["keystone_instance"] = ""

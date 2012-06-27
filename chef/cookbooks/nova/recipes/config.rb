@@ -29,25 +29,24 @@ package "nova-common" do
   action :upgrade
 end
 
-sql_engine=node[:nova][:db][:sql_engine]
-case sql_engine
-  when "mysql"
-    package "python-mysqldb"
-  when "postgresql"
-    package "python-psycopg2"
-end
+include_recipe "database::client"
 
-env_filter = " AND #{sql_engine}_config_environment:#{sql_engine}-config-#{node[:nova][:db][:sql_instance]}"
-sqls = search(:node, "roles:#{sql_engine}-server#{env_filter}") || []
+env_filter = " AND database_config_environment:database-config-#{node[:nova][:db][:sql_instance]}"
+sqls = search(:node, "roles:database-server#{env_filter}") || []
 if sqls.length > 0
   sql = sqls[0]
   sql = node if sql.name == node.name
 else
   sql = node
 end
+backend_name = Chef::Recipe::Database::Util.get_backend_name(sql)
+
+include_recipe "#{backend_name}::client"
+include_recipe "#{backend_name}::python-client"
+
 sql_address = Chef::Recipe::Barclamp::Inventory.get_network_by_type(sql, "admin").address if sql_address.nil?
-Chef::Log.info("#{sql_engine} server found at #{sql_address}")
-sql_connection = "#{sql_engine}://#{node[:nova][:db][:user]}:#{node[:nova][:db][:password]}@#{sql_address}/#{node[:nova][:db][:database]}"
+Chef::Log.info("database server found at #{sql_address}")
+sql_connection = "#{backend_name}://#{node[:nova][:db][:user]}:#{node[:nova][:db][:password]}@#{sql_address}/#{node[:nova][:db][:database]}"
 
 env_filter = " AND nova_config_environment:#{node[:nova][:config][:environment]}"
 rabbits = search(:node, "recipes:nova\\:\\:rabbit#{env_filter}") || []
