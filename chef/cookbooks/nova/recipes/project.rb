@@ -44,13 +44,14 @@ unless node[:nova][:network][:tenant_vlans]
   env_filter = " AND #{sql_engine}_config_environment:#{sql_engine}-config-#{node[:nova][:db][:sql_instance]}"
   db_server = search(:node, "roles:#{sql_engine}-server#{env_filter}")[0]
   db_server = node if db_server.name == node.name
+  backend_name = Chef::Recipe::Database::Util.get_backend_name(db_server)
 
   execute "sql-fix-ranges-fixed" do
-    case sql_engine
+    case backend_name
       when "mysql"
-        command "/usr/bin/mysql -u #{node[:nova][:db][:user]} -h #{db_server[:mysql][:api_bind_host]} -p#{node[:nova][:db][:password]} #{node[:nova][:db][:database]} < /etc/nova/nova-fixed-range.sql"
+        command "/usr/bin/mysql -u #{node[:nova][:db][:user]} -h #{db_server[:database][:api_bind_host]} -p#{node[:nova][:db][:password]} #{node[:nova][:db][:database]} < /etc/nova/nova-fixed-range.sql"
       when "postgresql"
-        command "PGPASSWORD=#{node[:nova][:db][:password]} psql -h #{db_server[:postgresql][:api_bind_host]} -U #{node[:nova][:db][:user]} #{node[:nova][:db][:database]} < /etc/nova/nova-fixed-range.sql"
+        command "PGPASSWORD=#{node[:nova][:db][:password]} psql -h #{db_server[:database][:api_bind_host]} -U #{node[:nova][:db][:user]} #{node[:nova][:db][:database]} < /etc/nova/nova-fixed-range.sql"
     end
     action :nothing
   end
