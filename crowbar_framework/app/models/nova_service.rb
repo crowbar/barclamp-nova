@@ -32,6 +32,17 @@ class NovaService < ServiceObject
     answer
   end
 
+
+  #
+  # This can be overridden to get better validation if needed.
+  #
+  def validate_proposal proposal
+    super proposal
+
+    val = proposal["attributes"]["nova"]["volume"]["local_size"] rescue -1
+    raise I18n.t('barclamp.nova.edit_attributes.volume_file_size_error') if val < 2
+  end
+
   #
   # Lots of enhancements here.  Like:
   #    * Don't reuse machines

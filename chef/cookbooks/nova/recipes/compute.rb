@@ -46,7 +46,7 @@ nova_package("compute")
 # These two files are to handle: https://bugs.launchpad.net/ubuntu/+source/libvirt/+bug/996840
 # This is a hack until that gets fixed.
 # 
-cookbook_file "usr/lib/python2.7/dist-packages/nova/virt/libvirt/connection.py" do
+cookbook_file "/usr/lib/python2.7/dist-packages/nova/virt/libvirt/connection.py" do
   user "root"
   group "root"
   mode "0755"

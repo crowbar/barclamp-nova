@@ -31,7 +31,7 @@ if checked_disks.empty? or node[:nova][:volume][:volume_type] == "local"
   # only OS disk is exists, will use file storage
   fname = node["nova"]["volume"]["local_file"]
   fdir = ::File.dirname(fname)
-  fsize = node["nova"]["volume"]["local_size"]
+  fsize = node["nova"]["volume"]["local_size"] * 1024 * 1024 * 1024 # Convert from GB to Bytes
 
   # Cap size at 90% of free space
   max_fsize = ((`df -Pk #{fdir}`.split("\n")[1].split(" ")[3].to_i * 1024) * 0.90).to_i rescue 0
