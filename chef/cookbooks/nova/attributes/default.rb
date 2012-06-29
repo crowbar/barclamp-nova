@@ -85,5 +85,5 @@ default[:nova][:volume][:type] = "local"
 default[:nova][:volume][:nova_raw_method] = "all"
 default[:nova][:volume][:nova_volume_disks] = []
 default[:nova][:volume][:local_file] = "/var/lib/nova/volume.raw"
-default[:nova][:volume][:local_size] = 2000000000
+default[:nova][:volume][:local_size] = 2000
 
