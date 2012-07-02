@@ -44,6 +44,22 @@
               "type": "map",
               "required": true,
               "mapping": {
+                "eqlx": {
+                  "type": "map",
+                  "required": true,
+                  "mapping": {
+                    "san_ip": { "type": "str", "required": true },
+                    "san_login": { "type": "str", "required": true },
+                    "san_password": { "type": "str", "required": true },
+                    "san_thin_provision": { "type": "bool", "required": true },
+                    "eqlx_group_name": { "type": "str", "required": true },
+                    "eqlx_use_chap": { "type": "bool", "required": true },
+                    "eqlx_chap_login": { "type": "str", "required": true },
+                    "eqlx_chap_password": { "type": "str", "required": true },
+                    "eqlx_ssh_keepalive_interval": { "type": "int", "required": true },
+                    "eqlx_cli_timeout": { "type": "int", "required": true }
+                  }
+                },
                 "volume_name": { "type": "str", "required": true },
                 "volume_type": { "type": "str", "required": true },
                 "local_file": { "type": "str", "required": true },
