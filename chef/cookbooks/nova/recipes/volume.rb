@@ -53,7 +53,9 @@ if checked_disks.empty? or node[:nova][:volume][:volume_type] == "local"
     code "vgcreate #{volname} `losetup -j #{fname} | cut -f1 -d:`"
     not_if "vgs #{volname}"
   end
-  
+
+elsif node[:nova][:volume][:volume_type] == "eqlx"
+  # do nothing on the host
 else
   raw_mode = node[:nova][:volume][:nova_raw_method]
   raw_list = node[:nova][:volume][:nova_volume_disks]
@@ -96,6 +98,17 @@ end
 
 package "tgt"
 nova_package("volume")
+
+#
+# Put EQLX driver
+# It's kinda hacky
+#
+if node[:nova][:volume][:volume_type] == "eqlx"
+  cookbook_file "/usr/lib/python2.7/dist-packages/nova/volume/san.py" do
+    mode "0755"
+    source "san.py"
+  end
+end
 
 # Restart doesn't work correct for this service.
 bash "restart-tgt" do

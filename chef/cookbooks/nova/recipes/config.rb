@@ -175,6 +175,13 @@ else
   node[:nova][:network][:vlan_start] = fixed_net["vlan"]
 end
 
+if node.run_list.include?("recipe[nova::volume]") and node[:nova][:volume][:volume_type] == "eqlx"
+  Chef::Log.info("Pushing EQLX params to nova.conf template")
+  eqlx_params = node[:nova][:volume][:eqlx]
+else
+  eqlx_params = nil
+end
+
 template "/etc/nova/nova.conf" do
   source "nova.conf.erb"
   owner node[:nova][:user]
@@ -189,7 +196,8 @@ template "/etc/nova/nova.conf" do
             :dns_server_public_ip => dns_server_public_ip,
             :glance_server_ip => glance_server_ip,
             :glance_server_port => glance_server_port,
-            :vncproxy_public_ip => vncproxy_public_ip
+            :vncproxy_public_ip => vncproxy_public_ip,
+            :eqlx_params => eqlx_params
             )
 end
 
