@@ -26,7 +26,7 @@ class NovaController < BarclampController
       disk_list[disk] = data["size"] if data["usage"] == "Storage"
     end
     Rails.logger.info "disk list #{disk_list.inspect}"
-    render :json => JSON.generate(disk_list)
+    render :json => JSON.generate(disk_list), :layout=>false
   end
 end
 
