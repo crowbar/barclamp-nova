@@ -35,7 +35,7 @@
           "eqlx_chap_login": "chapadmin",
           "eqlx_chap_password": "12345",
           "eqlx_ssh_keepalive_interval": 1200,
-          "eqlx_cli_timeout": 30,
+          "eqlx_cli_timeout": 30
         }
       },
       "rabbit": {
