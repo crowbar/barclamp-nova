@@ -18,7 +18,7 @@ class NovaController < BarclampController
     @service_object = NovaService.new logger
   end
   
-  def node_disks
+  def nodes
     disk_list = {}
     name = params[:id] || params[:name]
     node = NodeObject.find_node_by_name(name)

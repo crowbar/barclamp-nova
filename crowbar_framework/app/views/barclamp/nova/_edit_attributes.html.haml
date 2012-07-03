@@ -120,7 +120,7 @@
   function on_role_change(callback, param) {
     var node = $('li', volume_path).text();
     if (node) {
-      $.getJSON('/nova/node_disks/' + node,
+      $.getJSON('/nodes/nova/1.0/' + node,
         function(data){
           make_disk_list(data, node);
           if (callback){
