@@ -25,7 +25,7 @@
         "nova_volume_disks": [],
         "local_file": "/var/lib/nova/volume.raw",
         "local_size": 2000,
-        "eqlx":{
+        "eqlx": {
           "san_ip": "192.168.124.11",
           "san_login": "grpadmin",
           "san_password": "12345",
