@@ -105,6 +105,6 @@ iscsi_helper=tgtadm
 <% unless @eqlx_params.nil? -%>
 volume_driver=nova.volume.san.DellEQLSanISCSIDriver
 <%   @eqlx_params.each do |k, v| -%>
-<%=    k + '=' + v %> 
+<%=    k + '=' + v.to_s %> 
 <%   end -%>
 <% end -%>

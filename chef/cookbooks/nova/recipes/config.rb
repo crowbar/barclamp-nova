@@ -175,7 +175,7 @@ else
   node[:nova][:network][:vlan_start] = fixed_net["vlan"]
 end
 
-if node.run_list.include?("recipe[nova::volume]") and node[:nova][:volume][:volume_type] == "eqlx"
+if node.recipes.include?("nova::volume") and node[:nova][:volume][:volume_type] == "eqlx"
   Chef::Log.info("Pushing EQLX params to nova.conf template")
   eqlx_params = node[:nova][:volume][:eqlx]
 else

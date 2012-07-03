@@ -74,9 +74,6 @@
         %label{ :for => :san_thin_provision }= t('.eqlx_san_thin_provision')
         = select_tag :san_thin_provision, options_for_select([['yes','true'], ['no', 'false']], @proposal.raw_data['attributes'][@proposal.barclamp]["volume"]["eqlx"]["san_thin_provision"].to_s), :onchange => "update_value('volume/eqlx/san_thin_provision', 'san_thin_provision', 'boolean')"
       %p
-        %label{ :for => :eqlx_group_name }= t('.eqlx_group_name')
-        %input#eqlx_group_name{:type => "text", :name => "eqlx_group_name", :'data-default' => @proposal.raw_data['attributes'][@proposal.barclamp]["volume"]["eqlx"]["eqlx_group_name"], :onchange => "update_value('volume/eqlx/eqlx_group_name', 'eqlx_group_name', 'string')"}
-      %p
         %label{ :for => :eqlx_use_chap }= t('.eqlx_use_chap')
         = select_tag :eqlx_use_chap, options_for_select([['yes','true'], ['no', 'false']], @proposal.raw_data['attributes'][@proposal.barclamp]["volume"]["eqlx"]["eqlx_use_chap"].to_s), :onchange => "update_value('volume/eqlx/eqlx_use_chap', 'eqlx_use_chap', 'boolean')"
       %p
