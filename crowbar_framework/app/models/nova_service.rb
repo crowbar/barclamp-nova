@@ -29,6 +29,9 @@ class NovaService < ServiceObject
     answer << { "barclamp" => "database", "inst" => role.default_attributes["nova"]["db"]["sql_instance"] }
     answer << { "barclamp" => "keystone", "inst" => role.default_attributes["nova"]["keystone_instance"] }
     answer << { "barclamp" => "glance", "inst" => role.default_attributes["nova"]["glance_instance"] }
+    if role.default_attributes["nova"]["volume"]["type"] == "rados"
+        answer << { "barclamp" => "ceph", "inst" => role.default_attributes["nova"]["volume"]["ceph_instance"] }
+    end
     answer
   end
 
@@ -95,6 +98,23 @@ class NovaService < ServiceObject
       base["attributes"]["nova"]["glance_instance"] = glances[0] unless glances.empty?
     rescue
       @logger.info("Nova create_proposal: no glance found")
+    end
+
+    base["attributes"]["nova"]["volume"]["type"] = "local"
+    begin
+      cephService = CephService.new(@logger)
+      cephs = cephService.list_active[1]
+      if cephs.empty? # no active ceph service look for proposals
+        cephs = cephService.proposals[1]
+      end
+      unless cephs.empty?
+        base["attributes"]["nova"]["volume"]["ceph_instance"] = cephs[0]
+        @logger.info("Using ceph instance: #{cephs[0]}")
+        base["attributes"]["nova"]["volume"]["type"] = "rados"
+        base["attributes"]["nova"]["volume"]["rbd_pool"] = "data"
+      end
+    rescue
+      @logger.info("Nova create_proposal: ceph not found")
     end
 
     base["attributes"]["nova"]["db"]["password"] = random_password

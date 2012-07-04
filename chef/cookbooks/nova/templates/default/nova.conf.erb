@@ -99,6 +99,13 @@ enable_zone_routing=true
 auth_strategy=keystone
 
 # VOLUME
+<% if node[:nova][:volume][:type] == "rados" -%>
+volume_driver=nova.volume.driver.RBDDriver
+rbd_pool=<%= node[:nova][:volume][:rbd_pool] %>
+rbd_secret_file=<%= node[:nova][:volume][:ceph_secret_file] %>
+rbd_user=<%= node[:nova][:volume][:rbd_user] %>
+<% else -%>
 volume_group=<%= node[:nova][:volume][:volume_name] %>
 volume_name_template=volume-%08x
 iscsi_helper=tgtadm
+<% end -%>

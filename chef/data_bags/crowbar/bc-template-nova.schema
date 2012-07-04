@@ -41,6 +41,8 @@
               "type": "map",
               "required": true,
               "mapping": {
+                "ceph_instance": { "type": "str", "required": true },
+                "rbd_pool": { "type": "str" },
                 "volume_name": { "type": "str", "required": true },
                 "type": { "type": "str", "required": true },
                 "local_file": { "type": "str", "required": true },

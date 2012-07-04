@@ -17,6 +17,7 @@
         "network_size": 256
       },
       "volume": {
+        "ceph_instance": "none",
         "nova_volume_disks": [],
         "volume_name": "nova-volumes",
         "type": "local",
