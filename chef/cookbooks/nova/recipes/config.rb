@@ -183,6 +183,49 @@ else
   node[:nova][:network][:vlan_start] = fixed_net["vlan"]
 end
 
+if node[:nova][:volume][:type] == "rados"
+  package "ceph" do
+    action :upgrade
+  end
+
+  env_filter = " AND ceph_config_environment:ceph-config-#{node[:nova][:volume][:ceph_instance]}"
+  ceph_monitors = []
+  ceph_monitors = search(:node, "roles:ceph-mon*#{env_filter}") || []
+  if ceph_monitors.empty? 
+    Chef::Log.error("No ceph monitor found")
+  end
+  node[:nova][:volume][:ceph_secret_file] = "/etc/nova/nova.ceph.secret"
+  node[:nova][:volume][:rbd_user] = "admin"
+  node[:nova][:volume][:ceph_secret] = ceph_monitors[0]["ceph"]["secrets"]["client.admin"]
+
+  ceph_keyring "client.admin" do
+    secret node[:nova][:volume][:ceph_secret]
+    action [:create, :add]
+  end
+
+  # the nova user need read access to the key
+  file "/etc/ceph/client.admin.keyring" do
+    owner "root"
+    group node[:nova][:user]
+    mode "0640"
+    action :touch
+  end
+
+  monitors = []
+  ceph_monitors.each do |n|
+    monitor = {}
+    monitor[:address] = Chef::Recipe::Barclamp::Inventory.get_network_by_type(n, "admin").address
+    monitor[:name] = n[:hostname]
+    monitors << monitor
+  end
+
+  ceph_config  "ceph client config" do
+    config_file   "/etc/ceph/ceph.conf"
+    monitors      monitors
+    clustername   node[:ceph][:clustername]
+  end
+end
+
 directory "/var/lock/nova" do
   action :create
   owner "openstack-nova"
@@ -214,3 +257,5 @@ template "/etc/sudoers" do
   mode 0440
   variables( :novauser => node[:nova][:user] )
 end
+
+

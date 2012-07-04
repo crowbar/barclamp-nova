@@ -19,61 +19,7 @@
 
 include_recipe "nova::config"
 
-if node[:nova][:volume][:type] == "rados"
-
-  %w(ceph ceph-kmp).each do |pkg|
-    package pkg do
-      action :upgrade
-    end
-  end
-
-  env_filter = " AND ceph_config_environment:ceph-config-#{node[:nova][:volume][:ceph_instance]}"
-  ceph_monitors = []
-  ceph_monitors = search(:node, "roles:ceph-mon*#{env_filter}") || []
-  ceph_mon_master = search(:node, "roles:ceph-mon-master#{env_filter}") || []
-  if ceph_mon_master.length > 0
-    ceph_mon = ceph_mon_master[0]
-    ceph_mon = node if ceph_mon.name == node.name
-  else
-    Chef::Log.error("No ceph master found")
-  end
-  node[:nova][:volume][:ceph_secret_file] = "/etc/nova/nova.ceph.secret"
-  node[:nova][:volume][:rbd_user] = "admin"
-  ceph_mon["ceph"]["secrets"]["client.admin"]
-  node[:nova][:volume][:ceph_secret] = ceph_mon["ceph"]["secrets"]["client.admin"]
-  template "/etc/nova/nova.ceph.secret" do
-    source "nova.ceph.secret.erb"
-    owner "openstack-nova"
-    group "root"
-    mode 0640
-    variables( :secret => ceph_mon["ceph"]["secrets"]["client.admin"])
-  end
-  ceph_keyring "client.admin" do
-    secret ceph_mon["ceph"]["secrets"]["client.admin"]
-    action [:create, :add]
-  end
-  # the nova user need read access to the key
-  file "/etc/ceph/client.admin.keyring" do
-    owner "root"
-    group node[:nova][:user]
-    mode "0640"
-    action :touch
-  end
-  monitors = []
-  ceph_monitors.each do |n|
-    monitor = {}
-    monitor[:address] = Chef::Recipe::Barclamp::Inventory.get_network_by_type(n, "admin").address
-    monitor[:name] = n[:hostname]
-    monitors << monitor
-  end
-
-  ceph_config  "client.config" do
-    config_file   "/etc/ceph/ceph.conf"
-    monitors      monitors
-    clustername   ceph_mon[:ceph][:clustername]
-  end
-
-else
+if node[:nova][:volume][:type] != "rados"
 
   volname = node["nova"]["volume"]["volume_name"]
 

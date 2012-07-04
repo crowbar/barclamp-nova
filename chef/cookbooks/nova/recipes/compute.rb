@@ -48,3 +48,23 @@ if node[:nova][:network][:ha_enabled]
   include_recipe "nova::api"
   include_recipe "nova::network"
 end
+
+if node[:nova][:volume][:type] == "rados"
+
+  package "ceph-kmp" do
+    action :upgrade
+  end
+
+  execute "loading rbd kernel module" do
+    command "/sbin/modprobe rbd"
+  end
+
+  file node[:nova][:volume][:ceph_secret_file] do
+    owner "openstack-nova"
+    group "root"
+    mode 0640
+    content node[:nova][:volume][:ceph_secret]
+    action :create
+  end
+
+end
