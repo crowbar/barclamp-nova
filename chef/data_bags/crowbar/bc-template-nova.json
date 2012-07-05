@@ -24,7 +24,7 @@
         "nova_raw_method": "all",
         "nova_volume_disks": [],
         "local_file": "/var/lib/nova/volume.raw",
-        "local_size": 2000000000000
+        "local_size": 2000
       },
       "rabbit": {
         "password": "secure_password",
