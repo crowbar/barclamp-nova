@@ -899,6 +899,7 @@ class SolidFireSanISCSIDriver(SanISCSIDriver):
 import functools
 import eventlet
 import greenlet
+import time
 
 eqlx_opts = [
     cfg.StrOpt('eqlx_group_name',
@@ -910,6 +911,12 @@ eqlx_opts = [
     cfg.IntOpt('eqlx_cli_timeout',
                default=30,
                help='Timeout for the Group Manager cli command execution'),
+    cfg.IntOpt('eqlx_cli_max_retries',
+               default=5,
+               help='Maximum retry count for reconnection'),
+    cfg.IntOpt('eqlx_cli_retries_timeout',
+               default=30,
+               help='Seconds to sleep before the next reconnection retry'),
     cfg.BoolOpt('eqlx_use_chap',
                 default=False,
                 help='Use CHAP authentificaion for targets?'),
@@ -982,12 +989,38 @@ class DellEQLSanISCSIDriver(SanISCSIDriver):
 
     def __init__(self):
         super(DellEQLSanISCSIDriver, self).__init__()
-        self.ssh = self._connect_to_ssh()
-        self.trans = self.ssh.get_transport()
-        self.trans.set_keepalive(FLAGS.eqlx_ssh_keepalive_interval)
+        self._connected = False
+
+    def _check_connection_or_reconnect(self):
+        retry = 0
+        while (retry < FLAGS.eqlx_cli_max_retries):
+            try:
+                if not self._connected:
+                    raise Exception()
+                self._do_run_cmd('cli-settings', 'show',
+                                 timeout=FLAGS.eqlx_cli_timeout)
+            except:
+                LOG.debug(_("GMCLI: connection to SAN has been lost"))
+                retry += 1
+                self._connected = False
+                time.sleep(FLAGS.eqlx_cli_retries_timeout)
+                try:
+                    self.ssh = self._connect_to_ssh()
+                    self.trans = self.ssh.get_transport()
+                    self.trans.set_keepalive(FLAGS.eqlx_ssh_keepalive_interval)
+                    self._connected = True
+                    LOG.debug(_("GMCLI: reconnected on the %d attempt"), retry)
+                except:
+                    LOG.debug(_("GMCLI: unsuccessful retry %d attempt"), retry)
+            else:
+                LOG.debug(_("GMCLI: we're still connected to SAN!"))
+                return
+        msg = _("Cannot connect to SAN after %(retry)d retries") % locals()
+        raise exception.Error(msg)
 
     def _run_gmcli_cmd(self, *args):
         try:
+            self._check_connection_or_reconnect()
             out = self._do_run_cmd(*args, timeout=FLAGS.eqlx_cli_timeout)
         except greenlet.GreenletExit:
             cmd = ' '.join(args)
@@ -1044,7 +1077,7 @@ class DellEQLSanISCSIDriver(SanISCSIDriver):
         return model_update
 
     def do_setup(self, context):
-        """Disable cli confirmation and tunes output format"""
+        """Disable cli confirmation and tune output format"""
         disabled_cli_features = ('confirmation', 'paging', 'events',
                                  'formatoutput')
         for feature in disabled_cli_features:
