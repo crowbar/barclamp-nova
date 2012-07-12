@@ -78,6 +78,9 @@ debs:
     repos:
       - deb http://ops.rcb.me/packages oneiric diablo-final
   ubuntu-12.04:
+    repos:
+      # Added to fix some libvirt errors using qemu with essex on 12.04
+      - deb http://ppa.launchpad.net/ubuntu-virt/ppa/ubuntu precise main 
     pkgs:
       - tgt
       - novnc
