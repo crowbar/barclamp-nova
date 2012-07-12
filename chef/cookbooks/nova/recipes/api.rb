@@ -44,9 +44,9 @@ Chef::Log.info("Keystone server found at #{keystone_address}")
 
 template "/etc/nova/api-paste.ini" do
   source "api-paste.ini.erb"
-  owner "root"
+  owner node[:nova][:user]
   group "root"
-  mode "0644"
+  mode "0640"
   variables(
     :keystone_ip_address => keystone_address,
     :keystone_admin_token => keystone_token,
