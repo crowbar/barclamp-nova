@@ -132,4 +132,11 @@ if node[:nova][:volume][:type] == "rados"
     action :create
   end
 
+else
+  # enable and start open-iscsi, as this is needed for nova-volume to work
+  # properly
+  service "open-iscsi" do
+    supports :status => true, :restart => true
+    action [ :enable, :start ]
+  end
 end
