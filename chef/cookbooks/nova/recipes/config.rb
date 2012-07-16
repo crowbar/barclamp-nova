@@ -190,7 +190,7 @@ if node[:nova][:volume][:type] == "rados"
 
   env_filter = " AND ceph_config_environment:ceph-config-#{node[:nova][:volume][:ceph_instance]}"
   ceph_monitors = []
-  ceph_monitors = search(:node, "roles:ceph-mon*#{env_filter}") || []
+  ceph_monitors = search(:node, "roles:ceph-mon-master*#{env_filter}") || []
   if ceph_monitors.empty? 
     Chef::Log.error("No ceph monitor found")
   end
