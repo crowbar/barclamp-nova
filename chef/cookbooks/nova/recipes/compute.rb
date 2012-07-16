@@ -21,6 +21,46 @@
 include_recipe "nova::config"
 include_recipe "nova::database"
 
+def set_boot_kernel_and_trigger_reboot(flavor='default')
+  # only default and xen flavor is supported by this helper right now
+  default_boot = 0
+  current_default = nil
+
+  # parse menu.lst, to find boot index for selected flavor
+  File.open('/boot/grub/menu.lst') do |f|
+    f.lines.each do |line|
+      current_default = line.scan(/\d/).first.to_i if line.start_with?('default')
+
+      if line.start_with?('title')
+        if flavor.eql?('xen')
+          # found boot index
+          break if line.include?('Xen')
+        else
+          # take first kernel as default, unless we are searching for xen
+          # kernel
+          break
+        end
+
+        default_boot += 1
+      end
+      
+    end
+  end
+
+  # change default option for /boot/grub/menu.lst
+  unless current_default.eql?(default_boot)
+    puts "changed grub default to #{default_boot}"
+    %x[sed -i -e "s;^default.*;default #{default_boot};" /boot/grub/menu.lst]
+  end
+
+  # trigger reboot through reboot_handler, if kernel-$flavor is not yet
+  # running
+  unless %x[uname -r].include?(flavor)
+    node.run_state[:reboot] = true
+  end
+end
+
+
 if node.platform == "suse"
   case node[:nova][:libvirt_type]
     when "kvm"
@@ -28,6 +68,16 @@ if node.platform == "suse"
       execute "loading kvm modules" do
         command "grep -q vmx /proc/cpuinfo && /sbin/modprobe kvm-intel; grep -q svm /proc/cpuinfo && /sbin/modprobe kvm-amd; /sbin/modprobe vhost-net"
       end
+
+      set_boot_kernel_and_trigger_reboot
+    when "xen"
+      %w{kernel-xen xen xen-tools}.each do |pkg|
+        package pkg do
+          action :install
+        end
+      end
+
+      set_boot_kernel_and_trigger_reboot('xen')
     when "qemu"
       package "qemu"
   end
@@ -51,8 +101,13 @@ end
 
 if node[:nova][:volume][:type] == "rados"
 
-  package "ceph-kmp" do
-    action :upgrade
+  ceph_kmps = ["ceph-kmp-default"]
+  ceph_kmps << "ceph-kmp-xen" if node[:nova][:libvirt_type].eql?('xen')
+
+  ceph_kmps.each do |pkg|
+    package pkg do
+      action :upgrade
+    end
   end
 
   execute "loading rbd kernel module" do

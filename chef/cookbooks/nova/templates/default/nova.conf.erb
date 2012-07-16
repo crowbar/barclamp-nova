@@ -79,6 +79,10 @@ sql_connection=<%= @sql_connection %>
 <% end -%>
 connection_type=libvirt
 libvirt_type=<%= @libvirt_type %>
+<% if @libvirt_type.eql?('xen') -%>
+libvirt_disk_prefix=xvd
+additional_compute_capabilities=pv,hvm
+<% end -%>
 firewall_driver=nova.virt.libvirt.firewall.IptablesFirewallDriver
 compute_manager=nova.compute.manager.ComputeManager
 instance_name_template=instance-%08x
