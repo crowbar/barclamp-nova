@@ -114,6 +114,16 @@ if node[:nova][:volume][:type] == "rados"
     command "/sbin/modprobe rbd"
   end
 
+  # make sure to load rbd via MODULES_LOADED_ON_BOOT in /etc/sysconfig/kernel
+  # (default install has MODULES_LOADED_ON_BOOT="")
+  ruby_block "edit sysconfig kernel" do
+    block do
+      rc = Chef::Util::FileEdit.new("/etc/sysconfig/kernel")
+      rc.search_file_replace_line(/^MODULES_LOADED_ON_BOOT=/, 'MODULES_LOADED_ON_BOOT="rbd"')
+      rc.write_file
+    end
+  end
+                              
   file node[:nova][:volume][:ceph_secret_file] do
     owner "openstack-nova"
     group "root"
