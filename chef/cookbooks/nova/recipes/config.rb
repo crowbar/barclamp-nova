@@ -198,11 +198,27 @@ if node[:nova][:volume][:type] == "rados"
   node[:nova][:volume][:rbd_user] = "admin"
   node[:nova][:volume][:ceph_secret] = ceph_monitors[0]["ceph"]["secrets"]["client.admin"]
 
-  ceph_keyring "client.admin" do
-    secret node[:nova][:volume][:ceph_secret]
-    action [:create, :add]
-  end
+  # Don't overwrite files created by the ceph recipes
+  if ( node[:roles].grep(/^ceph-/).empty? )
+    ceph_keyring "client.admin" do
+      secret node[:nova][:volume][:ceph_secret]
+      action [:create, :add]
+    end
 
+    monitors = []
+    ceph_monitors.each do |n|
+      monitor = {}
+      monitor[:address] = Chef::Recipe::Barclamp::Inventory.get_network_by_type(n, "admin").address
+      monitor[:name] = n[:hostname]
+      monitors << monitor
+    end
+  
+    ceph_config  "ceph client config" do
+      config_file   "/etc/ceph/ceph.conf"
+      monitors      monitors
+      clustername   node[:ceph][:clustername]
+    end
+  end
   # the nova user need read access to the key
   file "/etc/ceph/client.admin.keyring" do
     owner "root"
@@ -211,19 +227,6 @@ if node[:nova][:volume][:type] == "rados"
     action :touch
   end
 
-  monitors = []
-  ceph_monitors.each do |n|
-    monitor = {}
-    monitor[:address] = Chef::Recipe::Barclamp::Inventory.get_network_by_type(n, "admin").address
-    monitor[:name] = n[:hostname]
-    monitors << monitor
-  end
-
-  ceph_config  "ceph client config" do
-    config_file   "/etc/ceph/ceph.conf"
-    monitors      monitors
-    clustername   node[:ceph][:clustername]
-  end
 end
 
 directory "/var/lock/nova" do
