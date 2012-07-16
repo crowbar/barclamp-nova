@@ -36,7 +36,18 @@ define :nova_package do
       status_command "status #{nova_name} | cut -d' ' -f2 | cut -d'/' -f1 | grep start"
     end
     supports :status => true, :restart => true
-    action [:enable, :start]
+
+    # only enable and start the service, unless a reboot has been triggered
+    # (e.g. because of switching from # kernel-default to kernel-xen)
+    unless node.run_state[:reboot]
+      action [:enable, :start]
+    else
+      # start will happen after reboot, and potentially even fail before
+      # reboot (ie. on installing kernel-xen + expecting libvirt to already
+      # use xen before)
+      action [:enable]
+    end
+
     subscribes :restart, resources(:template => "/etc/nova/nova.conf")
   end
 
