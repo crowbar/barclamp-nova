@@ -30,9 +30,9 @@ barclamp:
 
 crowbar:
   layout: 1
-  order: 95
-  run_order: 95
-  chef_order: 95
+  order: 90
+  run_order: 90
+  chef_order: 90
 
 locale_additions:
   en:
