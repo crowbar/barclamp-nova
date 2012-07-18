@@ -21,6 +21,7 @@ barclamp:
   version: 0
   requires:
     - @crowbar
+    - git
     - mysql
     - glance
     - keystone
@@ -139,4 +140,9 @@ debs:
     - python-eventlet
     - bzr
     - mysql-client
+    - socat
+    - python-mox
 
+git_repos:
+  - http://github.com/openstack/nova.git nova
+  - http://github.com/kanaka/noVNC.git novnc

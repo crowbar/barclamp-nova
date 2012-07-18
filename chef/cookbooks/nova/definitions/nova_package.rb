@@ -15,9 +15,15 @@
 define :nova_package do
 
   nova_name="nova-#{params[:name]}"
-  package nova_name do
-    options "--force-yes -o Dpkg::Options::=\"--force-confdef\""
-    action :upgrade
+  if node[:nova][:use_gitrepo]
+    link_service nova_name do
+      user node[:nova][:user]
+    end
+  else
+    package nova_name do
+      options "--force-yes -o Dpkg::Options::=\"--force-confdef\""
+      action :upgrade
+    end
   end
 
   service nova_name do

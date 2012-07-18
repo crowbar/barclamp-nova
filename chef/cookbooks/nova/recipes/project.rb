@@ -28,7 +28,7 @@ include_recipe "nova::config"
 cmd = "nova-manage network create --fixed_range_v4=#{node[:nova][:network][:fixed_range]} --num_networks=#{node[:nova][:network][:num_networks]} --network_size=#{node[:nova][:network][:network_size]} --label private" 
 cmd << " --multi_host=T" if node[:nova][:network][:ha_enabled]
 execute cmd do
-  user node[:nova][:user]
+  user node[:nova][:user] if node.platform != "suse" and not node[:nova][:use_gitrepo]
   not_if "nova-manage network list | grep '#{node[:nova][:network][:fixed_range].split("/")[0]}'"
 end
 
@@ -38,7 +38,7 @@ base_ip = node[:nova][:network][:floating_range].split("/")[0]
 grep_ip = base_ip[0..-2] + (base_ip[-1].chr.to_i+1).to_s
 
 execute "nova-manage floating create --ip_range=#{node[:nova][:network][:floating_range]}" do
-  user node[:nova][:user] if node.platform != "suse"
+  user node[:nova][:user] if node.platform != "suse" and not node[:nova][:use_gitrepo]
   not_if "nova-manage floating list | grep '#{grep_ip}'"
 end
 

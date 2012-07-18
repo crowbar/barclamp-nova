@@ -20,9 +20,17 @@
 
 node[:nova][:my_ip] = Chef::Recipe::Barclamp::Inventory.get_network_by_type(node, "admin").address
 
-package "nova-common" do
-  options "--force-yes -o Dpkg::Options::=\"--force-confdef\""
-  action :upgrade
+unless node[:nova][:use_gitrepo]
+  package "nova-common" do
+    if node.platform == "suse"
+      package_name "openstack-nova"
+    else
+      options "--force-yes -o Dpkg::Options::=\"--force-confdef\""
+    end
+    action :upgrade
+  end
+else
+  pfs_and_install_deps("nova")
 end
 
 package "python-mysqldb"
@@ -165,6 +173,55 @@ else
   node[:nova][:network][:vlan_start] = fixed_net["vlan"]
 end
 
+if node[:nova][:use_gitrepo]
+  nova_path = "/opt/nova"
+  package("libvirt-bin")
+  create_user_and_dirs "nova" do
+    opt_dirs ["/var/lib/nova/instances"]
+    user_gid "libvirtd"
+  end
+
+  execute "cp_policy.json" do
+    command "cp #{nova_path}/etc/nova/policy.json /etc/nova/"
+    creates "/etc/nova/policy.json"
+  end
+  
+  template "/etc/sudoers.d/nova-rootwrap" do
+    source "nova-rootwrap.erb"
+    mode 0440
+    variables(:user => node[:nova][:user])
+  end
+
+  bash "deploy_filters" do
+    cwd nova_path
+    code <<-EOH
+    ### that was copied from devstack's stack.sh
+    if [[ -d $NOVA_DIR/etc/nova/rootwrap.d ]]; then
+      # Wipe any existing rootwrap.d files first
+      if [[ -d $NOVA_CONF_DIR/rootwrap.d ]]; then
+          rm -rf $NOVA_CONF_DIR/rootwrap.d
+      fi
+      # Deploy filters to /etc/nova/rootwrap.d
+      mkdir -m 755 $NOVA_CONF_DIR/rootwrap.d
+      cp $NOVA_DIR/etc/nova/rootwrap.d/*.filters $NOVA_CONF_DIR/rootwrap.d
+      chown -R root:root $NOVA_CONF_DIR/rootwrap.d
+      chmod 644 $NOVA_CONF_DIR/rootwrap.d/*
+      # Set up rootwrap.conf, pointing to /etc/nova/rootwrap.d
+      cp $NOVA_DIR/etc/nova/rootwrap.conf $NOVA_CONF_DIR/
+      sed -e "s:^filters_path=.*$:filters_path=$NOVA_CONF_DIR/rootwrap.d:" -i $NOVA_CONF_DIR/rootwrap.conf
+      chown root:root $NOVA_CONF_DIR/rootwrap.conf
+      chmod 0644 $NOVA_CONF_DIR/rootwrap.conf
+    fi
+    ### end
+  EOH
+  environment({
+    'NOVA_DIR' => nova_path,
+    'NOVA_CONF_DIR' => '/etc/nova',
+  })
+  not_if {File.exists?("/etc/nova/rootwrap.d")}
+  end
+end
+
 if node.recipes.include?("nova::volume") and node[:nova][:volume][:volume_type] == "eqlx"
   Chef::Log.info("Pushing EQLX params to nova.conf template")
   eqlx_params = node[:nova][:volume][:eqlx]
@@ -178,6 +235,7 @@ template "/etc/nova/nova.conf" do
   group "root"
   mode 0640
   variables(
+            :dhcpbridge => "#{node[:nova][:use_gitrepo] ? nova_path:"/usr"}/bin/nova-dhcpbridge",
             :sql_connection => sql_connection,
             :rabbit_settings => rabbit_settings,
             :ec2_host => admin_api_ip,

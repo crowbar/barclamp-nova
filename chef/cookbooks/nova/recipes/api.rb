@@ -19,8 +19,11 @@
 
 include_recipe "nova::config"
 
+unless node[:nova][:use_gitrepo]
 package "python-keystone"
-package "openstackx"
+package "python-novaclient"
+#TODO: else
+end
 
 nova_package("api")
 
