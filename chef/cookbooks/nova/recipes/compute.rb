@@ -84,6 +84,15 @@ if node.platform == "suse"
 
   package "libvirt"
 
+  # change libvirt to run qemu as user qemu
+  ruby_block "edit qemu config" do
+    block do
+      rc = Chef::Util::FileEdit.new("/etc/libvirt/qemu.conf")
+      rc.search_file_replace_line(/user.*=/, 'user = "qemu"')
+      rc.write_file
+    end
+  end
+
   service "libvirtd" do
     action [:enable, :restart]
   end
