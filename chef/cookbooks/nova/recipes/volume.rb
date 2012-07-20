@@ -126,6 +126,7 @@ end
 
 keystone_address = Chef::Recipe::Barclamp::Inventory.get_network_by_type(keystone, "admin").address if keystone_address.nil?
 keystone_token = keystone["keystone"]["service"]["token"]
+keystone_protocol = keystone["keystone"]["api"]["protocol"]
 keystone_service_port = keystone["keystone"]["api"]["service_port"]
 keystone_admin_port = keystone["keystone"]["api"]["admin_port"]
 keystone_service_tenant = keystone["keystone"]["service"]["tenant"]
@@ -134,6 +135,7 @@ keystone_service_password = "fredfred" # GREG: Fix this
 Chef::Log.info("Keystone server found at #{keystone_address}")
 
 keystone_register "nova volume wakeup keystone" do
+  protocol keystone_protocol
   host keystone_address
   port keystone_admin_port
   token keystone_token
@@ -141,6 +143,7 @@ keystone_register "nova volume wakeup keystone" do
 end
 
 keystone_register "register nova-volume service" do
+  protocol keystone_protocol
   host keystone_address
   port keystone_admin_port
   token keystone_token
@@ -154,6 +157,7 @@ public_api_ip = Chef::Recipe::Barclamp::Inventory.get_network_by_type(node, "pub
 admin_api_ip = Chef::Recipe::Barclamp::Inventory.get_network_by_type(node, "admin").address
 
 keystone_register "register nova-volume endpoint" do
+  protocol keystone_protocol
   host keystone_address
   port keystone_admin_port
   token keystone_token
