@@ -79,6 +79,8 @@ sql_connection=<%= @sql_connection %>
 <% end -%>
 connection_type=libvirt
 libvirt_type=<%= @libvirt_type %>
+libvirt_inject_key=false
+libvirt_inject_password=false
 <% if @libvirt_type.eql?('xen') -%>
 libvirt_disk_prefix=xvd
 additional_compute_capabilities=pv,hvm
