@@ -93,7 +93,7 @@ if node.platform == "suse"
 
       set_boot_kernel_and_trigger_reboot('xen')
     when "qemu"
-      package "qemu"
+      package "kvm"
   end
 
   package "libvirt"
