@@ -102,7 +102,16 @@ if node.platform == "suse"
   ruby_block "edit qemu config" do
     block do
       rc = Chef::Util::FileEdit.new("/etc/libvirt/qemu.conf")
-      rc.search_file_replace_line(/user.*=/, 'user = "qemu"')
+
+      # make sure to only set qemu:kvm for kvm and qemu deployments, use
+      # system defaults for xen
+      if ['kvm','qemu'].include?(node[:nova][:libvirt_type])
+        rc.search_file_replace_line(/user.*=/, 'user = "qemu"')
+        rc.search_file_replace_line(/group.*=/, 'group = "kvm"')
+      else
+        rc.search_file_replace_line(/user.*=/, '#user = "root"')
+        rc.search_file_replace_line(/group.*=/, '#group = "root"')
+      end
       rc.write_file
     end
   end
