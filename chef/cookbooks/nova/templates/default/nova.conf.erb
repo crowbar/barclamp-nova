@@ -102,6 +102,8 @@ libvirt_type=<%= @libvirt_type %>
 <% if @libvirt_type.eql?('xen') -%>
 libvirt_disk_prefix=xvd
 additional_compute_capabilities=pv,hvm
+<% elsif @libvirt_type.eql?('kvm') -%>
+libvirt_use_virtio_for_bridges=true
 <% end -%>
 compute_manager=nova.compute.manager.ComputeManager
 instance_name_template=instance-%08x
