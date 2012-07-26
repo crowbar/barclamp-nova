@@ -80,6 +80,12 @@ if node.platform == "suse"
       set_boot_kernel_and_trigger_reboot('xen')
     when "qemu"
       package "kvm"
+    when "lxc"
+      package "lxc"
+
+      service "boot.cgroup" do
+        action [:enable, :start]
+      end
   end
 
   package "libvirt"
