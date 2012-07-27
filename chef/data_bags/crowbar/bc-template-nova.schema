@@ -32,6 +32,15 @@
                 "ssl_key_file": { "type": "str", "required": true }
               }
             },
+            "novnc": {
+              "type": "map",
+              "required": true,
+              "mapping": {
+                "ssl_enabled": { "type": "bool", "required": true },
+                "ssl_crt_file": { "type": "str", "required": true },
+                "ssl_key_file": { "type": "str", "required": true }
+              }
+            },
             "network": {
               "type": "map",
               "required": true,

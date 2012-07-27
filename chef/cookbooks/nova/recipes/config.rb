@@ -248,6 +248,7 @@ template "/etc/nova/nova.conf" do
             :dns_server_public_ip => dns_server_public_ip,
             :glance_server_ip => glance_server_ip,
             :glance_server_port => glance_server_port,
+            :vncproxy_ssl_enable => node[:nova][:novnc][:ssl_enabled],
             :vncproxy_public_ip => vncproxy_public_ip
             )
 end

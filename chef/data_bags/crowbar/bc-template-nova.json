@@ -15,6 +15,11 @@
         "ssl_crt_file": "/etc/apache2/ssl.crt/openstack-nova-server.crt",
         "ssl_key_file": "/etc/apache2/ssl.key/openstack-nova-server.key"
       },
+      "novnc": {
+        "ssl_enabled": false,
+        "ssl_crt_file": "",
+        "ssl_key_file": ""
+      },
       "network": {
         "ha_enabled": true,
         "tenant_vlans": false,

@@ -61,6 +61,11 @@ default[:nova][:api][:osapi_volume_port] = "8776"
 default[:nova][:apache][:ssl_crt_file] = '/etc/apache2/ssl.crt/openstack-nova-server.crt'
 default[:nova][:apache][:ssl_key_file] = '/etc/apache2/ssl.key/openstack-nova-server.key'
 
+# Secure novnc config
+default[:nova][:novnc][:ssl_enabled] = false
+default[:nova][:novnc][:ssl_crt_file] = ''
+default[:nova][:novnc][:ssl_key_file] = ''
+
 #
 # General network parameters
 #

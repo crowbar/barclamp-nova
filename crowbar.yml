@@ -59,6 +59,11 @@ locale_additions:
           protocol: Protocol
           apache_ssl_crt_file: SSL Certificate File
           apache_ssl_key_file: SSL Key File
+          novnc_header: noVNC Security Attributes
+          novnc_ssl_enabled: noVNC via SSL
+          novnc_ssl_cert: noVNC SSL Certificate File
+          novnc_ssl_key: noVNC SSL Key File
+          novnc_ssl_hint: 'Note: Unless files are specified the SSL certificate and key from Nova will be reused for noVNC by default.'
         edit_deployment: 
           deployment: Deployment
 

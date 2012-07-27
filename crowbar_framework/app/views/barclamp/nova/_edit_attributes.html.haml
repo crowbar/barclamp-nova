@@ -64,6 +64,20 @@
         %p
           %label{ :for => :apache_ssl_key_file }= t('.apache_ssl_key_file')
           = text_field_tag :apache_ssl_key_file, @proposal.raw_data['attributes'][@proposal.barclamp]["apache"]["ssl_key_file"], :size => 80, :onchange => "update_value('apache/ssl_key_file', 'apache_ssl_key_file', 'string')"
+    %p
+      %label{ :for => :novnc_header }= t('.novnc_header')
+    %div.container
+      %p
+        %label{ :for => :novnc_ssl_enabled }= t('.novnc_ssl_enabled')
+        = select_tag :novnc_ssl_enabled, options_for_select([['true','true'], ['false', 'false']], @proposal.raw_data['attributes'][@proposal.barclamp]["novnc"]["ssl_enabled"].to_s), :onchange => "update_value('novnc/ssl_enabled', 'novnc_ssl_enabled', 'boolean')"
+      %p
+        %label{ :for => :novnc_ssl_cert }= t('.novnc_ssl_cert')
+        = text_field_tag :novnc_ssl_cert, @proposal.raw_data['attributes'][@proposal.barclamp]["novnc"]["ssl_crt_file"], :size => "80", :onchange => "update_value('novnc/ssl_crt_file', 'novnc_ssl_cert', 'string')"
+      %p
+        %label{ :for => :novnc_ssl_key }= t('.novnc_ssl_key')
+        = text_field_tag :novnc_ssl_key, @proposal.raw_data['attributes'][@proposal.barclamp]["novnc"]["ssl_key_file"], :size => "80", :onchange => "update_value('novnc/ssl_key', 'novnc_ssl_key', 'string')"
+      %p
+        %em= t('.novnc_ssl_hint')
 
 
 :javascript
