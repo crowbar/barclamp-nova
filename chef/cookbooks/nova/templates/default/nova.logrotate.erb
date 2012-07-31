@@ -1,0 +1,27 @@
+/var/log/apache2/openstack-nova-api-access_log {
+    compress
+    dateext
+    maxage 365
+    rotate 99
+    size=+4096k
+    notifempty
+    missingok
+    create 644 root root
+    postrotate
+     /etc/init.d/apache2 reload
+    endscript
+}
+
+/var/log/apache2/openstack-nova-api-error_log {
+    compress
+    dateext
+    maxage 365
+    rotate 99
+    size=+1024k
+    notifempty
+    missingok
+    create 644 root root
+    postrotate
+     /etc/init.d/apache2 reload
+    endscript
+}

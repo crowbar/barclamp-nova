@@ -17,6 +17,21 @@
             "libvirt_type": { "type": "str", "required": true },
             "verbose": { "type": "bool", "required": true },
             "user": { "type": "str", "required": true },
+            "api": {
+              "type": "map",
+              "required": true,
+              "mapping": {
+                "protocol": { "type": "str", "required": true }
+              }
+            },
+            "apache": {
+              "type": "map",
+              "required": true,
+              "mapping": {
+                "ssl_crt_file": { "type": "str", "required": true },
+                "ssl_key_file": { "type": "str", "required": true }
+              }
+            },
             "network": {
               "type": "map",
               "required": true,

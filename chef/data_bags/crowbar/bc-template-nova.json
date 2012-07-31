@@ -8,6 +8,13 @@
       "libvirt_type": "kvm",
       "verbose": true,
       "user": "openstack-nova",
+      "api": {
+        "protocol": "http"
+      },
+      "apache": {
+        "ssl_crt_file": "/etc/apache2/ssl.crt/openstack-nova-server.crt",
+        "ssl_key_file": "/etc/apache2/ssl.key/openstack-nova-server.key"
+      },
       "network": {
         "ha_enabled": true,
         "tenant_vlans": false,

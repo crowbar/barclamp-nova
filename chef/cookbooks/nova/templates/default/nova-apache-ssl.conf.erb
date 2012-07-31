@@ -1,0 +1,43 @@
+#
+# OpenStack Compute (Nova) Apache2 SSL proxy configuration.
+#
+# Required Apache2 modules:
+#  - mod_ssl
+#  - mod_wsgi
+#
+
+
+<IfDefine SSL>
+<IfDefine !NOSSL>
+
+# Proxy  public API:
+<%= nova_apis.each do |api, options| %>
+Listen <%= options[:port] %>
+
+<VirtualHost *:<%= options[:port] %>>
+    ServerName openstack-nova.example.com
+    ServerAdmin webmaster@openstack-nova.example.com
+
+    ErrorLog /var/log/apache2/openstack-nova-api-error_log
+    TransferLog /var/log/apache2/openstack-nova-api-access_log
+    LogLevel warn
+
+    SSLEngine on
+    SSLCertificateFile <%= node[:nova][:apache][:ssl_crt_file] %>
+    SSLCertificateKeyFile <%= node[:nova][:apache][:ssl_key_file] %>
+
+    # Need to run as user 'openstack-nova' to gain access to '/etc/nova/nova.conf'
+    WSGIDaemonProcess nova-<%= api %> user=<%= node[:nova][:user] %> group=<%= node[:nova][:group] %> processes=2
+    WSGIProcessGroup nova-<%= api %>
+
+    WSGIScriptAlias / /var/lib/nova/wsgi/<%= api %>.wsgi
+    <Directory /var/lib/nova/wsgi/>
+        Order allow,deny
+        Allow from all
+    </Directory>
+</VirtualHost>
+
+<% end %>
+
+</IfDefine>
+</IfDefine>

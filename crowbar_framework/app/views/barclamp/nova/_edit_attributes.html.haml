@@ -48,6 +48,24 @@
       %label{ :for => :volume_disks }= t('.nova_volume_disks')
       %ul{ :id => 'nova_volume_disks_list'}
 
+    %label{ :for => :ssl }= t('.ssl')
+    %div.container{ :id => :ssl }
+      %p
+        %label{ :for => :protocol }= t('.protocol')
+        = select_tag :protocol, options_for_select([['HTTP','http'], ['HTTPS', 'https']], @proposal.raw_data['attributes'][@proposal.barclamp]["api"]["protocol"].to_s), :onchange => "update_value('api/protocol', 'protocol', 'string')"
+        %em{ :id => :ssl_hint }= t('.ssl_hint')
+
+      %div{ :id => :protocol_div }
+        //TODO/Fixme: provide upload dialog for these. For now we have to rely on the files being present on the machine:
+        %p
+          %label{ :for => :apache_ssl_crt_file }= t('.apache_ssl_crt_file')
+          = text_field_tag :apache_ssl_crt_file, @proposal.raw_data['attributes'][@proposal.barclamp]["apache"]["ssl_crt_file"], :size => 80, :onchange => "update_value('apache/ssl_crt_file', 'apache_ssl_crt_file', 'string')"
+
+        %p
+          %label{ :for => :apache_ssl_key_file }= t('.apache_ssl_key_file')
+          = text_field_tag :apache_ssl_key_file, @proposal.raw_data['attributes'][@proposal.barclamp]["apache"]["ssl_key_file"], :size => 80, :onchange => "update_value('apache/ssl_key_file', 'apache_ssl_key_file', 'string')"
+
+
 :javascript
 
   var volume_role = 'nova-multi-controller';
@@ -158,3 +176,16 @@
 
     load_proposal_disk_attrs();
   }, 1000);
+
+  function toggle_protocol() {
+    if ($('#protocol option:selected').attr('value') == 'https') {
+      $('#protocol_div').show();
+      $('#ssl_hint').show();
+    } else {
+      $('#protocol_div').hide();
+      $('#ssl_hint').hide();
+    }
+  };
+
+  $(document).ready(function () { toggle_protocol(); });
+  $('#protocol').change(toggle_protocol);

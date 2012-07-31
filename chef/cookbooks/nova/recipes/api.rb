@@ -19,10 +19,18 @@
 
 include_recipe "nova::config"
 
+include_recipe "apache2"
+if node[:keystone][:api][:protocol] == "https"
+  include_recipe "apache2::mod_ssl"
+  include_recipe "apache2::mod_wsgi"
+end
+
 package "python-keystone"
 package "python-novaclient"
 
-nova_package("api")
+nova_package "api" do
+  enable (node[:nova][:api][:protocol] != "https")
+end
 
 env_filter = " AND keystone_config_environment:keystone-config-#{node[:nova][:keystone_instance]}"
 keystones = search(:node, "recipes:keystone\\:\\:server#{env_filter}") || []
@@ -43,6 +51,56 @@ keystone_service_user = "nova" # GREG: Fix this
 keystone_service_password = "fredfred" # GREG: Fix this
 Chef::Log.info("Keystone server found at #{keystone_address}")
 
+if node[:nova][:api][:protocol] == "https"
+  Chef::Log.info("Configuring Nova-API to use SSL via Apache2+mod_wsgi")
+
+  # Prepare Apache2 SSL vhost template:
+  template "#{node[:apache][:dir]}/sites-available/openstack-nova.conf" do
+    if node.platform == "suse"
+      path "#{node[:apache][:dir]}/vhosts.d/openstack-nova.conf"
+    end
+    source "nova-apache-ssl.conf.erb"
+    variables(
+      :nova_apis => {:ec2 => {:port => node[:nova][:api][:ec2_port]},
+                     :osapi_compute => {:port => node[:nova][:api][:osapi_compute_port]},
+                     :osapi_volume => {:port => node[:nova][:api][:osapi_volume_port]},
+                     :metadata => {:port => node[:nova][:api][:metadata_port]}}
+    )
+    mode 0644
+  end
+
+  apache_site "openstack-nova.conf" do
+    enable true
+  end
+
+  template "/etc/logrotate.d/openstack-nova" do
+    source "nova.logrotate.erb"
+    mode 0644
+    owner "root"
+    group "root"
+  end
+else
+  # Remove potentially left-over Apache2 config files:
+  file "/etc/logrotate.d/openstack-glance" do
+    action :delete
+  end if ::File.exist?("/etc/logrotate.d/openstack-nova")
+
+  apache_site "openstack-nova.conf" do
+    enable false
+  end
+
+  if node.platform == "suse"
+    vhost_config = "#{node[:apache][:dir]}/vhosts.d/openstack-nova.conf"
+  else
+    vhost_config = "#{node[:apache][:dir]}/sites-available/openstack-nova.conf"
+  end
+  file vhost_config do
+    action :delete
+    notifies :reload, resources(:service => "apache2"), :immediately
+  end if ::File.exist?(vhost_config)
+  # End of Apache2 vhost cleanup
+end
+
 template "/etc/nova/api-paste.ini" do
   source "api-paste.ini.erb"
   owner node[:nova][:user]
@@ -58,7 +116,13 @@ template "/etc/nova/api-paste.ini" do
     :keystone_service_password => keystone_service_password,
     :keystone_admin_port => keystone_admin_port
   )
-  notifies :restart, resources(:service => "nova-api"), :immediately
+  if node[:nova][:api][:protocol] == "https"
+    if ::File.symlink?("#{node[:apache][:dir]}/sites-enabled/openstack-nova.conf") or node.platform == "suse"
+      notifies :reload, resources(:service => "apache2")
+    end
+  else
+    notifies :restart, resources(:service => "nova-api"), :immediately
+  end
 end
 
 apis = search(:node, "recipes:nova\\:\\:api#{env_filter}") || []
@@ -70,6 +134,7 @@ else
 end
 public_api_ip = Chef::Recipe::Barclamp::Inventory.get_network_by_type(api, "public").address
 admin_api_ip = Chef::Recipe::Barclamp::Inventory.get_network_by_type(api, "admin").address
+api_protocol = node[:nova][:api][:protocol]
 
 keystone_register "nova api wakeup keystone" do
   protocol keystone_protocol
@@ -130,9 +195,9 @@ keystone_register "register nova endpoint" do
   token keystone_token
   endpoint_service "nova"
   endpoint_region "RegionOne"
-  endpoint_publicURL "http://#{public_api_ip}:8774/v2/$(tenant_id)s"
-  endpoint_adminURL "http://#{admin_api_ip}:8774/v2/$(tenant_id)s"
-  endpoint_internalURL "http://#{admin_api_ip}:8774/v2/$(tenant_id)s"
+  endpoint_publicURL "#{api_protocol}://#{public_api_ip}:8774/v2/$(tenant_id)s"
+  endpoint_adminURL "#{api_protocol}://#{admin_api_ip}:8774/v2/$(tenant_id)s"
+  endpoint_internalURL "#{api_protocol}://#{admin_api_ip}:8774/v2/$(tenant_id)s"
 #  endpoint_global true
 #  endpoint_enabled true
   action :add_endpoint_template
@@ -145,9 +210,9 @@ keystone_register "register nova ec2 endpoint" do
   token keystone_token
   endpoint_service "ec2"
   endpoint_region "RegionOne"
-  endpoint_publicURL "http://#{public_api_ip}:8773/services/Cloud"
-  endpoint_adminURL "http://#{admin_api_ip}:8773/services/Admin"
-  endpoint_internalURL "http://#{admin_api_ip}:8773/services/Cloud"
+  endpoint_publicURL "#{api_protocol}://#{public_api_ip}:8773/services/Cloud"
+  endpoint_adminURL "#{api_protocol}://#{admin_api_ip}:8773/services/Admin"
+  endpoint_internalURL "#{api_protocol}://#{admin_api_ip}:8773/services/Cloud"
 #  endpoint_global true
 #  endpoint_enabled true
   action :add_endpoint_template

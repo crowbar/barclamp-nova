@@ -54,6 +54,11 @@ locale_additions:
           num_networks: Number of Networks
           network_size: Network Size
           nova_volume_disks: Choose disks for nova-volume storage volume group
+          ssl: Security Attributes
+          ssl_hint: Nova-API will be provided by Apache2 via SSL-enabled WSGI vhost
+          protocol: Protocol
+          apache_ssl_crt_file: SSL Certificate File
+          apache_ssl_key_file: SSL Key File
         edit_deployment: 
           deployment: Deployment
 
