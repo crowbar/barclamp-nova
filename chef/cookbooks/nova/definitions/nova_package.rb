@@ -12,9 +12,10 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-define :nova_package do
+define :nova_package, :enable => true do
 
   nova_name="nova-#{params[:name]}"
+
   if node[:nova][:use_gitrepo]
     link_service nova_name do
       user node[:nova][:user]
@@ -37,15 +38,17 @@ define :nova_package do
     end
     supports :status => true, :restart => true
 
-    # only enable and start the service, unless a reboot has been triggered
-    # (e.g. because of switching from # kernel-default to kernel-xen)
-    unless node.run_state[:reboot]
-      action [:enable, :start]
-    else
-      # start will happen after reboot, and potentially even fail before
-      # reboot (ie. on installing kernel-xen + expecting libvirt to already
-      # use xen before)
-      action [:enable]
+    if params[:enable] != false
+      # only enable and start the service, unless a reboot has been triggered
+      # (e.g. because of switching from # kernel-default to kernel-xen)
+      unless node.run_state[:reboot]
+        action [:enable, :start]
+      else
+        # start will happen after reboot, and potentially even fail before
+        # reboot (ie. on installing kernel-xen + expecting libvirt to already
+        # use xen before)
+        action [:enable]
+      end
     end
 
     subscribes :restart, resources(:template => "/etc/nova/nova.conf")
