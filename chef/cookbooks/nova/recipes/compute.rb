@@ -73,7 +73,7 @@ if node.platform == "suse"
     when "xen"
       %w{kernel-xen xen xen-tools}.each do |pkg|
         package pkg do
-          action :install
+          action :upgrade
         end
       end
 
