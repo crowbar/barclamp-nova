@@ -21,6 +21,7 @@ The unique thing about a SAN is that we don't expect that we can run the volume
 controller on the SAN hardware.  We expect to access it over SSH or some API.
 """
 
+import sys
 import base64
 import httplib
 import json
@@ -65,7 +66,7 @@ san_opts = [
                default=22,
                help='SSH port to use with SAN'),
     cfg.BoolOpt('san_is_local',
-                default='false',
+                default=False,
                 help='Execute commands locally instead of over SSH; '
                      'use if the volume service is running on the SAN device'),
     cfg.StrOpt('san_zfs_volume_base',
@@ -74,7 +75,9 @@ san_opts = [
     ]
 
 FLAGS = flags.FLAGS
-FLAGS.register_opts(san_opts)
+
+if __name__ != '__main__':
+    FLAGS.register_opts(san_opts)
 
 
 class SanISCSIDriver(nova.volume.driver.ISCSIDriver):
@@ -897,6 +900,7 @@ class SolidFireSanISCSIDriver(SanISCSIDriver):
 
 
 import functools
+# TODO(aandreev): replace explicit imports with nova-based
 import eventlet
 import greenlet
 import time
@@ -926,10 +930,17 @@ eqlx_opts = [
     cfg.StrOpt('eqlx_chap_password',
                 default='password',
                 help='Password for specified CHAP account name'),
+    cfg.BoolOpt('eqlx_verbose_ssh',
+            default=False,
+            help='Print SSH debugging output to stderr'),
     ]
 
-FLAGS.register_opts(eqlx_opts)
+if __name__ != '__main__':
+    FLAGS.register_opts(eqlx_opts)
 
+
+class Timeout(Exception):
+    pass
 
 def with_timeout(f):
     @functools.wraps(f)
@@ -943,13 +954,27 @@ def with_timeout(f):
             try:
                 res = gt.wait()
             except greenlet.GreenletExit:
-                raise
+                raise Timeout()
             else:
                 kill_thread.cancel()
                 return res
 
     return __inner
 
+def monkey_patch_eventlet():
+    """This monkey patch provides a workaround for the  
+    ('_GreenThread' object has no attribute 'daemon') issue seen when using paramiko 
+    together with eventlet library of version less then 0.9.17
+    """
+    import threading, eventlet
+
+    if eventlet.__version__ < '0.9.17':
+        _current_thread = threading.current_thread
+        def current_thread():
+            thread = _current_thread()
+            thread.__dict__['daemon'] = True
+            return thread
+        threading.current_thread = current_thread
 
 class DellEQLSanISCSIDriver(SanISCSIDriver):
     """Implements commands for Dell EqualLogic SAN ISCSI management.
@@ -989,63 +1014,88 @@ class DellEQLSanISCSIDriver(SanISCSIDriver):
 
     def __init__(self):
         super(DellEQLSanISCSIDriver, self).__init__()
-        self._connected = False
+        
+        if FLAGS.eqlx_verbose_ssh:
+            logger = paramiko.util.logging.getLogger("paramiko")
+            logger.setLevel(paramiko.util.DEBUG)
+            logger.addHandler(paramiko.util.logging.StreamHandler(sys.stdout))
 
-    def _check_connection_or_reconnect(self):
-        retry = 0
-        while (retry < FLAGS.eqlx_cli_max_retries):
-            try:
-                if not self._connected:
-                    raise Exception()
-                self._do_run_cmd('cli-settings', 'show',
-                                 timeout=FLAGS.eqlx_cli_timeout)
-            except:
-                LOG.debug(_("GMCLI: connection to SAN has been lost"))
-                retry += 1
-                self._connected = False
-                time.sleep(FLAGS.eqlx_cli_retries_timeout)
+        monkey_patch_eventlet()
+
+    def _connect_to_ssh(self):
+        # NOTE(aandreev): storing a stong reference to the client to avoid 
+        # it's garbage collection. paramiko is weird!
+        self.ssh_client = super(DellEQLSanISCSIDriver, self)._connect_to_ssh()
+        transport = self.ssh_client.get_transport()
+        transport.set_keepalive(FLAGS.eqlx_ssh_keepalive_interval)
+        return transport
+
+    def _check_connection(self):
+        for try_no in range(FLAGS.eqlx_cli_max_retries):
+            if hasattr(self, 'ssh'):
                 try:
-                    self.ssh = self._connect_to_ssh()
-                    self.trans = self.ssh.get_transport()
-                    self.trans.set_keepalive(FLAGS.eqlx_ssh_keepalive_interval)
-                    self._connected = True
-                    LOG.debug(_("GMCLI: reconnected on the %d attempt"), retry)
-                except:
-                    LOG.debug(_("GMCLI: unsuccessful retry %d attempt"), retry)
+                    self._run_ssh('cli-settings', 'show',
+                                 timeout=FLAGS.eqlx_cli_timeout)
+                except Exception as error:
+                    LOG.debug(error)
+                    LOG.info(_("EQL: connection to SAN has been lost"))
+                    delattr(self, 'ssh')
+                else:
+                    LOG.debug(_("EQL: SAN connection is up"))
+                    return 
+            if try_no:
+                # TODO(aandreev): replace with gevent sleep
+                time.sleep(FLAGS.eqlx_cli_retries_timeout)
+            try:
+                self.ssh = self._connect_to_ssh()
+                LOG.info(_("EQL: connected to the SAN after %d retries"), try_no)
+            except Exception as error:
+                LOG.debug(error)
+                LOG.error(_("EQL: failed to connect to the SAN"))
             else:
-                LOG.debug(_("GMCLI: we're still connected to SAN!"))
                 return
-        msg = _("Cannot connect to SAN after %(retry)d retries") % locals()
+
+        msg = _("EQL: unable to connect to the SAN after %(try_no)d retries") % locals()
         raise exception.Error(msg)
 
-    def _run_gmcli_cmd(self, *args):
+    def set_execute(self, execute):
+        """The only possible method of command exection here is SSH"""
+        pass
+    
+    def _execute(self, *args, **kwargs):
+        command = ' '.join(args)
         try:
-            self._check_connection_or_reconnect()
-            out = self._do_run_cmd(*args, timeout=FLAGS.eqlx_cli_timeout)
-        except greenlet.GreenletExit:
-            cmd = ' '.join(args)
-            msg = _("Timeout occurs while running GMCLI command: %(cmd)s") % \
+            self._check_connection()
+            LOG.info(_('EQL: executing "%s"') % command)
+            return self._run_ssh(command, timeout=FLAGS.eqlx_cli_timeout)
+        except Timeout:
+            msg = _("Timeout occurs while running GMCLI command: %(command)s") % \
                                                                        locals()
             raise exception.Error(msg)
-        else:
-            return out
 
     @with_timeout
-    def _do_run_cmd(self, *args, **kwargs):
-        chan = self.trans.open_session()
+    def _run_ssh(self, command, check_exit_code=True):
+        chan = self.ssh.open_session()
         chan.invoke_shell()
         _motd = self._get_output(chan)
-        LOG.debug(_("SAN MOTD returned: %s"), _motd)
+        if FLAGS.eqlx_verbose_ssh:
+            LOG.debug(_("SAN MOTD returned: %s"), _motd)
+        
         cmd = "%s %s %s" % ('stty', 'columns', '255')
         chan.send(cmd + '\r')
-        LOG.debug(_("CLI command sent to setup ternimal width: %s"), cmd)
+        if FLAGS.eqlx_verbose_ssh:
+            LOG.debug(_("CLI command sent to setup terminal width: %s"), cmd)
         out = self._get_output(chan)
-        cmd = ' '.join(args)
-        chan.send(cmd + '\r')
-        LOG.debug(_("CLI command sent: %s"), cmd)
+        
+        chan.send(command + '\r')
+        if FLAGS.eqlx_verbose_ssh:
+            LOG.debug(_("CLI command sent: %s"), command)
         out = self._get_output(chan)
+        
         chan.close()
-        LOG.debug(_("GMCLI command returned %s"), out)
+        if FLAGS.eqlx_verbose_ssh:
+            LOG.debug(_("GMCLI command returned %s"), out)
+        
         if any(line.startswith('% Error') for line in out):
             msg = _("Error running GMCLI command %(cmd)s. Result=%(out)s") % \
                                                                        locals()
@@ -1057,6 +1107,7 @@ class DellEQLSanISCSIDriver(SanISCSIDriver):
         ending = '%s> ' % FLAGS.eqlx_group_name
         while not out.endswith(ending):
             out += chan.recv(102400)
+
         return out.splitlines()
 
     def _get_prefixed_value(self, lines, prefix):
@@ -1081,41 +1132,41 @@ class DellEQLSanISCSIDriver(SanISCSIDriver):
         disabled_cli_features = ('confirmation', 'paging', 'events',
                                  'formatoutput')
         for feature in disabled_cli_features:
-            self._run_gmcli_cmd('cli-settings', feature, 'off')
-        LOG.debug(_("GMCLI settings initialization is complete"))
+            self._execute('cli-settings', feature, 'off')
+        LOG.info(_("EQL: SAN setup is complete"))
 
     def create_volume(self, volume):
         """Create a volume"""
         cmd = ['volume', 'create', volume['name'], "%sG" % (volume['size'],)]
         if FLAGS.san_thin_provision:
             cmd.append('thin-provision')
-        out = self._run_gmcli_cmd(*cmd)
+        out = self._execute(*cmd)
         return self._get_volume_data(out)
 
     def delete_volume(self, volume):
         """Delete a volume"""
-        self._run_gmcli_cmd('volume', 'select', volume['name'], 'offline')
-        self._run_gmcli_cmd('volume', 'delete', volume['name'])
+        self._execute('volume', 'select', volume['name'], 'offline')
+        self._execute('volume', 'delete', volume['name'])
 
     def create_snapshot(self, snapshot):
         """"Create snapshot of existing volume on appliance"""
-        out = self._run_gmcli_cmd('volume', 'select', snapshot['volume_name'],
+        out = self._execute('volume', 'select', snapshot['volume_name'],
                                   'snapshot', 'create-now')
         prefix = 'Snapshot name is '
         snap_name = self._get_prefixed_value(out, prefix)
-        self._run_gmcli_cmd('volume', 'select', snapshot['volume_name'],
+        self._execute('volume', 'select', snapshot['volume_name'],
                             'snapshot', 'rename', snap_name, snapshot['name'])
 
     def create_volume_from_snapshot(self, volume, snapshot):
         """Create new volume from other volume's snapshot on appliance"""
-        out = self._run_gmcli_cmd('volume', 'select', snapshot['volume_name'],
+        out = self._execute('volume', 'select', snapshot['volume_name'],
                                   'snapshot', 'select', snapshot['name'],
                                   'clone', volume['name'])
         return self._get_volume_data(out)
 
     def delete_snapshot(self, snapshot):
         """Delete volume's snapshot"""
-        self._run_gmcli_cmd('volume', 'select', snapshot['volume_name'],
+        self._execute('volume', 'select', snapshot['volume_name'],
                             'snapshot', 'delete', snapshot['name'])
 
     def initialize_connection(self, volume, connector):
@@ -1125,7 +1176,7 @@ class DellEQLSanISCSIDriver(SanISCSIDriver):
                connector['initiator']]
         if FLAGS.eqlx_use_chap:
             cmd.extend(['authmethod chap', 'username', FLAGS.eqlx_chap_login])
-        self._run_gmcli_cmd(*cmd)
+        self._execute(*cmd)
         iscsi_properties = self._get_iscsi_properties(volume)
         return {
             'driver_volume_type': 'iscsi',
@@ -1134,7 +1185,7 @@ class DellEQLSanISCSIDriver(SanISCSIDriver):
 
     def terminate_connection(self, volume, connector):
         """Remove access restictions from a volume"""
-        self._run_gmcli_cmd('volume', 'select', volume['name'],
+        self._execute('volume', 'select', volume['name'],
                             'access', 'delete', '1')
 
     def create_export(self, context, volume):
@@ -1161,3 +1212,17 @@ class DellEQLSanISCSIDriver(SanISCSIDriver):
 
     def local_path(self, volume):
         raise NotImplementedError()
+
+if __name__ == "__main__":
+    utils.default_flagfile()
+    args = flags.FLAGS(sys.argv)
+    logging.setup()
+    
+    utils.monkey_patch()
+    volume_driver = utils.import_object(FLAGS.volume_driver)
+    
+    volume_driver.do_setup(None)
+    volume_driver.check_for_setup_error()
+
+    for command in args[1:]:
+        sys.stdout.write('\n'.join(volume_driver._execute(command)))
