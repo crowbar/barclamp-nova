@@ -74,6 +74,10 @@ class NovaService < ServiceObject
       @logger.info("Nova create_proposal: no database found")
     end
 
+    if base["attributes"]["nova"]["db"]["sql_engine"] == ""
+      raise(I18n.t('model.service.dependency_missing', :name => @bc_name, :dependson => "database"))
+    end
+
     base["attributes"]["nova"]["keystone_instance"] = ""
     begin
       keystoneService = KeystoneService.new(@logger)
@@ -85,6 +89,9 @@ class NovaService < ServiceObject
       base["attributes"]["nova"]["keystone_instance"] = keystones[0] unless keystones.empty?
     rescue
       @logger.info("Nova create_proposal: no keystone found")
+    end
+    if base["attributes"]["nova"]["keystone_instance"] == ""
+      raise(I18n.t('model.service.dependency_missing', :name => @bc_name, :dependson => "keystone"))
     end
 
     base["attributes"]["nova"]["glance_instance"] = ""
@@ -98,6 +105,9 @@ class NovaService < ServiceObject
       base["attributes"]["nova"]["glance_instance"] = glances[0] unless glances.empty?
     rescue
       @logger.info("Nova create_proposal: no glance found")
+    end
+    if base["attributes"]["nova"]["glance_instance"] == ""
+      raise(I18n.t('model.service.dependency_missing', :name => @bc_name, :dependson => "glance"))
     end
 
     base["attributes"]["nova"]["volume"]["type"] = "local"
