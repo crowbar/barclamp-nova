@@ -25,8 +25,12 @@ if node[:keystone][:api][:protocol] == "https"
   include_recipe "apache2::mod_wsgi"
 end
 
-package "python-keystone"
-package "python-novaclient"
+package "python-keystone" do
+  action :upgrade
+end
+package "python-novaclient" do
+  action :upgrade
+end
 
 nova_package "api" do
   enable (node[:nova][:api][:protocol] != "https")

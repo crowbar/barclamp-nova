@@ -64,7 +64,9 @@ end
 if node.platform == "suse"
   case node[:nova][:libvirt_type]
     when "kvm"
-      package "kvm"
+      package "kvm" do
+        action :upgrade
+      end
       execute "loading kvm modules" do
         command "grep -q vmx /proc/cpuinfo && /sbin/modprobe kvm-intel; grep -q svm /proc/cpuinfo && /sbin/modprobe kvm-amd; /sbin/modprobe vhost-net"
       end
@@ -79,16 +81,22 @@ if node.platform == "suse"
 
       set_boot_kernel_and_trigger_reboot('xen')
     when "qemu"
-      package "kvm"
+      package "kvm" do
+        action :upgrade
+      end
     when "lxc"
-      package "lxc"
+      package "lxc" do
+        action :upgrade
+      end
 
       service "boot.cgroup" do
         action [:enable, :start]
       end
   end
 
-  package "libvirt"
+  package "libvirt" do
+    action :upgrade
+  end
 
   # change libvirt to run qemu as user qemu
   ruby_block "edit qemu config" do

@@ -87,7 +87,9 @@ if node[:nova][:volume][:type] != "rados"
   end
 
 
-  package "tgt"
+  package "tgt" do
+    action :upgrade
+  end
   # Restart doesn't work correct for this service.
   bash "restart-tgt" do
     if node.platform == "suse"
