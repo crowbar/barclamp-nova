@@ -73,7 +73,7 @@ if node[:nova][:api][:protocol] == "https"
     enable true
   end
 
-  template "/etc/logrotate.d/openstack-nova" do
+  template "/etc/logrotate.d/openstack-nova-api" do
     source "nova.logrotate.erb"
     mode 0644
     owner "root"
@@ -81,9 +81,9 @@ if node[:nova][:api][:protocol] == "https"
   end
 else
   # Remove potentially left-over Apache2 config files:
-  file "/etc/logrotate.d/openstack-glance" do
+  file "/etc/logrotate.d/openstack-nova-api" do
     action :delete
-  end if ::File.exist?("/etc/logrotate.d/openstack-nova")
+  end if ::File.exist?("/etc/logrotate.d/openstack-nova-api")
 
   apache_site "openstack-nova.conf" do
     enable false
