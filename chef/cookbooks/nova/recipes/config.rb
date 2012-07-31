@@ -75,7 +75,6 @@ else
 end
 public_api_ip = api_ip = Chef::Recipe::Barclamp::Inventory.get_network_by_type(api, "public").address
 admin_api_ip = api_ip = Chef::Recipe::Barclamp::Inventory.get_network_by_type(api, "admin").address
-node[:nova][:api] = public_api_ip
 Chef::Log.info("Api server found at #{public_api_ip} #{admin_api_ip}")
 
 networks = search(:node, "recipes:nova\\:\\:network#{env_filter}") || []
