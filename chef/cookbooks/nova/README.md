@@ -21,6 +21,10 @@ api
 ---
 Installs the `nova-api` service.
 
+cert
+---
+Installs the `nova-cert` service.
+
 config
 ------
 Shared nova dependencies and writes out the `nova.conf` file.
