@@ -75,7 +75,7 @@
         = text_field_tag :novnc_ssl_cert, @proposal.raw_data['attributes'][@proposal.barclamp]["novnc"]["ssl_crt_file"], :size => "80", :onchange => "update_value('novnc/ssl_crt_file', 'novnc_ssl_cert', 'string')"
       %p
         %label{ :for => :novnc_ssl_key }= t('.novnc_ssl_key')
-        = text_field_tag :novnc_ssl_key, @proposal.raw_data['attributes'][@proposal.barclamp]["novnc"]["ssl_key_file"], :size => "80", :onchange => "update_value('novnc/ssl_key', 'novnc_ssl_key', 'string')"
+        = text_field_tag :novnc_ssl_key, @proposal.raw_data['attributes'][@proposal.barclamp]["novnc"]["ssl_key_file"], :size => "80", :onchange => "update_value('novnc/ssl_key_file', 'novnc_ssl_key', 'string')"
       %p
         %em= t('.novnc_ssl_hint')
 
