@@ -58,8 +58,8 @@ default[:nova][:api][:osapi_compute_port] = "8774"
 default[:nova][:api][:osapi_volume_port] = "8776"
 
 # Secure Apache config
-default[:keystone][:apache][:ssl_crt_file] = '/etc/apache2/ssl.crt/openstack-nova-server.crt'
-default[:keystone][:apache][:ssl_key_file] = '/etc/apache2/ssl.key/openstack-nova-server.key'
+default[:nova][:apache][:ssl_crt_file] = '/etc/apache2/ssl.crt/openstack-nova-server.crt'
+default[:nova][:apache][:ssl_key_file] = '/etc/apache2/ssl.key/openstack-nova-server.key'
 
 #
 # General network parameters
