@@ -29,8 +29,8 @@ if node[:nova][:volume][:type] != "rados"
     checked_disks << disk if File.exists?("/dev/#{disk}") and data["usage"] == "Storage"
   end
 
-  if checked_disks.empty?
-    # only OS disk is exists, will use file storage
+  if checked_disks.empty? or node[:nova][:volume][:nova_volume_disks].empty?
+    # only OS disk exists or no non-OS disk specified, will use file storage
     fname = node["nova"]["volume"]["local_file"]
     fsize = node["nova"]["volume"]["local_size"]
 
@@ -53,26 +53,17 @@ if node[:nova][:volume][:type] != "rados"
 
   else
 
-    if node[:nova][:volume][:nova_volume_disks].empty?
-      # use first non-OS disk for vg
-      dname = "/dev/#{checked_disks.first}"
+    # use this disk list
+    disk_list = []
+    node[:nova][:volume][:nova_volume_disks].each do |disk|
+      disk_list << "/dev/#{disk}" if checked_disks.include?(disk)
       bash "wipe partitions" do
-        code "dd if=/dev/zero of=#{dname} bs=1024 count=1"
+        code "dd if=/dev/zero of=#{disk} bs=1024 count=1"
         not_if "vgs #{volname}"
       end
-    else
-      # use this disk list
-      disk_list = []
-      node[:nova][:volume][:nova_volume_disks].each do |disk|
-        disk_list << "/dev/#{disk}" if checked_disks.include?(disk)
-        bash "wipe partitions" do
-          code "dd if=/dev/zero of=#{disk} bs=1024 count=1"
-          not_if "vgs #{volname}"
-        end
-      end
-      raise "Can't access any disk from the given list" if disk_list.empty?
-      dname = disk_list.join(' ')
     end
+    raise "Can't access any disk from the given list" if disk_list.empty?
+    dname = disk_list.join(' ')
 
     bash "create physical volume" do
       code "pvcreate #{dname}"
