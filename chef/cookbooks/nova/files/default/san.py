@@ -979,15 +979,18 @@ def monkey_patch_eventlet():
 class DellEQLSanISCSIDriver(SanISCSIDriver):
     """Implements commands for Dell EqualLogic SAN ISCSI management.
     
+    To enable the driver add the following line to the nova configuration:
+        volume_driver=nova.volume.san.DellEQLSanISCSIDriver
+
     Driver's prerequisites are:
-        - a separate volume group set up and running
-        - SSH access to the SAN is enabled
-        - a special user must be created which is would be able to
+        - a separate volume group set up and running on the SAN
+        - SSH access to the SAN
+        - a special user must be created which must be able to
             - create/delete volumes and snapshots;
             - clone snapshots into volumes; 
             - modify volume access records;
     
-    The access credentials to the SAN are provided by means of the flags
+    The access credentials to the SAN are provided by means of the following flags
         san_ip=<ip_address>
         san_login=<user name>
         san_password=<user password>
@@ -995,8 +998,9 @@ class DellEQLSanISCSIDriver(SanISCSIDriver):
     Thin provision of volumes is enabled by default, to disable it use:
         san_thin_provision=false
 
-    To use target CHAP authentication that is disabled by default SAN admin
-    should create a local CHAP user and specify the following flags:
+    In order to use target CHAP authentication (which is disabled by default) SAN 
+    administrator must create a local CHAP user and specify the following flags 
+    for the driver:
         eqlx_use_chap=true
         eqlx_chap_login=<chap_login>
         eqlx_chap_password=<chap_password>
@@ -1010,6 +1014,9 @@ class DellEQLSanISCSIDriver(SanISCSIDriver):
 
     Also, the default CLI command execution timeout is 30 secs. Adjustable by
         eqlx_cli_timeout=<seconds>
+
+    In addition to enable SSH connection debugging output use the flag:
+        eqlx_verbose_ssh=True
     """
 
     def __init__(self):
@@ -1047,6 +1054,8 @@ class DellEQLSanISCSIDriver(SanISCSIDriver):
                 # TODO(aandreev): replace with gevent sleep
                 time.sleep(FLAGS.eqlx_cli_retries_timeout)
             try:
+                LOG.debug(_("EQL: connecting to the SAN (%s@%s:%d)"), FLAGS.san_login, 
+                    FLAGS.san_ip, FLAGS.san_ssh_port)
                 self.ssh = self._connect_to_ssh()
                 LOG.info(_("EQL: connected to the SAN after %d retries"), try_no)
             except Exception as error:
@@ -1119,7 +1128,7 @@ class DellEQLSanISCSIDriver(SanISCSIDriver):
     def _get_volume_data(self, lines):
         prefix = 'iSCSI target name is '
         target_name = self._get_prefixed_value(lines, prefix)[:-1]
-        lun_id = "%s:%s,1 %s 0" % (FLAGS.san_ip, '3260', target_name)
+        lun_id = "%s:%s,1 %s 0" % (self._group_ip, '3260', target_name)
         model_update = {}
         model_update['provider_location'] = lun_id
         if FLAGS.eqlx_use_chap:
@@ -1133,7 +1142,13 @@ class DellEQLSanISCSIDriver(SanISCSIDriver):
                                  'formatoutput')
         for feature in disabled_cli_features:
             self._execute('cli-settings', feature, 'off')
-        LOG.info(_("EQL: SAN setup is complete"))
+        
+        
+        for line in self._execute('grpparams', 'show'):
+            if line.startswith('Group-Ipaddress:'):
+                _nop, _nop, self._group_ip = line.rstrip().partition(' ')
+
+        LOG.info(_("EQL: SAN setup is complete, group IP is %s"), self._group_ip)
 
     def create_volume(self, volume):
         """Create a volume"""
@@ -1172,8 +1187,7 @@ class DellEQLSanISCSIDriver(SanISCSIDriver):
     def initialize_connection(self, volume, connector):
         """Restrict access to a volume"""
         cmd = ['volume', 'select', volume['name'], 'access', 'create',
-               'ipaddress', connector['ip'], 'initiator',
-               connector['initiator']]
+               'initiator', connector['initiator']]
         if FLAGS.eqlx_use_chap:
             cmd.extend(['authmethod chap', 'username', FLAGS.eqlx_chap_login])
         self._execute(*cmd)
@@ -1214,6 +1228,17 @@ class DellEQLSanISCSIDriver(SanISCSIDriver):
         raise NotImplementedError()
 
 if __name__ == "__main__":
+    """The following code make it possible to execute a set of arbitrary commands 
+    on the SAN without starting up the nova-volume service. The script requires no 
+    additional configuration beyond one already used by regular nova services.
+    To run the script use the following command line:
+
+    python <nova-pkg-dir>/volume/san.py [--config=<optional-file-with-extra-cfg>] <cmd1> ... <cmdN>
+
+    NOTE: when working with the source packaged nova use the command line
+
+    cd <nova-src-dir> && python nova/volume/san.py ...
+    """
     utils.default_flagfile()
     args = flags.FLAGS(sys.argv)
     logging.setup()
