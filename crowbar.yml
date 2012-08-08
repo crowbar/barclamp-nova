@@ -19,6 +19,7 @@ barclamp:
   name: nova
   display: Nova
   version: 0
+  allow_multiple_proposals: true
   requires:
     - @crowbar
     - mysql

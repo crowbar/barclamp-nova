@@ -20,10 +20,6 @@ class NovaService < ServiceObject
     @logger = thelogger
   end
 
-  def self.allow_multiple_proposals?
-    true
-  end
-
   def proposal_dependencies(role)
     answer = []
     answer << { "barclamp" => "mysql", "inst" => role.default_attributes["nova"]["db"]["mysql_instance"] }
