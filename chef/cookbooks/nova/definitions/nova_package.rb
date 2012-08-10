@@ -30,7 +30,7 @@ define :nova_package, :enable => true do
       start_command "start #{nova_name}"
       status_command "status #{nova_name} | cut -d' ' -f2 | cut -d'/' -f1 | grep start"
     end
-    supports :status => true, :restart => true
+    supports :status => true, :restart => true, :start => true, :stop => true
 
     if params[:enable] != false
       # only enable and start the service, unless a reboot has been triggered
@@ -43,6 +43,8 @@ define :nova_package, :enable => true do
         # use xen before)
         action [:enable]
       end
+    else
+      action [:disable, :stop]
     end
 
     subscribes :restart, resources(:template => "/etc/nova/nova.conf")
