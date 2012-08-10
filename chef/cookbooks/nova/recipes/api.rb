@@ -20,7 +20,7 @@
 include_recipe "nova::config"
 
 include_recipe "apache2"
-if node[:keystone][:api][:protocol] == "https"
+if node[:nova][:api][:protocol] == "https"
   include_recipe "apache2::mod_ssl"
   include_recipe "apache2::mod_wsgi"
 end
