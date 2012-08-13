@@ -18,9 +18,9 @@ class NovaService < ServiceObject
   def proposal_dependencies(new_config)
     answer = []
     hash = new_config.config_hash
-    answer << { "barclamp" => "mysql", "inst" => hash["db"]["mysql_instance"] }
-    answer << { "barclamp" => "keystone", "inst" => hash["keystone_instance"] }
-    answer << { "barclamp" => "glance", "inst" => hash["glance_instance"] }
+    answer << { "barclamp" => "mysql", "inst" => hash["nova"]["db"]["mysql_instance"] }
+    answer << { "barclamp" => "keystone", "inst" => hash["nova"]["keystone_instance"] }
+    answer << { "barclamp" => "glance", "inst" => hash["nova"]["glance_instance"] }
     answer
   end
 
@@ -58,12 +58,12 @@ class NovaService < ServiceObject
     # automatically swap to qemu if using VMs for testing (relies on node.virtual to detect VMs)
     nodes.each do |n|
       if n.node_object.virtual?
-        hash["libvirt_type"] = "qemu"
+        hash["nova"]["libvirt_type"] = "qemu"
         break
       end
     end
 
-    hash["db"]["mysql_instance"] = ""
+    hash["nova"]["db"]["mysql_instance"] = ""
     begin
       mysql = Barclamp.find_by_name("mysql")
       mysqls = mysql.active_proposals
@@ -71,12 +71,12 @@ class NovaService < ServiceObject
         # No actives, look for proposals
         mysqls = mysql.proposals
       end
-      hash["db"]["mysql_instance"] = mysqls[0].name unless mysqls.empty?
+      hash["nova"]["db"]["mysql_instance"] = mysqls[0].name unless mysqls.empty?
     rescue
       @logger.info("Nova create_proposal: no mysql found")
     end
 
-    hash["keystone_instance"] = ""
+    hash["nova"]["keystone_instance"] = ""
     begin
       keystoneService = Barclamp.find_by_name("keystone")
       keystones = keystoneService.active_proposals
@@ -84,13 +84,13 @@ class NovaService < ServiceObject
         # No actives, look for proposals
         keystones = keystoneService.proposals
       end
-      hash["keystone_instance"] = keystones[0].name unless keystones.empty?
+      hash["nova"]["keystone_instance"] = keystones[0].name unless keystones.empty?
     rescue
       @logger.info("Nova create_proposal: no keystone found")
     end
-    hash["service_password"] = '%012d' % rand(1e12)
+    hash["nova"]["service_password"] = '%012d' % rand(1e12)
 
-    hash["glance_instance"] = ""
+    hash["nova"]["glance_instance"] = ""
     begin
       glanceService = Barclamp.find_by_name("glance")
       glances = glanceService.active_proposals
@@ -98,12 +98,12 @@ class NovaService < ServiceObject
         # No actives, look for proposals
         glances = glanceService.proposals
       end
-      hash["glance_instance"] = glances[0].name unless glances.empty?
+      hash["nova"]["glance_instance"] = glances[0].name unless glances.empty?
     rescue
       @logger.info("Nova create_proposal: no glance found")
     end
 
-    hash["db"]["password"] = random_password
+    hash["nova"]["db"]["password"] = random_password
     base.config_hash = hash
 
     @logger.debug("Nova create_proposal: exiting")
@@ -124,14 +124,14 @@ class NovaService < ServiceObject
     net_svc = Barclamp.find_by_name("network").operations(@logger)
 
     tnodes = new_config.active_config.get_nodes_by_role("nova-multi-controller")
-    tnodes = all_nodes if new_config.active_config.config_hash["network"]["ha_enabled"]
+    tnodes = all_nodes if new_config.active_config.config_hash["nova"]["network"]["ha_enabled"]
     unless tnodes.nil? or tnodes.empty?
       tnodes.each do |n|
         net_svc.allocate_ip "default", "public", "host", n.name
       end
     end
 
-    unless new_config.active_config.config_hash["network"]["tenant_vlans"]
+    unless new_config.active_config.config_hash["nova"]["network"]["tenant_vlans"]
       all_nodes.each do |n|
         net_svc.enable_interface "default", "nova_fixed", n.name
       end
