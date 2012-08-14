@@ -85,23 +85,20 @@ if node[:nova][:api][:protocol] == "https"
   end
 else
   # Remove potentially left-over Apache2 config files:
-  file "/etc/logrotate.d/openstack-nova-api" do
-    action :delete
-  end if ::File.exist?("/etc/logrotate.d/openstack-nova-api")
-
   apache_site "openstack-nova.conf" do
     enable false
   end
 
-  if node.platform == "suse"
-    vhost_config = "#{node[:apache][:dir]}/vhosts.d/openstack-nova.conf"
-  else
+  if node.platform != "suse"
     vhost_config = "#{node[:apache][:dir]}/sites-available/openstack-nova.conf"
+    file vhost_config do
+      action :delete
+    end
   end
-  file vhost_config do
+
+  file "/etc/logrotate.d/openstack-nova-api" do
     action :delete
-    notifies :reload, resources(:service => "apache2"), :immediately
-  end if ::File.exist?(vhost_config)
+  end
   # End of Apache2 vhost cleanup
 end
 
