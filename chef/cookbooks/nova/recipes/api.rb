@@ -32,31 +32,12 @@ package "python-novaclient" do
   action :upgrade
 end
 
-nova_package "api" do
-  enable (node[:nova][:api][:protocol] != "https")
-end
-
-env_filter = " AND keystone_config_environment:keystone-config-#{node[:nova][:keystone_instance]}"
-keystones = search(:node, "recipes:keystone\\:\\:server#{env_filter}") || []
-if keystones.length > 0
-  keystone = keystones[0]
-  keystone = node if keystone.name == node.name
-else
-  keystone = node
-end
-
-keystone_address = Chef::Recipe::Barclamp::Inventory.get_network_by_type(keystone, "admin").address if keystone_address.nil?
-keystone_protocol = keystone["keystone"]["api"]["protocol"]
-keystone_token = keystone["keystone"]["service"]["token"]
-keystone_service_port = keystone["keystone"]["api"]["service_port"]
-keystone_admin_port = keystone["keystone"]["api"]["admin_port"]
-keystone_service_tenant = keystone["keystone"]["service"]["tenant"]
-keystone_service_user = "nova" # GREG: Fix this
-keystone_service_password = "fredfred" # GREG: Fix this
-Chef::Log.info("Keystone server found at #{keystone_address}")
-
 if node[:nova][:api][:protocol] == "https"
   Chef::Log.info("Configuring Nova-API to use SSL via Apache2+mod_wsgi")
+
+  nova_package "api" do
+    enable false
+  end
 
   # Prepare Apache2 SSL vhost template:
   template "#{node[:apache][:dir]}/sites-available/openstack-nova.conf" do
@@ -100,7 +81,30 @@ else
     action :delete
   end
   # End of Apache2 vhost cleanup
+
+  nova_package "api" do
+    enable true
+  end
 end
+
+env_filter = " AND keystone_config_environment:keystone-config-#{node[:nova][:keystone_instance]}"
+keystones = search(:node, "recipes:keystone\\:\\:server#{env_filter}") || []
+if keystones.length > 0
+  keystone = keystones[0]
+  keystone = node if keystone.name == node.name
+else
+  keystone = node
+end
+
+keystone_address = Chef::Recipe::Barclamp::Inventory.get_network_by_type(keystone, "admin").address if keystone_address.nil?
+keystone_protocol = keystone["keystone"]["api"]["protocol"]
+keystone_token = keystone["keystone"]["service"]["token"]
+keystone_service_port = keystone["keystone"]["api"]["service_port"]
+keystone_admin_port = keystone["keystone"]["api"]["admin_port"]
+keystone_service_tenant = keystone["keystone"]["service"]["tenant"]
+keystone_service_user = "nova" # GREG: Fix this
+keystone_service_password = "fredfred" # GREG: Fix this
+Chef::Log.info("Keystone server found at #{keystone_address}")
 
 template "/etc/nova/api-paste.ini" do
   source "api-paste.ini.erb"
