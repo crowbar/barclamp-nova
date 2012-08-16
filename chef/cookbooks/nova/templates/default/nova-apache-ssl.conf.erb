@@ -11,7 +11,7 @@
 <IfDefine !NOSSL>
 
 # Proxy  public API:
-<% @nova_apis.each do |api, options| %>
+<% @nova_apis.sort_by { |api, options| api }.each do |api, options| %>
 Listen <%= options[:port] %>
 
 <VirtualHost *:<%= options[:port] %>>

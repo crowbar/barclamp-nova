@@ -46,10 +46,10 @@ if node[:nova][:api][:protocol] == "https"
     end
     source "nova-apache-ssl.conf.erb"
     variables(
-      :nova_apis => {:ec2 => {:port => node[:nova][:api][:ec2_port]},
-                     :osapi_compute => {:port => node[:nova][:api][:osapi_compute_port]},
-                     :osapi_volume => {:port => node[:nova][:api][:osapi_volume_port]},
-                     :metadata => {:port => node[:nova][:api][:metadata_port]}}
+      :nova_apis => {"ec2" => {:port => node[:nova][:api][:ec2_port]},
+                     "osapi_compute" => {:port => node[:nova][:api][:osapi_compute_port]},
+                     "osapi_volume" => {:port => node[:nova][:api][:osapi_volume_port]},
+                     "metadata" => {:port => node[:nova][:api][:metadata_port]}}
     )
     mode 0644
     if node.platform == "suse"
