@@ -19,8 +19,8 @@
 
 include_recipe "nova::config"
 
-include_recipe "apache2"
 if node[:nova][:api][:protocol] == "https"
+  include_recipe "apache2"
   include_recipe "apache2::mod_ssl"
   include_recipe "apache2::mod_wsgi"
 end
@@ -52,6 +52,9 @@ if node[:nova][:api][:protocol] == "https"
                      :metadata => {:port => node[:nova][:api][:metadata_port]}}
     )
     mode 0644
+    if node.platform == "suse"
+      notifies :reload, resources(:service => "apache2"), :immediately
+    end
   end
 
   apache_site "openstack-nova.conf" do
@@ -66,19 +69,23 @@ if node[:nova][:api][:protocol] == "https"
   end
 else
   # Remove potentially left-over Apache2 config files:
-  apache_site "openstack-nova.conf" do
-    enable false
-  end
-
-  if node.platform != "suse"
+  if node.platform == "suse"
+    vhost_config = "#{node[:apache][:dir]}/vhosts.d/openstack-nova.conf"
+  else
     vhost_config = "#{node[:apache][:dir]}/sites-available/openstack-nova.conf"
+  end
+  if ::File.exist?(vhost_config)
+    apache_site "openstack-nova.conf" do
+      enable false
+    end
+
     file vhost_config do
       action :delete
-    end
-  end
+    end if node.platform != "suse"
 
-  file "/etc/logrotate.d/openstack-nova-api" do
-    action :delete
+    file "/etc/logrotate.d/openstack-nova-api" do
+      action :delete
+    end
   end
   # End of Apache2 vhost cleanup
 
