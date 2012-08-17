@@ -167,7 +167,7 @@ class NovaService < ServiceObject
     @logger.debug("Nova apply_role_pre_chef_call: leaving")
   end
 
-  def validate_proposal proposal
+  def validate_proposal_after_save proposal
     super
 
     elements = proposal["deployment"]["nova"]["elements"]
