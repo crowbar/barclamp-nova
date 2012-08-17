@@ -170,6 +170,8 @@ class NovaService < ServiceObject
   def validate_proposal_after_save proposal
     super
 
+    errors = []
+
     elements = proposal["deployment"]["nova"]["elements"]
 
     elements["nova-multi-controller"].each do |n|
@@ -177,11 +179,14 @@ class NovaService < ServiceObject
       roles = node.roles()
       ["ceph-store", "swift-storage"].each do |role|
         if roles.include?(role)
-          raise Chef::Exceptions::ValidationFailed.new("Node #{n} already has the #{role} role; nodes cannot have both nova-multi-controller and #{role} roles")
+          errors << "Node #{n} already has the #{role} role; nodes cannot have both nova-multi-controller and #{role} roles."
         end
       end
     end
 
+    if errors.length > 0
+      raise Chef::Exceptions::ValidationFailed.new(errors.join("\n"))
+    end
   end
 
 end
