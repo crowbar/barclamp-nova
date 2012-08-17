@@ -12,6 +12,7 @@
 # See the License for the specific language governing permissions and 
 # limitations under the License. 
 # 
+require 'chef'
 
 class NovaService < ServiceObject
 
@@ -164,6 +165,23 @@ class NovaService < ServiceObject
     end
 
     @logger.debug("Nova apply_role_pre_chef_call: leaving")
+  end
+
+  def validate_proposal proposal
+    super
+
+    elements = proposal["deployment"]["nova"]["elements"]
+
+    elements["nova-multi-controller"].each do |n|
+      node = NodeObject.find_node_by_name(n)
+      roles = node.roles()
+      ["ceph-store", "swift-storage"].each do |role|
+        if roles.include?(role)
+          raise Chef::Exceptions::ValidationFailed.new("Node #{n} already has the #{role} role; nodes cannot have both nova-multi-controller and #{role} roles")
+        end
+      end
+    end
+
   end
 
 end
