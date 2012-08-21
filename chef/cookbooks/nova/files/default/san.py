@@ -1156,6 +1156,7 @@ class DellEQLSanISCSIDriver(SanISCSIDriver):
         if FLAGS.san_thin_provision:
             cmd.append('thin-provision')
         out = self._execute(*cmd)
+        self._execute('volume', 'show', volume['name'])
         return self._get_volume_data(out)
 
     def delete_volume(self, volume):
@@ -1171,12 +1172,16 @@ class DellEQLSanISCSIDriver(SanISCSIDriver):
         snap_name = self._get_prefixed_value(out, prefix)
         self._execute('volume', 'select', snapshot['volume_name'],
                             'snapshot', 'rename', snap_name, snapshot['name'])
+        self._execute('volume', 'select', snapshot['volume_name'], 'snapshot',
+                            'show', snapshot['name'])
 
     def create_volume_from_snapshot(self, volume, snapshot):
         """Create new volume from other volume's snapshot on appliance"""
         out = self._execute('volume', 'select', snapshot['volume_name'],
                                   'snapshot', 'select', snapshot['name'],
                                   'clone', volume['name'])
+        self._execute('volume', 'show', volume['name'])
+        self._execute('volume', 'show', snapshot['volume_name'])
         return self._get_volume_data(out)
 
     def delete_snapshot(self, snapshot):
