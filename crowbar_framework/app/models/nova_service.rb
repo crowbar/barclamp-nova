@@ -122,7 +122,7 @@ class NovaService < ServiceObject
         base["attributes"]["nova"]["volume"]["ceph_instance"] = cephs[0]
         @logger.info("Using ceph instance: #{cephs[0]}")
         base["attributes"]["nova"]["volume"]["type"] = "rados"
-        base["attributes"]["nova"]["volume"]["rbd_pool"] = "data"
+        base["attributes"]["nova"]["volume"]["rbd_pool"] = "rbd"
       end
     rescue
       @logger.info("Nova create_proposal: ceph not found")
