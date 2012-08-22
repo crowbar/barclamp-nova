@@ -18,6 +18,10 @@
       %label{ :for => :glance_instance }= t('.glance_instance')
       = instance_selector("glance", :glance_instance, "glance_instance", @proposal)
     %p
+      %label{ :for => :glance_ssl_no_verify }= t('.glance_ssl_no_verify')
+      = select_tag :glance_ssl_no_verify, options_for_select([['true','true'], ['false', 'false']], @proposal.raw_data['attributes'][@proposal.barclamp]["glance_ssl_no_verify"].to_s), :onchange => "update_value('glance_ssl_no_verify', 'glance_ssl_no_verify', 'boolean')"
+      %em= t('.ssl_no_verify_hint')
+    %p
       %label{ :for => :verbose }= t('.verbose')
       = select_tag :verbose, options_for_select([['true','true'], ['false', 'false']], @proposal.raw_data['attributes'][@proposal.barclamp]["verbose"].to_s), :onchange => "update_value('verbose', 'verbose', 'boolean')"
     %p

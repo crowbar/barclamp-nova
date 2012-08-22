@@ -5,6 +5,7 @@
     "nova": {
       "keystone_instance": "none",
       "glance_instance": "none",
+      "glance_ssl_no_verify": false,
       "libvirt_type": "kvm",
       "verbose": true,
       "user": "openstack-nova",

@@ -44,6 +44,8 @@ locale_additions:
           sql_instance: SQL Instance
           keystone_instance: Keystone
           glance_instance: Glance
+          glance_ssl_no_verify: Disable SSL Certificate Verification for Glance
+          ssl_no_verify_hint: Useful when using self-signed certificates for OpenStack API services
           verbose: Verbose
           dhcp_enabled: DHCP Enabled
           ha_enabled: High Availability Enabled

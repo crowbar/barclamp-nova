@@ -70,7 +70,10 @@ flat_injected=True
 # GLANCE
 <% unless @glance_server_ip.nil? -%>
 image_service=nova.image.glance.GlanceImageService
-glance_api_servers=<%= @glance_server_ip %>:<%= @glance_server_port %>
+glance_api_servers=<%= @glance_server_protocol %>://<%= @glance_server_ip %>:<%= @glance_server_port %>
+<% if @glance_ssl_no_verify -%>
+glance_api_insecure=true
+<% end %>
 <% end -%>
 
 # COMPUTE

@@ -14,6 +14,7 @@
           "mapping": {
             "keystone_instance": { "type": "str", "required": true },
             "glance_instance": { "type": "str", "required": true },
+            "glance_ssl_no_verify": { "type": "bool", "required": true },
             "libvirt_type": { "type": "str", "required": true },
             "verbose": { "type": "bool", "required": true },
             "user": { "type": "str", "required": true },

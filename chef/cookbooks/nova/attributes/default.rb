@@ -66,6 +66,9 @@ default[:nova][:novnc][:ssl_enabled] = false
 default[:nova][:novnc][:ssl_crt_file] = ''
 default[:nova][:novnc][:ssl_key_file] = ''
 
+# SSL certificate verification, disable when using self-signed certificates
+default[:nova][:glance_ssl_no_verify] = false
+
 #
 # General network parameters
 #
