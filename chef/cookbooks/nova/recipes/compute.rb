@@ -115,7 +115,7 @@ if node.platform == "suse"
         rc.search_file_replace_line(/group.*=/, '#group = "root"')
       end
 
-      libvirt_restart_needed = true if rc.file_edited
+      libvirt_restart_needed = true if rc.file_edited?
       rc.write_file
     end
   end
