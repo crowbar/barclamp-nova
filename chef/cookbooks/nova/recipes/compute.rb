@@ -181,7 +181,7 @@ else
     supports :status => true, :restart => true
     # check if /sbin/iscsid is running, as the init script just returns 6 in
     # some cases, which means rc_unused (bnc#776901)
-    status_command "/sbin/checkproc /sbin/iscsid" node.platform == "suse"
+    status_command "/sbin/checkproc /sbin/iscsid" if node.platform == "suse"
     action [ :enable, :start ]
   end
 end
