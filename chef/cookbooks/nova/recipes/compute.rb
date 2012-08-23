@@ -98,6 +98,8 @@ if node.platform == "suse"
     action :upgrade
   end
 
+  libvirt_restart_needed = false
+
   # change libvirt to run qemu as user qemu
   ruby_block "edit qemu config" do
     block do
@@ -112,12 +114,20 @@ if node.platform == "suse"
         rc.search_file_replace_line(/user.*=/, '#user = "root"')
         rc.search_file_replace_line(/group.*=/, '#group = "root"')
       end
+
+      libvirt_restart_needed = true if rc.file_edited
       rc.write_file
     end
   end
 
   service "libvirtd" do
-    action [:enable, :restart]
+    action [:enable, :start]
+  end
+
+  if libvirt_restart_needed
+    service "libvirtd" do
+      action [:restart]
+    end
   end
 end
 
