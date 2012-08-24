@@ -21,6 +21,26 @@ class NovaService < ServiceObject
     @logger = thelogger
   end
 
+  def netmask_from_str(netmask_str)
+    octets = netmask_str.split(".")
+    if octets.length != 4
+      raise ArgumentError.new("Invalid netmask.")
+    end
+    netmask = 0
+    octets.each do |octet|
+      octet_int = Integer(octet)
+      break if octet_int == 0
+      # log2 and log(x,base) are only available in recent versions of ruby...
+      octet_log = Math.log(octet_int + 1) / Math.log(2)
+      if octet_log != octet_log.round
+        raise ArgumentError.new("Invalid netmask.")
+      end
+      netmask = netmask + octet_log.to_i
+    end
+
+    netmask
+  end
+
   def self.allow_multiple_proposals?
     true
   end
@@ -130,6 +150,15 @@ class NovaService < ServiceObject
 
     base["attributes"]["nova"]["db"]["password"] = random_password
 
+    nova_fixed_netmask_str = NodeObject.all[0]["network"]["networks"]["nova_fixed"]["netmask"]
+    begin
+      nova_fixed_netmask = netmask_from_str(nova_fixed_netmask_str)
+      base["attributes"]["nova"]["network"]["network_size"] = 2**(32 - nova_fixed_netmask)
+      base["attributes"]["nova"]["network"]["num_networks"] = 1
+    rescue ArgumentError => e
+      # Ouch. Just keep the defaults, nothing we can do :/
+    end
+
     @logger.debug("Nova create_proposal: exiting")
     base
   end
@@ -179,21 +208,7 @@ class NovaService < ServiceObject
     compute_fit = true
 
     begin
-      octets = nova_fixed_netmask_str.split(".")
-      if octets.length != 4
-        raise ArgumentError.new("Invalid netmask.")
-      end
-      nova_fixed_netmask = 0
-      octets.each do |octet|
-        octet_int = Integer(octet)
-        break if octet_int == 0
-        # log2 and log(x,base) are only available in recent versions of ruby...
-        octet_log = Math.log(octet_int + 1) / Math.log(2)
-        if octet_log != octet_log.round
-          raise ArgumentError.new("Invalid netmask.")
-        end
-        nova_fixed_netmask = nova_fixed_netmask + octet_log.to_i
-      end
+      nova_fixed_netmask = netmask_from_str(nova_fixed_netmask_str)
     rescue ArgumentError => e
       nova_fixed_netmask = -1
     end
