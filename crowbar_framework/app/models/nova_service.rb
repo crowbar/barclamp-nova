@@ -172,6 +172,61 @@ class NovaService < ServiceObject
 
     errors = []
 
+    nova_fixed_netmask_str = NodeObject.all[0]["network"]["networks"]["nova_fixed"]["netmask"]
+    num_networks = proposal["attributes"]["nova"]["network"]["num_networks"]
+    subnetwork_size = proposal["attributes"]["nova"]["network"]["network_size"]
+
+    compute_fit = true
+
+    begin
+      octets = nova_fixed_netmask_str.split(".")
+      if octets.length != 4
+        raise ArgumentError.new("Invalid netmask.")
+      end
+      nova_fixed_netmask = 0
+      octets.each do |octet|
+        octet_int = Integer(octet)
+        break if octet_int == 0
+        # log2 and log(x,base) are only available in recent versions of ruby...
+        octet_log = Math.log(octet_int + 1) / Math.log(2)
+        if octet_log != octet_log.round
+          raise ArgumentError.new("Invalid netmask.")
+        end
+        nova_fixed_netmask = nova_fixed_netmask + octet_log.to_i
+      end
+    rescue ArgumentError => e
+      nova_fixed_netmask = -1
+    end
+
+    if nova_fixed_netmask < 0 or nova_fixed_netmask > 32
+      errors << "Invalid netmask #{nova_fixed_netmask_str} for nova_fixed network specified in network barclamp."
+      compute_fit = false
+    end
+
+    if num_networks <= 0
+      errors << "Value for num_networks must be positive."
+      compute_fit = false
+    end
+
+    if subnetwork_size <= 1
+      errors << "Value for subnetwork_size must be at least 2 and a power of 2."
+      compute_fit = false
+    else
+      subnetwork_size_log = Math.log(subnetwork_size) / Math.log(2)
+      if subnetwork_size_log != subnetwork_size_log.round
+        errors << "Value for subnetwork_size must be a power of 2."
+        compute_fit = false
+      end
+    end
+
+    if compute_fit
+      nova_fixed_network_size = 2**(32 - nova_fixed_netmask)
+      needed_size = num_networks * subnetwork_size
+      if needed_size > nova_fixed_network_size
+        errors << "Requested networks for nova (defined by num_networks and subnetwork_size) do not fit in the nova_fixed network defined in network barclamp."
+      end
+    end
+
     elements = proposal["deployment"]["nova"]["elements"]
 
     elements["nova-multi-controller"].each do |n|
