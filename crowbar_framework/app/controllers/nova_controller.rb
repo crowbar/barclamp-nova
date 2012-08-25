@@ -14,11 +14,7 @@
 # 
 
 class NovaController < BarclampController
-  def initialize
-    @service_object = NovaService.new logger
-  end
-  
-  def node_disks
+  def nodes
     disk_list = {}
     name = params[:id] || params[:name]
     node = NodeObject.find_node_by_name(name)
@@ -26,7 +22,7 @@ class NovaController < BarclampController
       disk_list[disk] = data["size"] if data["usage"] == "Storage"
     end
     Rails.logger.info "disk list #{disk_list.inspect}"
-    render :json => JSON.generate(disk_list)
+    render :json => JSON.generate(disk_list), :layout=>false
   end
 end
 
