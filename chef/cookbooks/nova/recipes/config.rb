@@ -230,9 +230,10 @@ if node[:nova][:volume][:type] == "rados"
 
 end
 
-# only expose metadata api on compute nodes
+# expose all apis on the controller, and only the metadata api on compute
+# nodes
 if node["roles"].include?("nova-multi-controller")
-  enabled_apis = ['ec2','osapi_compute','osapi_volume']
+  enabled_apis = ['ec2','osapi_compute','osapi_volume','metadata']
 else
   enabled_apis = ['metadata']
 end
