@@ -230,6 +230,14 @@ if node[:nova][:volume][:type] == "rados"
 
 end
 
+# only expose metadata api on compute nodes
+if node["roles"].include?("nova-multi-controller")
+  enabled_apis = ['ec2','osapi_compute','osapi_volume']
+else
+  enabled_apis = ['metadata']
+end
+
+
 directory "/var/lock/nova" do
   action :create
   owner "openstack-nova"
@@ -246,6 +254,7 @@ template "/etc/nova/nova.conf" do
             :libvirt_type => node[:nova][:libvirt_type],
             :ec2_host => admin_api_ip,
             :ec2_dmz_host => public_api_ip,
+            :enabled_apis => enabled_apis,
             :network_public_ip => network_public_ip,
             :dns_server_public_ip => dns_server_public_ip,
             :glance_server_protocol => glance_server_protocol,

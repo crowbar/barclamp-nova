@@ -19,7 +19,8 @@
 
 include_recipe "nova::config"
 
-if node[:nova][:api][:protocol] == "https"
+# https is only used on the nova-multi-controller
+if node[:nova][:api][:protocol] == "https" and node["roles"].include?("nova-multi-controller")
   include_recipe "apache2"
   include_recipe "apache2::mod_ssl"
   include_recipe "apache2::mod_wsgi"
@@ -32,7 +33,8 @@ package "python-novaclient" do
   action :upgrade
 end
 
-if node[:nova][:api][:protocol] == "https"
+# https is only used on the nova-multi-controller
+if node[:nova][:api][:protocol] == "https" and node["roles"].include?("nova-multi-controller")
   Chef::Log.info("Configuring Nova-API to use SSL via Apache2+mod_wsgi")
 
   nova_package "api" do
@@ -128,7 +130,8 @@ template "/etc/nova/api-paste.ini" do
     :keystone_service_password => keystone_service_password,
     :keystone_admin_port => keystone_admin_port
   )
-  if node[:nova][:api][:protocol] == "https"
+  # https is only used on the nova-multi-controller
+  if node[:nova][:api][:protocol] == "https" and node["roles"].include?("nova-multi-controller")
     if ::File.symlink?("#{node[:apache][:dir]}/sites-enabled/openstack-nova.conf") or node.platform == "suse"
       notifies :reload, resources(:service => "apache2")
     end
@@ -137,95 +140,100 @@ template "/etc/nova/api-paste.ini" do
   end
 end
 
-apis = search(:node, "recipes:nova\\:\\:api#{env_filter}") || []
-if apis.length > 0 and !node[:nova][:network][:ha_enabled]
-  api = apis[0]
-  api = node if api.name == node.name
-else
-  api = node
-end
-public_api_ip = Chef::Recipe::Barclamp::Inventory.get_network_by_type(api, "public").address
-admin_api_ip = Chef::Recipe::Barclamp::Inventory.get_network_by_type(api, "admin").address
-api_protocol = node[:nova][:api][:protocol]
+# we only need to register the api on the controller, since this recipe is
+# also used for setting up the metadata api on compute nodes
+if node["roles"].include?("nova-multi-controller")
 
-keystone_register "nova api wakeup keystone" do
-  protocol keystone_protocol
-  host keystone_address
-  port keystone_admin_port
-  token keystone_token
-  action :wakeup
-end
+  apis = search(:node, "recipes:nova\\:\\:api#{env_filter}") || []
+  if apis.length > 0 and !node[:nova][:network][:ha_enabled]
+    api = apis[0]
+    api = node if api.name == node.name
+  else
+    api = node
+  end
+  public_api_ip = Chef::Recipe::Barclamp::Inventory.get_network_by_type(api, "public").address
+  admin_api_ip = Chef::Recipe::Barclamp::Inventory.get_network_by_type(api, "admin").address
+  api_protocol = node[:nova][:api][:protocol]
 
-keystone_register "register nova user" do
-  protocol keystone_protocol
-  host keystone_address
-  port keystone_admin_port
-  token keystone_token
-  user_name keystone_service_user
-  user_password keystone_service_password
-  tenant_name keystone_service_tenant
-  action :add_user
-end
+  keystone_register "nova api wakeup keystone" do
+    protocol keystone_protocol
+    host keystone_address
+    port keystone_admin_port
+    token keystone_token
+    action :wakeup
+  end
 
-keystone_register "give nova user access" do
-  protocol keystone_protocol
-  host keystone_address
-  port keystone_admin_port
-  token keystone_token
-  user_name keystone_service_user
-  tenant_name keystone_service_tenant
-  role_name "admin"
-  action :add_access
-end
+  keystone_register "register nova user" do
+    protocol keystone_protocol
+    host keystone_address
+    port keystone_admin_port
+    token keystone_token
+    user_name keystone_service_user
+    user_password keystone_service_password
+    tenant_name keystone_service_tenant
+    action :add_user
+  end
 
-keystone_register "register nova service" do
-  protocol keystone_protocol
-  host keystone_address
-  port keystone_admin_port
-  token keystone_token
-  service_name "nova"
-  service_type "compute"
-  service_description "Openstack Nova Service"
-  action :add_service
-end
+  keystone_register "give nova user access" do
+    protocol keystone_protocol
+    host keystone_address
+    port keystone_admin_port
+    token keystone_token
+    user_name keystone_service_user
+    tenant_name keystone_service_tenant
+    role_name "admin"
+    action :add_access
+  end
 
-keystone_register "register ec2 service" do
-  protocol keystone_protocol
-  host keystone_address
-  port keystone_admin_port
-  token keystone_token
-  service_name "ec2"
-  service_type "ec2"
-  service_description "EC2 Compatibility Layer"
-  action :add_service
-end
+  keystone_register "register nova service" do
+    protocol keystone_protocol
+    host keystone_address
+    port keystone_admin_port
+    token keystone_token
+    service_name "nova"
+    service_type "compute"
+    service_description "Openstack Nova Service"
+    action :add_service
+  end
 
-keystone_register "register nova endpoint" do
-  protocol keystone_protocol
-  host keystone_address
-  port keystone_admin_port
-  token keystone_token
-  endpoint_service "nova"
-  endpoint_region "RegionOne"
-  endpoint_publicURL "#{api_protocol}://#{public_api_ip}:8774/v2/$(tenant_id)s"
-  endpoint_adminURL "#{api_protocol}://#{admin_api_ip}:8774/v2/$(tenant_id)s"
-  endpoint_internalURL "#{api_protocol}://#{admin_api_ip}:8774/v2/$(tenant_id)s"
-#  endpoint_global true
-#  endpoint_enabled true
-  action :add_endpoint_template
-end
+  keystone_register "register ec2 service" do
+    protocol keystone_protocol
+    host keystone_address
+    port keystone_admin_port
+    token keystone_token
+    service_name "ec2"
+    service_type "ec2"
+    service_description "EC2 Compatibility Layer"
+    action :add_service
+  end
 
-keystone_register "register nova ec2 endpoint" do
-  protocol keystone_protocol
-  host keystone_address
-  port keystone_admin_port
-  token keystone_token
-  endpoint_service "ec2"
-  endpoint_region "RegionOne"
-  endpoint_publicURL "#{api_protocol}://#{public_api_ip}:8773/services/Cloud"
-  endpoint_adminURL "#{api_protocol}://#{admin_api_ip}:8773/services/Admin"
-  endpoint_internalURL "#{api_protocol}://#{admin_api_ip}:8773/services/Cloud"
-#  endpoint_global true
-#  endpoint_enabled true
-  action :add_endpoint_template
+  keystone_register "register nova endpoint" do
+    protocol keystone_protocol
+    host keystone_address
+    port keystone_admin_port
+    token keystone_token
+    endpoint_service "nova"
+    endpoint_region "RegionOne"
+    endpoint_publicURL "#{api_protocol}://#{public_api_ip}:8774/v2/$(tenant_id)s"
+    endpoint_adminURL "#{api_protocol}://#{admin_api_ip}:8774/v2/$(tenant_id)s"
+    endpoint_internalURL "#{api_protocol}://#{admin_api_ip}:8774/v2/$(tenant_id)s"
+#   endpoint_global true
+#   endpoint_enabled true
+    action :add_endpoint_template
+  end
+
+  keystone_register "register nova ec2 endpoint" do
+    protocol keystone_protocol
+    host keystone_address
+    port keystone_admin_port
+    token keystone_token
+    endpoint_service "ec2"
+    endpoint_region "RegionOne"
+    endpoint_publicURL "#{api_protocol}://#{public_api_ip}:8773/services/Cloud"
+    endpoint_adminURL "#{api_protocol}://#{admin_api_ip}:8773/services/Admin"
+    endpoint_internalURL "#{api_protocol}://#{admin_api_ip}:8773/services/Cloud"
+#   endpoint_global true
+#   endpoint_enabled true
+    action :add_endpoint_template
+  end
 end
