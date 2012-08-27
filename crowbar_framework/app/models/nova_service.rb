@@ -31,11 +31,11 @@ class NovaService < ServiceObject
       octet_int = Integer(octet)
       break if octet_int == 0
       # log2 and log(x,base) are only available in recent versions of ruby...
-      octet_log = Math.log(octet_int + 1) / Math.log(2)
+      octet_log = Math.log(256 - octet_int) / Math.log(2)
       if octet_log != octet_log.round
         raise ArgumentError.new("Invalid netmask.")
       end
-      netmask = netmask + octet_log.to_i
+      netmask = netmask + (8 - octet_log.to_i)
     end
 
     netmask
