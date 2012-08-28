@@ -117,7 +117,7 @@ else
   keystone = node
 end
 
-keystone_address = Chef::Recipe::Barclamp::Inventory.get_network_by_type(keystone, "admin").address if keystone_address.nil?
+keystone_host = keystone[:fqdn]
 keystone_token = keystone["keystone"]["service"]["token"]
 keystone_protocol = keystone["keystone"]["api"]["protocol"]
 keystone_service_port = keystone["keystone"]["api"]["service_port"]
@@ -125,11 +125,11 @@ keystone_admin_port = keystone["keystone"]["api"]["admin_port"]
 keystone_service_tenant = keystone["keystone"]["service"]["tenant"]
 keystone_service_user = "nova" # GREG: Fix this
 keystone_service_password = "fredfred" # GREG: Fix this
-Chef::Log.info("Keystone server found at #{keystone_address}")
+Chef::Log.info("Keystone server found at #{keystone_host}")
 
 keystone_register "nova volume wakeup keystone" do
   protocol keystone_protocol
-  host keystone_address
+  host keystone_host
   port keystone_admin_port
   token keystone_token
   action :wakeup
@@ -137,7 +137,7 @@ end
 
 keystone_register "register nova-volume service" do
   protocol keystone_protocol
-  host keystone_address
+  host keystone_host
   port keystone_admin_port
   token keystone_token
   service_name "nova-volume"
@@ -146,20 +146,20 @@ keystone_register "register nova-volume service" do
   action :add_service
 end
 
-public_api_ip = Chef::Recipe::Barclamp::Inventory.get_network_by_type(node, "public").address
-admin_api_ip = Chef::Recipe::Barclamp::Inventory.get_network_by_type(node, "admin").address
+public_api_host = 'public.'+node[:fqdn]
+admin_api_host = node[:fqdn]
 api_protocol = node[:nova][:api][:protocol]
 
 keystone_register "register nova-volume endpoint" do
   protocol keystone_protocol
-  host keystone_address
+  host keystone_host
   port keystone_admin_port
   token keystone_token
   endpoint_service "nova-volume"
   endpoint_region "RegionOne"
-  endpoint_adminURL "#{api_protocol}://#{admin_api_ip}:8776/v1/$(tenant_id)s"
-  endpoint_internalURL "#{api_protocol}://#{admin_api_ip}:8776/v1/$(tenant_id)s"
-  endpoint_publicURL "#{api_protocol}://#{public_api_ip}:8776/v1/$(tenant_id)s"
+  endpoint_publicURL "#{api_protocol}://#{public_api_host}:8776/v1/$(tenant_id)s"
+  endpoint_adminURL "#{api_protocol}://#{admin_api_host}:8776/v1/$(tenant_id)s"
+  endpoint_internalURL "#{api_protocol}://#{admin_api_host}:8776/v1/$(tenant_id)s"
 #  endpoint_global true
 #  endpoint_enabled true
   action :add_endpoint_template

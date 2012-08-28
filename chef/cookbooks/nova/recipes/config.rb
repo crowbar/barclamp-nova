@@ -73,9 +73,9 @@ if apis.length > 0 and !node[:nova][:network][:ha_enabled]
 else
   api = node
 end
-public_api_ip = api_ip = Chef::Recipe::Barclamp::Inventory.get_network_by_type(api, "public").address
-admin_api_ip = api_ip = Chef::Recipe::Barclamp::Inventory.get_network_by_type(api, "admin").address
-Chef::Log.info("Api server found at #{public_api_ip} #{admin_api_ip}")
+public_api_host = 'public.'+api[:fqdn]
+admin_api_host = api[:fqdn]
+Chef::Log.info("Api server found at #{public_api_host} #{admin_api_host}")
 
 networks = search(:node, "recipes:nova\\:\\:network#{env_filter}") || []
 if networks.length > 0
@@ -102,24 +102,24 @@ if glance_servers.length > 0
   glance_server = glance_servers[0]
   glance_server = node if glance_server.name == node.name
   glance_server_protocol = glance_server[:glance][:api][:protocol]
-  glance_server_ip = Chef::Recipe::Barclamp::Inventory.get_network_by_type(glance_server, "admin").address
+  glance_server_host = glance_server[:fqdn]
   glance_server_port = glance_server[:glance][:api][:bind_port]
 else
   glance_server_protocol = 'http'
-  glance_server_ip = nil
+  glance_server_host = nil
   glance_server_port = nil
 end
-Chef::Log.info("Glance server at #{glance_server_ip}")
+Chef::Log.info("Glance server at #{glance_server_host}")
 
 vncproxies = search(:node, "recipes:nova\\:\\:vncproxy#{env_filter}") || []
 if vncproxies.length > 0
   vncproxy = vncproxies[0]
   vncproxy = node if vncproxy.name == node.name
-  vncproxy_public_ip = Chef::Recipe::Barclamp::Inventory.get_network_by_type(vncproxy, "public").address
+  vncproxy_public_host = 'public.'+vncproxy[:fqdn]
 else
-  vncproxy_public_ip = nil
+  vncproxy_public_host = nil
 end
-Chef::Log.info("VNCProxy server at #{vncproxy_public_ip}")
+Chef::Log.info("VNCProxy server at #{vncproxy_public_host}")
 
 cookbook_file "/etc/default/nova-common" do
   source "nova-common"
@@ -253,17 +253,17 @@ template "/etc/nova/nova.conf" do
             :sql_connection => sql_connection,
             :rabbit_settings => rabbit_settings,
             :libvirt_type => node[:nova][:libvirt_type],
-            :ec2_host => admin_api_ip,
-            :ec2_dmz_host => public_api_ip,
+            :ec2_host => admin_api_host,
+            :ec2_dmz_host => public_api_host,
             :enabled_apis => enabled_apis,
             :network_public_ip => network_public_ip,
             :dns_server_public_ip => dns_server_public_ip,
             :glance_server_protocol => glance_server_protocol,
-            :glance_server_ip => glance_server_ip,
+            :glance_server_host => glance_server_host,
             :glance_server_port => glance_server_port,
             :glance_ssl_no_verify => node[:nova][:glance_ssl_no_verify],
             :vncproxy_ssl_enable => node[:nova][:novnc][:ssl_enabled],
-            :vncproxy_public_ip => vncproxy_public_ip
+            :vncproxy_public_host => vncproxy_public_host
             )
 end
 

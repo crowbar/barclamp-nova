@@ -101,14 +101,14 @@ else
   keystone = node
 end
 
-keystone_address = Chef::Recipe::Barclamp::Inventory.get_network_by_type(keystone, "admin").address if keystone_address.nil?
+keystone_host = keystone[:fqdn]
 keystone_protocol = keystone["keystone"]["api"]["protocol"]
 keystone_token = keystone["keystone"]["admin"]["token"] rescue nil
 admin_username = keystone["keystone"]["admin"]["username"] rescue nil
 admin_password = keystone["keystone"]["admin"]["password"] rescue nil
 default_tenant = keystone["keystone"]["default"]["tenant"] rescue nil
 keystone_service_port = keystone["keystone"]["api"]["service_port"] rescue nil
-Chef::Log.info("Keystone server found at #{keystone_address}")
+Chef::Log.info("Keystone server found at #{keystone_host}")
 
 apis = search(:node, "recipes:nova\\:\\:api#{env_filter}") || []
 if apis.length > 0 and !node[:nova][:network][:ha_enabled]
@@ -117,8 +117,8 @@ if apis.length > 0 and !node[:nova][:network][:ha_enabled]
 else
   api = node
 end
-admin_api_ip = Chef::Recipe::Barclamp::Inventory.get_network_by_type(api, "admin").address
-Chef::Log.info("Admin API server found at #{admin_api_ip}")
+admin_api_host = api[:fqdn]
+Chef::Log.info("Admin API server found at #{admin_api_host}")
 
 # install python-glanceclient on controller, to be able to upload images
 # from here
@@ -133,12 +133,12 @@ template "/root/.openrc" do
   mode 0600
   variables(
     :keystone_protocol => keystone_protocol,
-    :keystone_ip_address => keystone_address,
+    :keystone_host => keystone_host,
     :keystone_service_port => keystone_service_port,
     :admin_username => admin_username,
     :admin_password => admin_password,
     :default_tenant => default_tenant,
-    :nova_api_ip_address => admin_api_ip
+    :nova_api_host => admin_api_host
   )
 end
 

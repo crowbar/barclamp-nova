@@ -105,7 +105,7 @@ else
   keystone = node
 end
 
-keystone_address = Chef::Recipe::Barclamp::Inventory.get_network_by_type(keystone, "admin").address if keystone_address.nil?
+keystone_host = keystone[:fqdn]
 keystone_protocol = keystone["keystone"]["api"]["protocol"]
 keystone_token = keystone["keystone"]["service"]["token"]
 keystone_service_port = keystone["keystone"]["api"]["service_port"]
@@ -113,7 +113,7 @@ keystone_admin_port = keystone["keystone"]["api"]["admin_port"]
 keystone_service_tenant = keystone["keystone"]["service"]["tenant"]
 keystone_service_user = "nova" # GREG: Fix this
 keystone_service_password = "fredfred" # GREG: Fix this
-Chef::Log.info("Keystone server found at #{keystone_address}")
+Chef::Log.info("Keystone server found at #{keystone_host}")
 
 template "/etc/nova/api-paste.ini" do
   source "api-paste.ini.erb"
@@ -122,7 +122,7 @@ template "/etc/nova/api-paste.ini" do
   mode "0640"
   variables(
     :keystone_protocol => keystone_protocol,
-    :keystone_ip_address => keystone_address,
+    :keystone_host => keystone_host,
     :keystone_admin_token => keystone_token,
     :keystone_service_port => keystone_service_port,
     :keystone_service_tenant => keystone_service_tenant,
@@ -151,13 +151,13 @@ if node["roles"].include?("nova-multi-controller")
   else
     api = node
   end
-  public_api_ip = Chef::Recipe::Barclamp::Inventory.get_network_by_type(api, "public").address
-  admin_api_ip = Chef::Recipe::Barclamp::Inventory.get_network_by_type(api, "admin").address
+  public_api_host = 'public.'+api[:fqdn]
+  admin_api_host = api[:fqdn]
   api_protocol = node[:nova][:api][:protocol]
 
   keystone_register "nova api wakeup keystone" do
     protocol keystone_protocol
-    host keystone_address
+    host keystone_host
     port keystone_admin_port
     token keystone_token
     action :wakeup
@@ -165,7 +165,7 @@ if node["roles"].include?("nova-multi-controller")
 
   keystone_register "register nova user" do
     protocol keystone_protocol
-    host keystone_address
+    host keystone_host
     port keystone_admin_port
     token keystone_token
     user_name keystone_service_user
@@ -176,7 +176,7 @@ if node["roles"].include?("nova-multi-controller")
 
   keystone_register "give nova user access" do
     protocol keystone_protocol
-    host keystone_address
+    host keystone_host
     port keystone_admin_port
     token keystone_token
     user_name keystone_service_user
@@ -187,7 +187,7 @@ if node["roles"].include?("nova-multi-controller")
 
   keystone_register "register nova service" do
     protocol keystone_protocol
-    host keystone_address
+    host keystone_host
     port keystone_admin_port
     token keystone_token
     service_name "nova"
@@ -198,7 +198,7 @@ if node["roles"].include?("nova-multi-controller")
 
   keystone_register "register ec2 service" do
     protocol keystone_protocol
-    host keystone_address
+    host keystone_host
     port keystone_admin_port
     token keystone_token
     service_name "ec2"
@@ -209,14 +209,14 @@ if node["roles"].include?("nova-multi-controller")
 
   keystone_register "register nova endpoint" do
     protocol keystone_protocol
-    host keystone_address
+    host keystone_host
     port keystone_admin_port
     token keystone_token
     endpoint_service "nova"
     endpoint_region "RegionOne"
-    endpoint_publicURL "#{api_protocol}://#{public_api_ip}:8774/v2/$(tenant_id)s"
-    endpoint_adminURL "#{api_protocol}://#{admin_api_ip}:8774/v2/$(tenant_id)s"
-    endpoint_internalURL "#{api_protocol}://#{admin_api_ip}:8774/v2/$(tenant_id)s"
+    endpoint_publicURL "#{api_protocol}://#{public_api_host}:8774/v2/$(tenant_id)s"
+    endpoint_adminURL "#{api_protocol}://#{admin_api_host}:8774/v2/$(tenant_id)s"
+    endpoint_internalURL "#{api_protocol}://#{admin_api_host}:8774/v2/$(tenant_id)s"
 #   endpoint_global true
 #   endpoint_enabled true
     action :add_endpoint_template
@@ -224,14 +224,14 @@ if node["roles"].include?("nova-multi-controller")
 
   keystone_register "register nova ec2 endpoint" do
     protocol keystone_protocol
-    host keystone_address
+    host keystone_host
     port keystone_admin_port
     token keystone_token
     endpoint_service "ec2"
     endpoint_region "RegionOne"
-    endpoint_publicURL "#{api_protocol}://#{public_api_ip}:8773/services/Cloud"
-    endpoint_adminURL "#{api_protocol}://#{admin_api_ip}:8773/services/Admin"
-    endpoint_internalURL "#{api_protocol}://#{admin_api_ip}:8773/services/Cloud"
+    endpoint_publicURL "#{api_protocol}://#{public_api_host}:8773/services/Cloud"
+    endpoint_adminURL "#{api_protocol}://#{admin_api_host}:8773/services/Admin"
+    endpoint_internalURL "#{api_protocol}://#{admin_api_host}:8773/services/Cloud"
 #   endpoint_global true
 #   endpoint_enabled true
     action :add_endpoint_template
