@@ -73,6 +73,7 @@ if apis.length > 0 and !node[:nova][:network][:ha_enabled]
 else
   api = node
 end
+api_scheme = api[:nova][:api][:protocol]
 public_api_host = 'public.'+api[:fqdn]
 admin_api_host = api[:fqdn]
 Chef::Log.info("Api server found at #{public_api_host} #{admin_api_host}")
@@ -250,6 +251,7 @@ template "/etc/nova/nova.conf" do
             :sql_connection => sql_connection,
             :rabbit_settings => rabbit_settings,
             :libvirt_type => node[:nova][:libvirt_type],
+            :ec2_scheme => api_scheme,
             :ec2_host => admin_api_host,
             :ec2_dmz_host => public_api_host,
             :enabled_apis => enabled_apis,
