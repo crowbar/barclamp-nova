@@ -118,6 +118,7 @@ else
   api = node
 end
 admin_api_host = api[:fqdn]
+api_scheme = api[:nova][:api][:protocol]
 Chef::Log.info("Admin API server found at #{admin_api_host}")
 
 # install python-glanceclient on controller, to be able to upload images
@@ -138,6 +139,7 @@ template "/root/.openrc" do
     :admin_username => admin_username,
     :admin_password => admin_password,
     :default_tenant => default_tenant,
+    :nova_api_protocol => api_scheme,
     :nova_api_host => admin_api_host
   )
 end
