@@ -60,3 +60,16 @@ else
     end
   end
 end
+
+template "/etc/sysconfig/openstack-nova-network" do
+  source "sysconfig-nova-network.erb"
+  owner "root"
+  group "root"
+  mode 0644
+  variables( 
+    :storagenetwork => node[:network][:networks][:storage][:subnet],
+    :storagenetmask => node[:network][:networks][:storage][:netmask],
+    :adminnetwork => node[:network][:networks][:admin][:subnet],
+    :adminnetmask => node[:network][:networks][:admin][:netmask]
+  )
+end
