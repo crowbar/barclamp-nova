@@ -77,16 +77,6 @@ public_api_host = 'public.'+api[:fqdn]
 admin_api_host = api[:fqdn]
 Chef::Log.info("Api server found at #{public_api_host} #{admin_api_host}")
 
-networks = search(:node, "recipes:nova\\:\\:network#{env_filter}") || []
-if networks.length > 0
-  network = networks[0]
-  network = node if network.name == node.name
-else
-  network = node
-end
-network_public_ip = Chef::Recipe::Barclamp::Inventory.get_network_by_type(network, "public").address
-Chef::Log.info("Network server found at #{network_public_ip}")
-
 dns_servers = search(:node, "roles:dns-server") || []
 if dns_servers.length > 0
   dns_server = dns_servers[0]
@@ -156,6 +146,13 @@ nova_floating = node[:network][:networks]["nova_floating"]
 node[:nova][:network][:fixed_range] = "#{fixed_net["subnet"]}/#{mask_to_bits(fixed_net["netmask"])}"
 node[:nova][:network][:floating_range] = "#{nova_floating["subnet"]}/#{mask_to_bits(nova_floating["netmask"])}"
 
+networks = search(:node, "recipes:nova\\:\\:network#{env_filter}") || []
+if networks.length > 0
+  network = networks[0]
+  network = node if network.name == node.name
+else
+  network = node
+end
 fip = Chef::Recipe::Barclamp::Inventory.get_network_by_type(network, "nova_fixed")
 if fip
   fixed_interface = fip.interface
@@ -256,7 +253,6 @@ template "/etc/nova/nova.conf" do
             :ec2_host => admin_api_host,
             :ec2_dmz_host => public_api_host,
             :enabled_apis => enabled_apis,
-            :network_public_ip => network_public_ip,
             :dns_server_public_ip => dns_server_public_ip,
             :glance_server_protocol => glance_server_protocol,
             :glance_server_host => glance_server_host,
