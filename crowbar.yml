@@ -64,6 +64,16 @@ locale_additions:
           volume_file_location: Volume File Location
           volume_raw_mode: Disk selection method
           nova_volume_disks: Disks for nova-volume storage volume group
+          eqlx_san_ip: EQLX SAN IP
+          eqlx_san_login: EQLX SAN login
+          eqlx_san_password: EQLX SAN password
+          eqlx_group_name: EQLX group name (prompt)
+          eqlx_san_thin_provision: Use thin provision for volumes
+          eqlx_use_chap: Use chap auth for targets
+          eqlx_chap_login: EQLX chap login for targets
+          eqlx_chap_password: EQLX chap password for targets
+          eqlx_ssh_keepalive_interval: EQLX SSH keepalive internal
+          eqlx_cli_timeout: EQLX CLI command execution timeout
         edit_deployment: 
           deployment: Deployment
 
@@ -100,6 +110,8 @@ debs:
       - nova-xcp-network
       - python-numpy
       - nova-consoleauth
+      # paramiko needed for using EQL with nova-volume
+      - python-paramiko
   pkgs:
     - euca2ools
     - unzip
