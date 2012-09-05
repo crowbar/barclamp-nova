@@ -1,0 +1,190 @@
+## @@AA - force io=native for better disk/volume perf.
+<domain type='${type}'>
+    <uuid>${uuid}</uuid>
+    <name>${name}</name>
+    <memory>${memory_kb}</memory>
+    <os>
+#if $type == 'lxc'
+        <type>exe</type>
+        <init>/sbin/init</init>
+        <cmdline>console=ttyS0</cmdline>
+#else if $type == 'uml'
+    #set $root_disk_bus = 'uml'
+    #set $ephemeral_disk_bus = 'uml'
+        <type>uml</type>
+        <kernel>/usr/bin/linux</kernel>
+        #set $root_device_name = $getVar('root_device_name', '/dev/ubda')
+        <root>${root_device_name}</root>
+#else
+    #if $type == 'xen'
+        #set $root_disk_bus = 'scsi'
+        #set $ephemeral_disk_bus = 'scsi'
+            <type>linux</type>
+            #set $root_device_name = $getVar('root_device_name', '/dev/xvda')
+            <root>${root_device_name}</root>
+    #else
+        #set $ephemeral_disk_bus = 'virtio'
+        #if $root_device_type == 'cdrom'
+            #set $root_disk_bus = 'ide'
+        #else
+            #set $root_disk_bus = 'virtio'
+        #end if
+            <type>hvm</type>
+    #end if
+    #if $getVar('rescue', False)
+        <kernel>${basepath}/kernel.rescue</kernel>
+        <initrd>${basepath}/ramdisk.rescue</initrd>
+    #else
+        #if $getVar('kernel', None)
+            <kernel>${kernel}</kernel>
+            #if $type == 'xen'
+                <cmdline>ro</cmdline>
+            #else
+                #set $root_device_name = $getVar('root_device_name', '/dev/vda')
+                <cmdline>root=${root_device_name} console=ttyS0</cmdline>
+            #end if
+            #if $getVar('ramdisk', None)
+                <initrd>${ramdisk}</initrd>
+            #end if
+        #else
+            <boot dev="hd" />
+        #end if
+    #end if
+#end if
+    </os>
+#if $type != 'lxc' and $type != 'uml'
+    <features>
+        <acpi/>
+    </features>
+#end if
+    <vcpu>${vcpus}</vcpu>
+    <devices>
+#if $type == 'lxc'
+        <filesystem type='mount'>
+            <source dir='${basepath}/rootfs'/>
+            <target dir='/'/>
+        </filesystem>
+#else
+    ## @@AA Perf - disable ballooning.
+    <memballoon model='none'/>
+    #if $getVar('rescue', False)
+        <disk type='file'>
+            <driver type='${driver_type}' cache='${cachemode}'/>
+            <source file='${basepath}/disk.rescue'/>
+            <target dev='${disk_prefix}a' bus='${ephemeral_disk_bus}'/>
+        </disk>
+        <disk type='file'>
+            <driver type='${driver_type}' cache='${cachemode}'/>
+            <source file='${basepath}/disk'/>
+            <target dev='${disk_prefix}b' bus='${ephemeral_disk_bus}'/>
+        </disk>
+    #else
+        #if not ($getVar('ebs_root', False))
+        <disk type='file' device='${root_device_type}'>
+            <driver type='${driver_type}' cache='${cachemode}'/>
+            <source file='${basepath}/disk'/>
+            <target dev='${root_device}' bus='${root_disk_bus}'/>
+        </disk>
+        #end if
+        #if $getVar('ephemeral_device', False)
+            <disk type='file'>
+                <driver type='${driver_type}' cache='${cachemode}'  io='native'/>
+                <source file='${basepath}/disk.local'/>
+                <target dev='${ephemeral_device}' bus='${ephemeral_disk_bus}'/>
+            </disk>
+        #end if
+        #for $eph in $ephemerals
+         <disk type='block'>
+                <driver type='${driver_type}' cache='${cachemode}' io='native' />
+                <source dev='${basepath}/${eph.device_path}'/>
+                <target dev='${eph.device}' bus='${ephemeral_disk_bus}'/>
+         </disk>
+        #end for
+        #if $getVar('swap_device', False)
+            <disk type='file'>
+                <driver type='${driver_type}' cache='${cachemode}'/>
+                <source file='${basepath}/disk.swap'/>
+                <target dev='${swap_device}' bus='${ephemeral_disk_bus}'/>
+            </disk>
+        #end if
+        #for $vol in $volumes
+            ${vol}
+        #end for
+    #end if
+    #if $getVar('config_drive', False)
+        <disk type='file'>
+            <driver type='raw' cache='${cachemode}'/>
+            <source file='${basepath}/disk.config' />
+            <target dev='${disk_prefix}z' bus='${ephemeral_disk_bus}' />
+        </disk>
+    #end if
+#end if
+
+#for $nic in $nics
+    #if $vif_type == 'ethernet'
+        <interface type='ethernet'>
+            <target dev='${nic.name}' />
+            <mac address='${nic.mac_address}' />
+            <script path='${nic.script}' />
+        </interface>
+    #else if $vif_type == '802.1Qbh'
+       <interface type='direct'>
+            <mac address='${nic.mac_address}'/>
+            <source dev='${nic.device_name}' mode='private'/>
+            <virtualport type='802.1Qbh'>
+                <parameters profileid='${nic.profile_name}'/>
+            </virtualport>
+            <model type='virtio'/>
+       </interface>
+    #else if $vif_type == 'ovs_virtualport'
+        <interface type='bridge'>
+            <source bridge='${nic.bridge_name}'/>
+            <mac address='${nic.mac_address}'/>
+            <virtualport type="openvswitch">
+                <parameters interfaceid='${nic.ovs_interfaceid}'/>
+            </virtualport>
+        </interface>
+    #else
+        <interface type='bridge'>
+            <source bridge='${nic.bridge_name}'/>
+            <mac address='${nic.mac_address}'/>
+#if $getVar('use_virtio_for_bridges', True)
+            <model type='virtio'/>
+#end if
+            <filterref filter="nova-instance-${name}-${nic.id}">
+                <parameter name="IP" value="${nic.ip_address}" />
+                <parameter name="DHCPSERVER" value="${nic.dhcp_server}" />
+#if $getVar('nic.extra_params', False)
+                ${nic.extra_params}
+#end if
+#if $getVar('nic.gateway_v6', False)
+                <parameter name="RASERVER" value="${nic.gateway_v6}" />
+#end if
+            </filterref>
+        </interface>
+    #end if
+
+#end for
+
+#if $type == 'qemu' or $type == 'kvm'
+        <!-- The QEMU 'pty' driver throws away any data if no
+	     client app is connected. Thus we can't get away
+	     with a single type=pty console. Instead we have
+	     to configure two separate consoles. -->
+        <serial type='file'>
+            <source path='${basepath}/console.log'/>
+        </serial>
+        <serial type='pty'/>
+#else
+        <console type='pty'/>
+#end if
+
+#if $getVar('use_usb_tablet', True) and $type != 'lxc' and $type != 'xen'
+        <input type='tablet' bus='usb'/>
+#end if
+
+#if $getVar('vncserver_listen', False)
+        <graphics type='vnc' port='-1' autoport='yes' keymap='${vnc_keymap}' listen='${vncserver_listen}'/>
+#end if
+    </devices>
+</domain>
