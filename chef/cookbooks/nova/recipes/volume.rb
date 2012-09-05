@@ -101,9 +101,9 @@ end
 #
 if node[:nova][:volume][:volume_type] == "eqlx"
   package("python-paramiko")
-  cookbook_file "/usr/lib/python2.7/dist-packages/nova/volume/san.py" do
+  cookbook_file "/usr/lib/python2.7/dist-packages/nova/volume/eqlx.py" do
     mode "0755"
-    source "san.py"
+    source "eqlx.py"
   end
 end
 
