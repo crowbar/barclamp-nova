@@ -68,16 +68,6 @@ admin_api_ip = api_ip = Chef::Recipe::Barclamp::Inventory.get_network_by_type(ap
 node[:nova][:api] = public_api_ip
 Chef::Log.info("Api server found at #{public_api_ip} #{admin_api_ip}")
 
-networks = search(:node, "recipes:nova\\:\\:network#{env_filter}") || []
-if networks.length > 0
-  network = networks[0]
-  network = node if network.name == node.name
-else
-  network = node
-end
-network_public_ip = Chef::Recipe::Barclamp::Inventory.get_network_by_type(network, "public").address
-Chef::Log.info("Network server found at #{network_public_ip}")
-
 dns_servers = search(:node, "roles:dns-server") || []
 if dns_servers.length > 0
   dns_server = dns_servers[0]
@@ -145,14 +135,14 @@ nova_floating = node[:network][:networks]["nova_floating"]
 node[:nova][:network][:fixed_range] = "#{fixed_net["subnet"]}/#{mask_to_bits(fixed_net["netmask"])}"
 node[:nova][:network][:floating_range] = "#{nova_floating["subnet"]}/#{mask_to_bits(nova_floating["netmask"])}"
 
-fip = Chef::Recipe::Barclamp::Inventory.get_network_by_type(network, "nova_fixed")
+fip = Chef::Recipe::Barclamp::Inventory.get_network_by_type(node, "nova_fixed")
 if fip
   fixed_interface = fip.interface
   fixed_interface = "#{fip.interface}.#{fip.vlan}" if fip.use_vlan
 else
   fixed_interface = nil
 end
-pip = Chef::Recipe::Barclamp::Inventory.get_network_by_type(network, "public")
+pip = Chef::Recipe::Barclamp::Inventory.get_network_by_type(node, "public")
 if pip
   public_interface = pip.interface
   public_interface = "#{pip.interface}.#{pip.vlan}" if pip.use_vlan
@@ -192,7 +182,6 @@ template "/etc/nova/nova.conf" do
             :rabbit_settings => rabbit_settings,
             :ec2_host => admin_api_ip,
             :ec2_dmz_host => public_api_ip,
-            :network_public_ip => network_public_ip,
             :dns_server_public_ip => dns_server_public_ip,
             :glance_server_ip => glance_server_ip,
             :glance_server_port => glance_server_port,

@@ -90,7 +90,8 @@ debs:
   ubuntu-12.04:
     repos:
       # Added to fix some libvirt errors using qemu with essex on 12.04
-      - deb http://ppa.launchpad.net/ubuntu-virt/ppa/ubuntu precise main 
+      #- deb http://ppa.launchpad.net/ubuntu-virt/ppa/ubuntu precise main 
+      - deb http://archive.ubuntu.com/ubuntu/ precise-updates repo
     pkgs:
       - tgt
       - novnc

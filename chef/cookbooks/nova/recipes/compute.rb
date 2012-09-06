@@ -42,6 +42,25 @@ cookbook_file "/usr/lib/python2.7/dist-packages/nova/rootwrap/compute.py" do
   source "compute.py"
 end
 
+## @@AA- perf. add io=native when mounting volumes. disable memory balooning.
+cookbook_file "/usr/lib/python2.7/dist-packages/nova/virt/libvirt/volume.py" do
+  user "root"
+  group "root"
+  mode "0755"
+  source "volume.py"
+end
+cookbook_file "/usr/lib/python2.7/dist-packages/nova/virt/libvirt.xml.template" do 
+  user "root"
+  group "root"
+  mode "0755"
+  source "libvirt.xml.template"
+end
+
+
+
+
+
+
 
 # ha_enabled activates Nova High Availability (HA) networking.
 # The nova "network" and "api" recipes need to be included on the compute nodes and
