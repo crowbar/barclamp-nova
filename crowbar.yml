@@ -58,12 +58,15 @@ locale_additions:
           volume_header: Volume Options
           volume_type: Type of Volume
           volume_name: Name of Volume
+          volume_file_parameters: File-based Parameters
           volume_file_name: Volume File Name
           volume_file_size: Maximum File Size (GB)
           volume_file_size_error: Maximum File Size must be at least 2GB
           volume_file_location: Volume File Location
+          volume_disk_parameters: Disk-based Parameters
           volume_raw_mode: Disk selection method
           nova_volume_disks: Disks for nova-volume storage volume group
+          eqlx_parameters: EQLX Parameters
           eqlx_san_ip: EQLX SAN IP
           eqlx_san_login: EQLX SAN login
           eqlx_san_password: EQLX SAN password
