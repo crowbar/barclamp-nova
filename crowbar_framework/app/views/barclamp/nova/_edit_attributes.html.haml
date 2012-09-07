@@ -57,49 +57,56 @@
         %input#volume_name{:type => "text", :name => "volume_name", :'data-default' => @proposal.raw_data['attributes'][@proposal.barclamp]["volume"]["volume_name"], :onchange => "update_value('volume/volume_name','volume_name', 'string')"}
       %p
         %label{ :for => :volume_type }= t('.volume_type')
-        = select_tag :volume_type, options_for_select([['raw','raw'], ['local', 'local'], ['eqlx', 'eqlx']], @proposal.raw_data['attributes'][@proposal.barclamp]["volume"]["volume_type"].to_s), :onchange => "update_value('volume/volume_type', 'volume_type', 'string')"
-      %p
-        %label{ :for => :san_ip }= t('.eqlx_san_ip')
-        %input#san_ip{:type => "text", :name => "san_ip", :'data-default' => @proposal.raw_data['attributes'][@proposal.barclamp]["volume"]["eqlx"]["san_ip"], :onchange => "update_value('volume/eqlx/san_ip', 'san_ip', 'string')"}
-      %p
-        %label{ :for => :san_login }= t('.eqlx_san_login')
-        %input#san_login{:type => "text", :name => "san_login", :'data-default' => @proposal.raw_data['attributes'][@proposal.barclamp]["volume"]["eqlx"]["san_login"], :onchange => "update_value('volume/eqlx/san_login', 'san_login', 'string')"}
-      %p
-        %label{ :for => :san_password }= t('.eqlx_san_password')
-        %input#san_password{:type => "text", :name => "san_password", :'data-default' => @proposal.raw_data['attributes'][@proposal.barclamp]["volume"]["eqlx"]["san_password"], :onchange => "update_value('volume/eqlx/san_password', 'san_password', 'string')"}
-      %p
-        %label{ :for => :eqlx_group_name }= t('.eqlx_group_name')
-        %input#eqlx_group_name{:type => "text", :name => "eqlx_group_name", :'data-default' => @proposal.raw_data['attributes'][@proposal.barclamp]["volume"]["eqlx"]["eqlx_group_name"], :onchange => "update_value('volume/eqlx/eqlx_group_name', 'eqlx_group_name', 'string')"}
-      %p
-        %label{ :for => :san_thin_provision }= t('.eqlx_san_thin_provision')
-        = select_tag :san_thin_provision, options_for_select([['yes','true'], ['no', 'false']], @proposal.raw_data['attributes'][@proposal.barclamp]["volume"]["eqlx"]["san_thin_provision"].to_s), :onchange => "update_value('volume/eqlx/san_thin_provision', 'san_thin_provision', 'boolean')"
-      %p
-        %label{ :for => :eqlx_use_chap }= t('.eqlx_use_chap')
-        = select_tag :eqlx_use_chap, options_for_select([['yes','true'], ['no', 'false']], @proposal.raw_data['attributes'][@proposal.barclamp]["volume"]["eqlx"]["eqlx_use_chap"].to_s), :onchange => "update_value('volume/eqlx/eqlx_use_chap', 'eqlx_use_chap', 'boolean')"
-      %p
-        %label{ :for => :eqlx_chap_login }= t('.eqlx_chap_login')
-        %input#eqlx_chap_login{:type => "text", :name => "eqlx_chap_login", :'data-default' => @proposal.raw_data['attributes'][@proposal.barclamp]["volume"]["eqlx"]["eqlx_chap_login"], :onchange => "update_value('volume/eqlx/eqlx_chap_login', 'eqlx_chap_login', 'string')"}
-      %p
-        %label{ :for => :eqlx_chap_password }= t('.eqlx_chap_password')
-        %input#eqlx_chap_password{:type => "text", :name => "eqlx_chap_password", :'data-default' => @proposal.raw_data['attributes'][@proposal.barclamp]["volume"]["eqlx"]["eqlx_chap_password"], :onchange => "update_value('volume/eqlx/eqlx_chap_password', 'eqlx_chap_password', 'string')"}
-      %p
-        %label{ :for => :eqlx_ssh_keepalive_interval }= t('.eqlx_ssh_keepalive_interval')
-        %input#eqlx_ssh_keepalive_interval{:type => "text", :name => "eqlx_ssh_keepalive_interval", :'data-default' => @proposal.raw_data['attributes'][@proposal.barclamp]["volume"]["eqlx"]["eqlx_ssh_keepalive_interval"], :onchange => "update_value('volume/eqlx/eqlx_ssh_keepalive_interval', 'eqlx_ssh_keepalive_interval', 'integer')"}
-      %p
-        %label{ :for => :eqlx_cli_timeout }= t('.eqlx_cli_timeout')
-        %input#eqlx_cli_timeout{:type => "text", :name => "eqlx_cli_timeout", :'data-default' => @proposal.raw_data['attributes'][@proposal.barclamp]["volume"]["eqlx"]["eqlx_cli_timeout"], :onchange => "update_value('volume/eqlx/eqlx_cli_timeout', 'eqlx_cli_timeout', 'integer')"}
-      %p
-        %label{ :for => :local_file }= t('.volume_file_name')
-        %input#local_file{:type => "text", :name => "local_file", :'data-default' => @proposal.raw_data['attributes'][@proposal.barclamp]["volume"]["local_file"], :onchange => "update_value('volume/local_file','local_file', 'string')"}
-      %p
-        %label{ :for => :local_size }= t('.volume_file_size')
-        %input#local_size{:type => "text", :name => "local_size", :'data-default' => @proposal.raw_data['attributes'][@proposal.barclamp]["volume"]["local_size"], :onchange => "update_value('volume/local_size','local_size', 'integer')"}
-      %p
-        %label{ :for => :nova_raw_method }= t('.volume_raw_mode')
-        = select_tag :nova_raw_method, options_for_select([['first','first'], ['all', 'all'], ['selected', 'selected']], @proposal.raw_data['attributes'][@proposal.barclamp]["volume"]["nova_raw_method"].to_s), :onchange => "update_value('volume/nova_raw_method', 'nova_raw_method', 'string')"
-      %div{ :id => 'nova_volume_disks', :class => 'container' }
-        %label{ :for => :volume_disks }= t('.nova_volume_disks')
-        %ul{ :id => 'nova_volume_disks_list'}
+        = select_tag :volume_type, options_for_select([['raw','raw'], ['local', 'local']], @proposal.raw_data['attributes'][@proposal.barclamp]["volume"]["volume_type"].to_s), :onchange => "update_view();update_value('volume/volume_type', 'volume_type', 'string')"
+      %div{ :id => 'eqlx_parameters', :class => 'container' }
+        %p
+          %label{ :for => :eqlx_header }= t('.eqlx_parameters')
+        %div.container
+          %label{ :for => :san_ip }= t('.eqlx_san_ip')
+          %input#san_ip{:type => "text", :name => "san_ip", :'data-default' => @proposal.raw_data['attributes'][@proposal.barclamp]["volume"]["eqlx"]["san_ip"], :onchange => "update_value('volume/eqlx/san_ip', 'san_ip', 'string')"}
+          %p
+            %label{ :for => :san_login }= t('.eqlx_san_login')
+            %input#san_login{:type => "text", :name => "san_login", :'data-default' => @proposal.raw_data['attributes'][@proposal.barclamp]["volume"]["eqlx"]["san_login"], :onchange => "update_value('volume/eqlx/san_login', 'san_login', 'string')"}
+          %p
+            %label{ :for => :san_password }= t('.eqlx_san_password')
+            %input#san_password{:type => "text", :name => "san_password", :'data-default' => @proposal.raw_data['attributes'][@proposal.barclamp]["volume"]["eqlx"]["san_password"], :onchange => "update_value('volume/eqlx/san_password', 'san_password', 'string')"}
+          %p
+            %label{ :for => :eqlx_group_name }= t('.eqlx_group_name')
+            %input#eqlx_group_name{:type => "text", :name => "eqlx_group_name", :'data-default' => @proposal.raw_data['attributes'][@proposal.barclamp]["volume"]["eqlx"]["eqlx_group_name"], :onchange => "update_value('volume/eqlx/eqlx_group_name', 'eqlx_group_name', 'string')"}
+          %p
+            %label{ :for => :san_thin_provision }= t('.eqlx_san_thin_provision')
+            = select_tag :san_thin_provision, options_for_select([['yes','true'], ['no', 'false']], @proposal.raw_data['attributes'][@proposal.barclamp]["volume"]["eqlx"]["san_thin_provision"].to_s), :onchange => "update_value('volume/eqlx/san_thin_provision', 'san_thin_provision', 'boolean')"
+          %p
+            %label{ :for => :eqlx_use_chap }= t('.eqlx_use_chap')
+            = select_tag :eqlx_use_chap, options_for_select([['yes','true'], ['no', 'false']], @proposal.raw_data['attributes'][@proposal.barclamp]["volume"]["eqlx"]["eqlx_use_chap"].to_s), :onchange => "update_value('volume/eqlx/eqlx_use_chap', 'eqlx_use_chap', 'boolean')"
+          %p
+            %label{ :for => :eqlx_chap_login }= t('.eqlx_chap_login')
+            %input#eqlx_chap_login{:type => "text", :name => "eqlx_chap_login", :'data-default' => @proposal.raw_data['attributes'][@proposal.barclamp]["volume"]["eqlx"]["eqlx_chap_login"], :onchange => "update_value('volume/eqlx/eqlx_chap_login', 'eqlx_chap_login', 'string')"}
+          %p
+            %label{ :for => :eqlx_chap_password }= t('.eqlx_chap_password')
+            %input#eqlx_chap_password{:type => "text", :name => "eqlx_chap_password", :'data-default' => @proposal.raw_data['attributes'][@proposal.barclamp]["volume"]["eqlx"]["eqlx_chap_password"], :onchange => "update_value('volume/eqlx/eqlx_chap_password', 'eqlx_chap_password', 'string')"}
+          %p
+            %label{ :for => :eqlx_ssh_keepalive_interval }= t('.eqlx_ssh_keepalive_interval')
+            %input#eqlx_ssh_keepalive_interval{:type => "text", :name => "eqlx_ssh_keepalive_interval", :'data-default' => @proposal.raw_data['attributes'][@proposal.barclamp]["volume"]["eqlx"]["eqlx_ssh_keepalive_interval"], :onchange => "update_value('volume/eqlx/eqlx_ssh_keepalive_interval', 'eqlx_ssh_keepalive_interval', 'integer')"}
+          %p
+            %label{ :for => :eqlx_cli_timeout }= t('.eqlx_cli_timeout')
+            %input#eqlx_cli_timeout{:type => "text", :name => "eqlx_cli_timeout", :'data-default' => @proposal.raw_data['attributes'][@proposal.barclamp]["volume"]["eqlx"]["eqlx_cli_timeout"], :onchange => "update_value('volume/eqlx/eqlx_cli_timeout', 'eqlx_cli_timeout', 'integer')"}
+      %div{ :id => 'volume_file_parameters', :class => 'container' }
+        %label{ :for => :file_header }= t('.volume_file_parameters')
+        %div.container
+          %label{ :for => :local_file }= t('.volume_file_name')
+          %input#local_file{:type => "text", :name => "local_file", :'data-default' => @proposal.raw_data['attributes'][@proposal.barclamp]["volume"]["local_file"], :onchange => "update_value('volume/local_file','local_file', 'string')"}
+          %p
+          %label{ :for => :local_size }= t('.volume_file_size')
+          %input#local_size{:type => "text", :name => "local_size", :'data-default' => @proposal.raw_data['attributes'][@proposal.barclamp]["volume"]["local_size"], :onchange => "update_value('volume/local_size','local_size', 'integer')"}
+      %div{ :id => 'volume_disk_parameters', :class => 'container' }
+        %label{ :for => :raw_header }= t('.volume_disk_parameters')
+        %div.container
+          %label{ :for => :nova_raw_method }= t('.volume_raw_mode')
+          = select_tag :nova_raw_method, options_for_select([['first','first'], ['all', 'all'], ['selected', 'selected']], @proposal.raw_data['attributes'][@proposal.barclamp]["volume"]["nova_raw_method"].to_s), :onchange => "update_value('volume/nova_raw_method', 'nova_raw_method', 'string')"
+        %div{ :id => 'nova_volume_disks', :class => 'container' }
+          %label{ :for => :volume_disks }= t('.nova_volume_disks')
+          %ul{ :id => 'nova_volume_disks_list'}
 
 :javascript
 
@@ -176,6 +183,24 @@
     on_role_change(check_disks_loaded_from_proposal, disks);      
  
   }
+
+  function update_view() {
+    var proposal_data = JSON.parse($("input#proposal_attributes").val()); 
+    var choice = $("select#volume_type").val();
+    if (choice == 'eqlx') {
+      $('div#eqlx_parameters').show();
+      $('div#volume_file_parameters').hide();
+      $('div#volume_disk_parameters').hide();
+    } else {
+      $('div#eqlx_parameters').hide();
+      $('div#volume_file_parameters').show();
+      $('div#volume_disk_parameters').show();
+    }
+  }
+
+  $(document).ready(function(){
+    update_view();
+  });
 
   // HACK HACK HACK
   // TODO: figure out the better way of overriding this functions
