@@ -64,6 +64,11 @@
         [ "nova-multi-controller" ],
         [ "nova-multi-compute", "nova-multi-volume" ]
       ],
+      "element_run_list_order": {
+        "nova-multi-controller": 95,
+        "nova-multi-volume": 96,
+        "nova-multi-compute": 97
+      },
       "config": {
         "environment": "nova-config-base",
         "mode": "full",
