@@ -129,6 +129,7 @@ debs:
     - dnsmasq-base
     - python-nova
     - nova-api
+    - nova-cert
     - nova-objectstore
     - nova-volume
     - nova-scheduler
