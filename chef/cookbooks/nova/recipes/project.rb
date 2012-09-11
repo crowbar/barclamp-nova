@@ -113,7 +113,9 @@ Chef::Log.info("Admin API server found at #{admin_api_ip}")
 
 # install python-glanceclient on controller, to be able to upload images
 # from here
-package "python-glanceclient" do
+glance_client = "python-glance"
+glance_client = "python-glanceclient" if node.platform == "suse"
+package glance_client do
   action :upgrade
 end
 
