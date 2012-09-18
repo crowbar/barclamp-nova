@@ -57,7 +57,7 @@ class NovaService < ServiceObject
     hash = base.config_hash
     # automatically swap to qemu if using VMs for testing (relies on node.virtual to detect VMs)
     nodes.each do |n|
-      if n.node_object.virtual?
+      if n.virtual?
         hash["nova"]["libvirt_type"] = "qemu"
         break
       end
