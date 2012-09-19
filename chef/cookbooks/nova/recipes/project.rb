@@ -34,9 +34,12 @@ end
 
 # Add private network one day.
 
+base_ip = node[:nova][:network][:floating_range].split("/")[0]
+grep_ip = base_ip[0..-2] + (base_ip[-1].chr.to_i+1).to_s
+
 execute "nova-manage floating create --ip_range=#{node[:nova][:network][:floating_range]}" do
-  user node[:nova][:user]
-  not_if "nova-manage floating list | grep '#{node[:nova][:network][:floating_range].split("/")[0]}'"
+  user node[:nova][:user] if node.platform != "suse"
+  not_if "nova-manage floating list | grep '#{grep_ip}'"
 end
 
 unless node[:nova][:network][:tenant_vlans]
@@ -107,6 +110,14 @@ else
 end
 admin_api_ip = Chef::Recipe::Barclamp::Inventory.get_network_by_type(api, "admin").address
 Chef::Log.info("Admin API server found at #{admin_api_ip}")
+
+# install python-glanceclient on controller, to be able to upload images
+# from here
+glance_client = "python-glance"
+glance_client = "python-glanceclient" if node.platform == "suse"
+package glance_client do
+  action :upgrade
+end
 
 template "/root/.openrc" do
   source "openrc.erb"

@@ -7,6 +7,7 @@ run_list(
          "recipe[rabbitmq]",
          "recipe[nova::rabbit]",
          "recipe[nova::api]",
+         "recipe[nova::cert]",
          "recipe[nova::network]",
          "recipe[nova::scheduler]",
          "recipe[nova::vncproxy]",
