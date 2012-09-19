@@ -57,11 +57,6 @@ cookbook_file "/usr/lib/python2.7/dist-packages/nova/virt/libvirt.xml.template" 
 end
 
 
-
-
-
-
-
 # ha_enabled activates Nova High Availability (HA) networking.
 # The nova "network" and "api" recipes need to be included on the compute nodes and
 # we must specify the --multi_host=T switch on "nova-manage network create".     
@@ -90,11 +85,6 @@ template "/etc/default/qemu-kvm" do
 end
 
 
-# stop ksm if running.
-service "ksm" do
-  action :stop
-end
-
 execute "set ksm value" do
   command "echo #{node[:nova][:kvm][:ksm_enabled]} > /sys/kernel/mm/ksm/run"
 end  
@@ -112,9 +102,5 @@ execute "set vhost_net module" do
 end
 
 execute "IO scheduler" do
-  command "find /sys/block -type l -name 'sd*' -exec sh -c 'echo deadline > {}/queue/scheduler' \;"
+  command "find /sys/block -type l -name 'sd*' -exec sh -c 'echo deadline > {}/queue/scheduler' \\;"
 end
-
-
-
- 
