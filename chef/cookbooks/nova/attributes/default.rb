@@ -87,3 +87,10 @@ default[:nova][:volume][:nova_volume_disks] = []
 default[:nova][:volume][:local_file] = "/var/lib/nova/volume.raw"
 default[:nova][:volume][:local_size] = 2000
 
+#
+# Transparent Hugepage Settings                       
+# 
+default[:nova][:hugepage][:tranparent_hugepage_enabled] = "always"
+default[:nova][:hugepage][:tranparent_hugepage_defrag] = "always"
+
+
