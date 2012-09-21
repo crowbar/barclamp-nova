@@ -28,7 +28,7 @@ define :nova_package do
 
   service nova_name do
     if (platform?("ubuntu") && node.platform_version.to_f >= 10.04)
-      restart_command "status #{nova_name} 2>&1 | grep -q Unknown || restart #{nova_name}"
+      restart_command "stop #{nova_name} ; start #{nova_name}"
       stop_command "stop #{nova_name}"
       start_command "start #{nova_name}"
       status_command "status #{nova_name} | cut -d' ' -f2 | cut -d'/' -f1 | grep start"
