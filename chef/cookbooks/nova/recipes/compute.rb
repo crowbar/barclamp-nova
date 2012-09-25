@@ -84,10 +84,9 @@ template "/etc/default/qemu-kvm" do
   mode "0644"
 end
 
-
 execute "set ksm value" do
   command "echo #{node[:nova][:kvm][:ksm_enabled]} > /sys/kernel/mm/ksm/run"
- end  
+end
 
 execute "set tranparent huge page enabled support" do
   # note path to setting is OS dependent
@@ -108,4 +107,4 @@ end
 
 execute "IO scheduler" do
   command "find /sys/block -type l -name 'sd*' -exec sh -c 'echo deadline > {}/queue/scheduler' \\;"
-end
+end  
