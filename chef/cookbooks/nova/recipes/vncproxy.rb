@@ -74,7 +74,9 @@ else
     nova_package("xvpvncproxy")
   else
     novnc_service = "nova-novncproxy"
+    #agordeev: remove hardcoded paths
     novnc_path = "/opt/novnc"
+    nova_path = "/opt/nova"
     pfs_and_install_deps "novnc" do
       reference "master"
       without_setup true 
@@ -101,6 +103,7 @@ else
         cp utils/rebind /usr/bin/
         cp utils/rebind.o /usr/lib/novnc
         cp utils/rebind.so /usr/lib/novnc
+        cp #{nova_path}/bin/#{novnc_service} utils/#{novnc_service}
         chmod 755 /usr/bin/rebind
         chmod 644 /usr/lib/novnc/rebind.*
         chmod -R a+r /usr/share/novnc/*
