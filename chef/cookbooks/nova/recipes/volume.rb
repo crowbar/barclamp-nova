@@ -19,6 +19,9 @@
 
 include_recipe "nova::config"
 
+package "tgt"
+nova_package("volume")
+
 volname = node["nova"]["volume"]["volume_name"]
 
 checked_disks = []
