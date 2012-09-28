@@ -36,6 +36,15 @@ if checked_disks.empty? or node[:nova][:volume][:volume_type] == "local"
   fdir = ::File.dirname(fname)
   fsize = node["nova"]["volume"]["local_size"] * 1024 * 1024 * 1024 # Convert from GB to Bytes
 
+  dir = directory fdir do
+    owner node[:nova][:user]
+    group "root"
+    mode "0755"
+    action :none
+    recursive true
+  end
+  dir.run(:create)
+
   # Cap size at 90% of free space
   max_fsize = ((`df -Pk #{fdir}`.split("\n")[1].split(" ")[3].to_i * 1024) * 0.90).to_i rescue 0
   fsize = max_fsize if fsize > max_fsize
