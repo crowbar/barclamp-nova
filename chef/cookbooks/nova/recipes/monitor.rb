@@ -52,13 +52,15 @@ end
 
 include_recipe "nagios::common" if node["roles"].include?("nagios-client")
 
+nova_admin_ip = Chef::Recipe::Barclamp::Inventory.get_network_by_type(node, "admin").address
 template "/etc/nagios/nrpe.d/nova_nrpe.cfg" do
   source "nova_nrpe.cfg.erb"
   mode "0644"
   group node[:nagios][:group]
   owner node[:nagios][:user]
   variables( {
-    :nova_scale => nova_scale
+    :nova_scale => nova_scale,
+    :nova_admin_ip => nova_admin_ip
   })    
    notifies :restart, "service[nagios-nrpe-server]"
 end if node["roles"].include?("nagios-client")    

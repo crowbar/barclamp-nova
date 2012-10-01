@@ -2,7 +2,7 @@
 #command[check_nova_ldap]=/usr/lib/nagios/plugins/check_procs -w 1:3 -c 1:3 -C nova
 
 <% unless node[:nova].nil? or node[:nova][:rabbit].nil? -%>
-command[check_nova_rabbit]=/usr/lib/nagios/plugins/check_rabbitmq_aliveness -H <%= node[:ipaddress] %> -u <%= node[:nova][:rabbit][:user] %> -p <%= node[:nova][:rabbit][:password] %> --vhost <%= node[:nova][:rabbit][:vhost] %>
+command[check_nova_rabbit]=/usr/lib/nagios/plugins/check_rabbitmq_aliveness -H <%= @nova_admin_ip %> -u <%= node[:nova][:rabbit][:user] %> -p <%= node[:nova][:rabbit][:password] %> --vhost <%= node[:nova][:rabbit][:vhost] %>
 <% end -%>
 
 <% unless node[:nova].nil? or node[:nova][:db].nil? -%>
