@@ -143,3 +143,28 @@ keystone_register "register nova ec2 endpoint" do
 #  endpoint_enabled true
   action :add_endpoint_template
 end
+
+keystone_register "register nova-volume service" do
+  host keystone_address
+  port keystone_admin_port
+  token keystone_token
+  service_name "nova-volume"
+  service_type "volume"
+  service_description "Openstack Nova Volume Service"
+  action :add_service
+end
+
+keystone_register "register nova-volume endpoint" do
+  host keystone_address
+  port keystone_admin_port
+  token keystone_token
+  endpoint_service "nova-volume"
+  endpoint_region "RegionOne"
+  endpoint_adminURL "http://#{admin_api_ip}:8776/v1/$(tenant_id)s"
+  endpoint_internalURL "http://#{admin_api_ip}:8776/v1/$(tenant_id)s"
+  endpoint_publicURL "http://#{public_api_ip}:8776/v1/$(tenant_id)s"
+  # endpoint_global true
+  # endpoint_enabled true
+  action :add_endpoint_template
+end
+
