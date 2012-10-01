@@ -28,40 +28,54 @@ nova_scale = {
   :apis => []
 }
 
-unless node[:nova_environment].nil?
-  search(:node, "roles:nova-single-machine AND nova_environment:#{node[:nova_environment]}") do |n|
+env_filter = " AND nova_config_environment:#{node[:nova][:config][:environment]}" rescue nil
+if env_filter
+  search(:node, "roles:nova-single-machine #{env_filter}") do |n|
     nova_scale[:computes] << n
-#   nova_scale[:volumes] << n
+    nova_scale[:volumes] << n
     nova_scale[:networks] << n
     nova_scale[:schedulers] << n
     nova_scale[:apis] << n
   end
 
-  search(:node, "roles:nova-multi-controller AND nova_environment:#{node[:nova_environment]}") do |n|
+  search(:node, "roles:nova-multi-controller #{env_filter}") do |n|
     nova_scale[:networks] << n
     nova_scale[:schedulers] << n
     nova_scale[:apis] << n
   end
 
-  search(:node, "roles:nova-multi-compute AND nova_environment:#{node[:nova_environment]}") do |n|
+  search(:node, "roles:nova-multi-compute #{env_filter}") do |n|
     nova_scale[:computes] << n
-#   nova_scale[:volumes] << n
   end
+
+  search(:node, "roles:nova-multi-volume #{env_filter}") do |n|
+    nova_scale[:volumes] << n
+  end
+
   # As other nova and swift roles come on-line we should add them here.
 end
 
-include_recipe "nagios::common" if node["roles"].include?("nagios-client")
+if node["roles"].include?("nagios-client")    
+  include_recipe "nagios::common"
 
-nova_admin_ip = Chef::Recipe::Barclamp::Inventory.get_network_by_type(node, "admin").address
-template "/etc/nagios/nrpe.d/nova_nrpe.cfg" do
-  source "nova_nrpe.cfg.erb"
-  mode "0644"
-  group node[:nagios][:group]
-  owner node[:nagios][:user]
-  variables( {
-    :nova_scale => nova_scale,
-    :nova_admin_ip => nova_admin_ip
-  })    
-   notifies :restart, "service[nagios-nrpe-server]"
-end if node["roles"].include?("nagios-client")    
+  nova_admin_ip = Chef::Recipe::Barclamp::Inventory.get_network_by_type(node, "admin").address
+  template "/etc/nagios/nrpe.d/nova_nrpe.cfg" do
+    source "nova_nrpe.cfg.erb"
+    mode "0644"
+    group node[:nagios][:group]
+    owner node[:nagios][:user]
+    variables( {
+      :nova_scale => nova_scale,
+      :nova_admin_ip => nova_admin_ip
+    })    
+    notifies :restart, "service[nagios-nrpe-server]"
+  end 
 
+  template "/etc/sudoers.d/nagios_sudoers" do
+    source "nagios_sudoers.erb"
+    mode "0440"
+    group "root"
+    owner "root"
+  end
+
+end
