@@ -11,7 +11,7 @@
       "verbose": true,
       "user": "nova",
       "gitrepo": "http://github.com/openstack/nova.git",
-      "git_refspec": "folsom-rc1",
+      "git_refspec": "2012.2",
       "use_gitrepo": true,
       "use_gitbarclamp": true,
       "pfs_deps": [
