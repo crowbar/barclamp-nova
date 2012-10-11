@@ -84,6 +84,7 @@ debs:
   ubuntu-12.04:
     repos:
       - deb http://ubuntu-cloud.archive.canonical.com/ubuntu precise-updates/folsom main
+      - deb http://ubuntu-cloud.archive.canonical.com/ubuntu precise-proposed/folsom main
     pkgs:
       - tgt
       - novnc
@@ -123,7 +124,7 @@ debs:
     - nova-volume
     - nova-scheduler
     - nova-doc
-#    - nova-vncproxy
+    - nova-vncproxy
     - nova-ajax-console-proxy
     - python-eventlet
     - bzr
