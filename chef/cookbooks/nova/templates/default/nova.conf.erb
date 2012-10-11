@@ -100,7 +100,6 @@ auth_strategy=keystone
 
 # VOLUME
 volume_group=<%= node[:nova][:volume][:volume_name] %>
-volume_name_template=volume-%08x
 iscsi_helper=tgtadm
 <% unless @eqlx_params.nil? -%>
 volume_driver=nova.volume.eqlx.DellEQLSanISCSIDriver
