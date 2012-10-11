@@ -108,6 +108,10 @@ if node[:nova][:volume][:volume_type] == "eqlx"
 end
 
 package "tgt"
+cookbook_file "/etc/tgt/conf.d/nova-volume.conf" do
+  source "nova-volume.conf"
+end
+
 nova_package("volume")
 
 # Restart doesn't work correct for this service.
