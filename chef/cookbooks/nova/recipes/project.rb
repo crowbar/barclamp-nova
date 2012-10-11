@@ -118,19 +118,3 @@ glance_client = "python-glanceclient" if node.platform == "suse"
 package glance_client do
   action :upgrade
 end
-
-template "/root/.openrc" do
-  source "openrc.erb"
-  owner "root"
-  group "root"
-  mode 0600
-  variables(
-    :keystone_ip_address => keystone_address,
-    :keystone_service_port => keystone_service_port,
-    :admin_username => admin_username,
-    :admin_password => admin_password,
-    :default_tenant => default_tenant,
-    :nova_api_ip_address => admin_api_ip
-  )
-end
-
