@@ -19,14 +19,6 @@
 
 include_recipe "nova::config"
 
-unless node[:nova][:use_gitrepo]
-package "python-keystone"
-package "python-novaclient"
-#TODO: else
-end
-
-nova_package("api")
-
 env_filter = " AND keystone_config_environment:keystone-config-#{node[:nova][:keystone_instance]}"
 keystones = search(:node, "recipes:keystone\\:\\:server#{env_filter}") || []
 if keystones.length > 0
@@ -35,6 +27,18 @@ if keystones.length > 0
 else
   keystone = node
 end
+
+unless node[:nova][:use_gitrepo]
+  package "python-keystone"
+  package "python-novaclient"
+else
+  pfs_and_install_deps "keystone" do
+    cookbook "keystone"
+    cnode keystone
+  end
+end
+
+nova_package("api")
 
 keystone_address = Chef::Recipe::Barclamp::Inventory.get_network_by_type(keystone, "admin").address if keystone_address.nil?
 keystone_token = keystone["keystone"]["service"]["token"]
