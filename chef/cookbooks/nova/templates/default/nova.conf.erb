@@ -26,6 +26,7 @@ rabbit_virtual_host=<%= @rabbit_settings[:vhost] %>
 
 # API
 osapi_compute_extension=nova.api.openstack.compute.contrib.standard_extensions
+api_rate_limit = False
 
 # NETWORK
 my_ip=<%= node[:nova][:my_ip] %>
