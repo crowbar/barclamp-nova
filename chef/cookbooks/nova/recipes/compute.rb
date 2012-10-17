@@ -42,25 +42,6 @@ end
 
 nova_package("compute")
 
-#
-# These two files are to handle: https://bugs.launchpad.net/ubuntu/+source/libvirt/+bug/996840
-# This is a hack until that gets fixed.
-# 
-cookbook_file "/usr/lib/python2.7/dist-packages/nova/virt/libvirt/connection.py" do
-  user "root"
-  group "root"
-  mode "0755"
-  source "connection.py"
-end
-
-cookbook_file "/usr/lib/python2.7/dist-packages/nova/rootwrap/compute.py" do
-  user "root"
-  group "root"
-  mode "0755"
-  source "compute.py"
-end
-
-
 # ha_enabled activates Nova High Availability (HA) networking.
 # The nova "network" and "api" recipes need to be included on the compute nodes and
 # we must specify the --multi_host=T switch on "nova-manage network create".     

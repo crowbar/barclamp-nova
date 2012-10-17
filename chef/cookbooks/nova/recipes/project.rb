@@ -108,18 +108,9 @@ end
 admin_api_ip = api.address.addr
 Chef::Log.info("Admin API server found at #{admin_api_ip}")
 
-template "/root/.openrc" do
-  source "openrc.erb"
-  owner "root"
-  group "root"
-  mode 0600
-  variables(
-    :keystone_ip_address => keystone_address,
-    :keystone_service_port => keystone_service_port,
-    :admin_username => admin_username,
-    :admin_password => admin_password,
-    :default_tenant => default_tenant,
-    :nova_api_ip_address => admin_api_ip
-  )
+# install python-glanceclient on controller, to be able to upload images
+# from here
+package "python-glanceclient" do
+  action :upgrade
 end
 
