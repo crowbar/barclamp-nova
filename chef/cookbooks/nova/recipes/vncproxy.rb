@@ -31,18 +31,18 @@ if node.platform != "suse"
 end
 
 # forcing novnc is deliberate on suse
-if node[:nova][:use_novnc] || node.platform == "suse"
+if node[:nova][:use_novnc]
   package "novnc" do
     package_name "openstack-novncproxy" if node.platform == "suse"
     action :upgrade
     options "--force-yes" if node.platform != "suse"
   end
-  service "novnc" do
-    service_name "openstack-novncproxy" if node.platform == "suse"
-    supports :status => true, :restart => true
-    action [:enable, :start]
-    subscribes :restart, resources(:template => "/etc/nova/nova.conf"), :delayed
-  end
+  # This does not appear to exist for Folsom anymore.
+  # service "novnc" do
+  #  supports :status => true, :restart => true
+  #  action [:enable, :start]
+  #  subscribes :restart, resources(:template => "/etc/nova/nova.conf"), :delayed
+  # end
 else
   package "nova-vncproxy" do
     action :upgrade
