@@ -25,6 +25,7 @@ barclamp:
     - glance
     - keystone
     - nova_dashboard
+    - cinder
   member:
     - openstack 
 
@@ -56,6 +57,8 @@ locale_additions:
           num_networks: Number of Networks
           network_size: Network Size
           volume_header: Volume Options
+          cinder_instance: Cinder
+          use_cinder: Use Cinder (otherwise nova-volume)
           volume_type: Type of Volume
           volume_name: Name of Volume
           volume_file_parameters: File-based Parameters
