@@ -29,6 +29,9 @@ class NovaService < ServiceObject
     answer << { "barclamp" => "mysql", "inst" => role.default_attributes["nova"]["db"]["mysql_instance"] }
     answer << { "barclamp" => "keystone", "inst" => role.default_attributes["nova"]["keystone_instance"] }
     answer << { "barclamp" => "glance", "inst" => role.default_attributes["nova"]["glance_instance"] }
+    if role.default_attributes[@bc_name]["volume"]["use_cinder"]
+      answer << { "barclamp" => "cinder", "inst" => role.default_attributes[@bc_name]["cinder_instance"] }
+    end
     answer
   end
 
@@ -109,6 +112,19 @@ class NovaService < ServiceObject
       base["attributes"]["nova"]["glance_instance"] = glances[0] unless glances.empty?
     rescue
       @logger.info("Nova create_proposal: no glance found")
+    end
+
+    base["attributes"]["nova"]["cinder_instance"] = ""
+    begin
+      cinderService = CinderService.new(@logger)
+      cinders = cinderService.list_active[1]
+      if cinders.empty?
+        # No actives, look for proposals
+        cinders = cinderService.proposals[1]
+      end
+      base["attributes"]["nova"]["cinder_instance"] = cinders[0] unless cinders.empty?
+    rescue
+      @logger.info("Nova create_proposal: no cinder found")
     end
 
     base["attributes"]["nova"]["db"]["password"] = random_password

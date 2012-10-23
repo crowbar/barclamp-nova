@@ -53,6 +53,12 @@
       %label{ :for => :volume_header }= t('.volume_header')
     %div.container
       %p
+        %label{ :for => :use_cinder }= t('.use_cinder')
+        = select_tag :use_cinder, options_for_select([['true','true'], ['false', 'false']], @proposal.raw_data['attributes'][@proposal.barclamp]["volume"]["use_cinder"].to_s), :onchange => "update_view();update_value('volume/use_cinder', 'use_cinder', 'boolean')"
+      %p
+        %label{ :for => :cinder_instance }= t('.cinder_instance')
+        = instance_selector("cinder", :cinder_instance, "cinder_instance", @proposal)
+      %p
         %label{ :for => :volume_name }= t('.volume_name')
         %input#volume_name{:type => "text", :name => "volume_name", :'data-default' => @proposal.raw_data['attributes'][@proposal.barclamp]["volume"]["volume_name"], :onchange => "update_value('volume/volume_name','volume_name', 'string')"}
       %p
