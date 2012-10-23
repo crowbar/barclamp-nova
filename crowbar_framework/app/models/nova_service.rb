@@ -39,9 +39,9 @@ class NovaService < ServiceObject
   #    * Don't reuse machines
   #    * validate hardware.
   #
-  def create_proposal
+  def create_proposal(name)
     @logger.debug("Nova create_proposal: entering")
-    base = super
+    base = super(name)
     @logger.debug("Nova create_proposal: done with base")
 
     nodes = Node.all
