@@ -32,6 +32,7 @@ osapi_compute_extension=nova.api.openstack.compute.contrib.standard_extensions
 
 # NETWORK
 my_ip=<%= node[:nova][:my_ip] %>
+routing_source_ip=<%= node[:nova][:network][:routing_source_ip] %>
 allow_same_net_traffic=<%= node[:nova][:network][:allow_same_net_traffic] ? "True" : "False" %>
 ec2_host=<%= @ec2_host %>
 ec2_dmz_host=<%= @ec2_dmz_host %>
