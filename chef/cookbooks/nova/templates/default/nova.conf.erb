@@ -24,6 +24,7 @@ rabbit_virtual_host=<%= @rabbit_settings[:vhost] %>
 
 # SCHEDULER
 # Default to multi-scheduler so that volume and compute can override
+ram_allocation_ratio=<%= node[:nova][:scheduler][:ram_allocation_ratio] %>
 
 # API
 osapi_compute_extension=nova.api.openstack.compute.contrib.standard_extensions
