@@ -6,6 +6,7 @@
       "keystone_instance": "none",
       "service_user": "nova",
       "glance_instance": "none",
+      "cinder_instance": "none",
       "libvirt_type": "kvm",
       "use_novnc": true,
       "verbose": true,
@@ -76,6 +77,7 @@
         "pip://python-quantumclient>=2.0",
         "pip://python-glanceclient>=0.5.0,<2",
         "pip://python-novaclient",
+        "pip://python-cinderclient",
         "pip://python-keystoneclient"
       ],
       "network": {
@@ -87,6 +89,7 @@
         "network_size": 256
       },
       "volume": {
+        "use_cinder": true,
         "volume_name": "nova-volumes",
         "volume_type": "raw",
         "nova_raw_method": "all",
