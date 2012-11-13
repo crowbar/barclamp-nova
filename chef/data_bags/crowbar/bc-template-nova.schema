@@ -33,7 +33,6 @@
                 "fixed_range": { "type": "str" },
                 "num_networks": { "type": "int" },
                 "network_size": { "type": "int" },
-                "routing_source_ip": { "type": "str" },
                 "flat_network_bridge": { "type": "str" },
                 "flat_interface": { "type": "str" },
                 "flat_network_dhcp_start": { "type": "str" },

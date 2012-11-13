@@ -54,7 +54,7 @@ _r = {}
 
 public_api_ip = api_ip = _r[:api].address("public").addr
 admin_api_ip = api_ip =  _r[:api].address.addr
-network_public_ip =      _r[:network].address("public").addr
+routing_source_ip = network_public_ip = _r[:network].address("public").addr
 dns_server_public_ip =   _r[:dns].address("public").addr
 glance_server_ip =       _r[:glance].address.addr
 glance_server_port =     _r[:glance][:glance][:api][:bind_port]
@@ -123,7 +123,8 @@ template "/etc/nova/nova.conf" do
             :dns_server_public_ip => dns_server_public_ip,
             :glance_server_ip => glance_server_ip,
             :glance_server_port => glance_server_port,
-            :vncproxy_public_ip => vncproxy_public_ip
+            :vncproxy_public_ip => vncproxy_public_ip,
+            :routing_source_ip => routing_source_ip
             )
 end
 
