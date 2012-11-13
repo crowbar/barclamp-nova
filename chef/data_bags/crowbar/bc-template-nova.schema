@@ -57,7 +57,8 @@
                     "eqlx_chap_login": { "type": "str", "required": true },
                     "eqlx_chap_password": { "type": "str", "required": true },
                     "eqlx_ssh_keepalive_interval": { "type": "int", "required": true },
-                    "eqlx_cli_timeout": { "type": "int", "required": true }
+                    "eqlx_cli_timeout": { "type": "int", "required": true },
+                    "eqlx_pool": { "type": "str", "required": true }
                   }
                 },
                 "volume_name": { "type": "str", "required": true },

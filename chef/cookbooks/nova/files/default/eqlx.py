@@ -43,6 +43,9 @@ eqlx_opts = [
     cfg.BoolOpt('eqlx_verbose_ssh',
             default=False,
             help='Print SSH debugging output to stderr'),
+    cfg.StrOpt('eqlx_pool',
+                default='default',
+                help='Pool in which volumes will be created')
     ]
 
 if __name__ != '__main__':
@@ -213,8 +216,10 @@ class DellEQLSanISCSIDriver(SanISCSIDriver):
         
         chan.close()
         
-        if any(line.startswith('% Error') for line in out):
+        if any(line.startswith(('% Error', 'Error:')) for line in out):
             msg = _("Error executing EQL command: %(cmd)s") % locals()
+            for line in out:
+              LOG.error(line)
             raise exception.Error(msg, out)
         return out
 
@@ -265,7 +270,10 @@ class DellEQLSanISCSIDriver(SanISCSIDriver):
 
     def create_volume(self, volume):
         """Create a volume"""
-        cmd = ['volume', 'create', volume['name'], "%sG" % (volume['size'],)]
+        cmd = ['volume', 'create', volume['name'], "%sG" % (volume['size'])]
+        if FLAGS.eqlx_pool != 'default':
+            cmd.append('pool')
+            cmd.append(FLAGS.eqlx_pool)
         if FLAGS.san_thin_provision:
             cmd.append('thin-provision')
         out = self._execute(*cmd)
