@@ -44,6 +44,10 @@ public_interface=<%= node[:nova][:network][:public_interface] %>
 network_size=<%= node[:nova][:network][:network_size] %>
 num_networks=<%= node[:nova][:network][:num_networks] %>
 
+<% if @routing_source_ip -%>
+routing_source_ip=<%= @routing_source_ip %>
+<% end -%>
+
 <% if node[:nova][:network][:dhcp_enabled] -%>
 <% if node[:nova][:network][:tenant_vlans] -%>
 # DHCP Vlan Mode

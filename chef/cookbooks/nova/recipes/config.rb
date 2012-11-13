@@ -40,7 +40,7 @@ _r = {}
   :dns  => "roles:dns-server",
   :glance  => "roles:glance-server"
 }.each{|role,query|
-  list = search(:node,query) || []
+  list = search(:node, query) || []
   if n = list.detect{|n| n[:fqdn] == node[:fqdn]}
     Chef::Log.info("Preferring myself for #{role.to_s}")
   elsif n = list.first
@@ -54,11 +54,12 @@ _r = {}
 
 public_api_ip = api_ip = _r[:api].address("public").addr
 admin_api_ip = api_ip =  _r[:api].address.addr
-network_public_ip =      _r[:network].address("public").addr
+network_public_ip = _r[:network].address("public").addr
 dns_server_public_ip =   _r[:dns].address("public").addr
 glance_server_ip =       _r[:glance].address.addr
 glance_server_port =     _r[:glance][:glance][:api][:bind_port]
 vncproxy_public_ip =     _r[:vncproxy].address("public").addr
+routing_source_ip = _r[:network][:fqdn] == node[:fqdn]? network_public_ip : nil
 
 node[:nova][:my_ip] = node.address.addr
 
@@ -123,7 +124,8 @@ template "/etc/nova/nova.conf" do
             :dns_server_public_ip => dns_server_public_ip,
             :glance_server_ip => glance_server_ip,
             :glance_server_port => glance_server_port,
-            :vncproxy_public_ip => vncproxy_public_ip
+            :vncproxy_public_ip => vncproxy_public_ip,
+            :routing_source_ip => routing_source_ip
             )
 end
 
