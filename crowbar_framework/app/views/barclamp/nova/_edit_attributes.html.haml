@@ -57,7 +57,7 @@
         %input#volume_name{:type => "text", :name => "volume_name", :'data-default' => @proposal.raw_data['attributes'][@proposal.barclamp]["volume"]["volume_name"], :onchange => "update_value('volume/volume_name','volume_name', 'string')"}
       %p
         %label{ :for => :volume_type }= t('.volume_type')
-        = select_tag :volume_type, options_for_select([['raw','raw'], ['local', 'local']], @proposal.raw_data['attributes'][@proposal.barclamp]["volume"]["volume_type"].to_s), :onchange => "update_view();update_value('volume/volume_type', 'volume_type', 'string')"
+        = select_tag :volume_type, options_for_select([['raw','raw'], ['local', 'local'], ['eqlx','eqlx']], @proposal.raw_data['attributes'][@proposal.barclamp]["volume"]["volume_type"].to_s), :onchange => "update_view();update_value('volume/volume_type', 'volume_type', 'string')"
       %div{ :id => 'eqlx_parameters', :class => 'container' }
         %p
           %label{ :for => :eqlx_header }= t('.eqlx_parameters')
@@ -73,6 +73,9 @@
           %p
             %label{ :for => :eqlx_group_name }= t('.eqlx_group_name')
             %input#eqlx_group_name{:type => "text", :name => "eqlx_group_name", :'data-default' => @proposal.raw_data['attributes'][@proposal.barclamp]["volume"]["eqlx"]["eqlx_group_name"], :onchange => "update_value('volume/eqlx/eqlx_group_name', 'eqlx_group_name', 'string')"}
+          %p
+            %label{ :for => :eqlx_pool }= t('.eqlx_pool')
+            %input#eqlx_pool{:type => "text", :name => "eqlx_pool", :'data-default' => @proposal.raw_data['attributes'][@proposal.barclamp]["volume"]["eqlx"]["eqlx_pool"], :onchange => "update_value('volume/eqlx/eqlx_pool', 'eqlx_pool', 'string')"}
           %p
             %label{ :for => :san_thin_provision }= t('.eqlx_san_thin_provision')
             = select_tag :san_thin_provision, options_for_select([['yes','true'], ['no', 'false']], @proposal.raw_data['attributes'][@proposal.barclamp]["volume"]["eqlx"]["san_thin_provision"].to_s), :onchange => "update_value('volume/eqlx/san_thin_provision', 'san_thin_provision', 'boolean')"
