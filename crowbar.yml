@@ -77,6 +77,7 @@ locale_additions:
           eqlx_chap_password: EQLX chap password for targets
           eqlx_ssh_keepalive_interval: EQLX SSH keepalive internal
           eqlx_cli_timeout: EQLX CLI command execution timeout
+          eqlx_pool: EQLX pool name
         edit_deployment: 
           deployment: Deployment
 
