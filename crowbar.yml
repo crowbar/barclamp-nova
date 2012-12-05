@@ -27,7 +27,9 @@ barclamp:
     - keystone
     - nova_dashboard
   member:
-    - openstack 
+    - openstack
+  os_support:
+    - ubuntu-12.04
 
 crowbar:
   layout: 2
