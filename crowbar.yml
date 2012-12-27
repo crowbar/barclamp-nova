@@ -147,5 +147,5 @@ debs:
     - python-mox
 
 git_repo:
-  - nova http://github.com/openstack/nova.git stable/folsom
+  - nova http://github.com/openstack/nova.git grizzly-1
   - novnc http://github.com/kanaka/noVNC.git master
