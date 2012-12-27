@@ -8,8 +8,7 @@ logdir=/var/log/nova
 state_path=/var/lib/nova
 lock_path=/var/lock/nova
 use_syslog=True
-root_helper=sudo nova-rootwrap
-
+rootwrap_config=/etc/nova/rootwrap.conf
 
 # RABBITMQ
 <% if @rabbit_settings -%>
@@ -27,6 +26,7 @@ rabbit_virtual_host=<%= @rabbit_settings[:vhost] %>
 
 # API
 osapi_compute_extension=nova.api.openstack.compute.contrib.standard_extensions
+api_rate_limit = False
 
 # NETWORK
 my_ip=<%= node[:nova][:my_ip] %>
@@ -75,7 +75,10 @@ glance_api_servers=<%= @glance_server_ip %>:<%= @glance_server_port %>
 <% if @sql_connection -%>
 sql_connection=<%= @sql_connection %>
 <% end -%>
-connection_type=libvirt
+#connection_type=libvirt
+# This should work, according to the docs.  I have no idea why.
+# Will fix later.
+compute_driver=libvirt.LibvirtDriver
 firewall_driver=nova.virt.libvirt.firewall.IptablesFirewallDriver
 compute_manager=nova.compute.manager.ComputeManager
 instance_name_template=instance-%08x
