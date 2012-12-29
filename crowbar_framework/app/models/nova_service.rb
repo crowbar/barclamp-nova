@@ -54,7 +54,7 @@ class NovaService < ServiceObject
       add_role_to_instance_and_node(node.name, base.name, "nova-multi-compute")
     end
 
-    hash = base.config_hash
+    hash = base.current_config.config_hash
     # automatically swap to qemu if using VMs for testing (relies on node.virtual to detect VMs)
     nodes.each do |n|
       if n.virtual?
@@ -104,7 +104,7 @@ class NovaService < ServiceObject
     end
 
     hash["nova"]["db"]["password"] = random_password
-    base.config_hash = hash
+    base.current_config.config_hash = hash
 
     @logger.debug("Nova create_proposal: exiting")
     base
