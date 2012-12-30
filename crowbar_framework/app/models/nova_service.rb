@@ -123,15 +123,15 @@ class NovaService < ServiceObject
     #
     net_svc = Barclamp.find_by_name("network").operations(@logger)
 
-    tnodes = new_config.active_config.get_nodes_by_role("nova-multi-controller")
-    tnodes = all_nodes if new_config.active_config.config_hash["nova"]["network"]["ha_enabled"]
+    tnodes = new_config.get_nodes_by_role("nova-multi-controller")
+    tnodes = all_nodes if new_config.config_hash["nova"]["network"]["ha_enabled"]
     unless tnodes.nil? or tnodes.empty?
       tnodes.each do |n|
         net_svc.allocate_ip "default", "public", "host", n.name
       end
     end
 
-    unless new_config.active_config.config_hash["nova"]["network"]["tenant_vlans"]
+    unless new_config.config_hash["nova"]["network"]["tenant_vlans"]
       all_nodes.each do |n|
         net_svc.enable_interface "default", "nova_fixed", n.name
       end
