@@ -54,7 +54,7 @@ class NovaService < ServiceObject
       add_role_to_instance_and_node(node.name, base.name, "nova-multi-compute")
     end
 
-    hash = base.config_hash
+    hash = base.current_config.config_hash
     # automatically swap to qemu if using VMs for testing (relies on node.virtual to detect VMs)
     nodes.each do |n|
       if n.virtual?
@@ -104,7 +104,7 @@ class NovaService < ServiceObject
     end
 
     hash["nova"]["db"]["password"] = random_password
-    base.config_hash = hash
+    base.current_config.config_hash = hash
 
     @logger.debug("Nova create_proposal: exiting")
     base
@@ -123,15 +123,15 @@ class NovaService < ServiceObject
     #
     net_svc = Barclamp.find_by_name("network").operations(@logger)
 
-    tnodes = new_config.active_config.get_nodes_by_role("nova-multi-controller")
-    tnodes = all_nodes if new_config.active_config.config_hash["nova"]["network"]["ha_enabled"]
+    tnodes = new_config.get_nodes_by_role("nova-multi-controller")
+    tnodes = all_nodes if new_config.config_hash["nova"]["network"]["ha_enabled"]
     unless tnodes.nil? or tnodes.empty?
       tnodes.each do |n|
         net_svc.allocate_ip "default", "public", "host", n.name
       end
     end
 
-    unless new_config.active_config.config_hash["nova"]["network"]["tenant_vlans"]
+    unless new_config.config_hash["nova"]["network"]["tenant_vlans"]
       all_nodes.each do |n|
         net_svc.enable_interface "default", "nova_fixed", n.name
       end
