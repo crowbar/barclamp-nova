@@ -18,6 +18,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
+#
+require 'ipaddr'
 
 include_recipe "nova::mysql"
 include_recipe "nova::config"
@@ -34,9 +36,10 @@ end
 
 # Add private network one day.
 
+test_addr = IPAddr.new(node[:nova][:network][:floating_range]).succ.to_s
 execute "nova-manage floating create --ip_range=#{node[:nova][:network][:floating_range]}" do
   user node[:nova][:user] if node.platform != "suse"
-  not_if "nova-manage floating list | grep '#{node[:nova][:network][:floating_range].split("/")[0]}'"
+  not_if "nova-manage floating list | grep '#{test_addr}'"
 end
 
 unless node[:nova][:network][:tenant_vlans]
