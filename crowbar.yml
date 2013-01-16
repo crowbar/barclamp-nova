@@ -108,6 +108,7 @@ debs:
       - nova-consoleauth
       # paramiko needed for using EQL with nova-volume
       - python-paramiko
+      - python-cinderclient
   pkgs:
     - euca2ools
     - unzip
