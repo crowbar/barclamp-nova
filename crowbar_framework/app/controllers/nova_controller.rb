@@ -18,7 +18,7 @@ class NovaController < BarclampController
     disk_list = {}
     name = params[:id] || params[:name]
     node = Node.find_by_name(name)
-    node.cmdb_disks.each do | disk, data |
+    node.jig_disks.each do | disk, data |
       disk_list[disk] = data["size"] if data["usage"] == "Storage"
     end
     Rails.logger.info "disk list #{disk_list.inspect}"
