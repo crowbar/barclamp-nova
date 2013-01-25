@@ -6,6 +6,7 @@
       "keystone_instance": "none",
       "service_user": "nova",
       "glance_instance": "none",
+      "cinder_instance": "none",
       "libvirt_type": "kvm",
       "use_novnc": true,
       "verbose": true,
@@ -19,6 +20,7 @@
         "network_size": 256
       },
       "volume": {
+        "use_cinder": true,
         "volume_name": "nova-volumes",
         "volume_type": "raw",
         "nova_raw_method": "all",
