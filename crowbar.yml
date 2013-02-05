@@ -138,6 +138,7 @@ debs:
     - nova-volume
     - nova-scheduler
     - nova-doc
+    - nova-vncproxy
     - nova-ajax-console-proxy
     - python-eventlet
     - bzr
