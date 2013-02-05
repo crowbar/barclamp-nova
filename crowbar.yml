@@ -91,6 +91,7 @@ debs:
     pkgs:
       - tgt
       - novnc
+      - nova-novncproxy
       - nova-compute-lxc
       - nova-compute-xen
       - nova-compute-xcp
@@ -128,7 +129,6 @@ debs:
     - nova-volume
     - nova-scheduler
     - nova-doc
-    - nova-vncproxy
     - nova-ajax-console-proxy
     - python-eventlet
     - bzr
