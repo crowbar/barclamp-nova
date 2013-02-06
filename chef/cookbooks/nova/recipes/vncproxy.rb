@@ -33,32 +33,34 @@ end
 
 # forcing novnc is deliberate on suse
 unless node[:nova][:use_gitrepo]
-  if node[:nova][:use_novnc] || node.platform == "suse"
-    package "novnc" do
-      package_name "openstack-novncproxy" if node.platform == "suse"
-      action :upgrade
-      options "--force-yes" if node.platform != "suse"
-    end
-    service "novnc" do
-      service_name "openstack-novncproxy" if node.platform == "suse"
-      supports :status => true, :restart => true
-      action [:enable, :start]
-      subscribes :restart, resources(:template => "/etc/nova/nova.conf"), :delayed
-    end
-  else
-    package "nova-vncproxy" do
-      action :upgrade
-      options "--force-yes"
-    end
-    execute "Fix permission Bug" do
-      command "sed -i 's/nova$/root/g' /etc/init/nova-vncproxy.conf"
-      action :run
-    end
-  
-    service "nova-vncproxy" do
-      supports :status => true, :restart => true
-      action [:enable, :start]
-      subscribes :restart, resources(:template => "/etc/nova/nova.conf"), :delayed
+  if node[:nova][:use_novnc]
+    if node.platform == "suse"
+      package "novnc" do
+        package_name "openstack-novncproxy" if node.platform == "suse"
+        action :upgrade
+        options "--force-yes" if node.platform != "suse"
+      end
+      service "novnc" do
+        service_name "openstack-novncproxy" if node.platform == "suse"
+        supports :status => true, :restart => true
+        action [:enable, :start]
+        subscribes :restart, resources(:template => "/etc/nova/nova.conf"), :delayed
+      end
+    else
+      package "nova-novncproxy" do
+        action :upgrade
+        options "--force-yes"
+      end
+      execute "Fix permission Bug" do
+        command "sed -i 's/nova$/root/g' /etc/init/nova-novncproxy.conf"
+        action :run
+      end
+
+      service "nova-novncproxy" do
+        supports :status => true, :restart => true
+        action [:enable, :start]
+        subscribes :restart, resources(:template => "/etc/nova/nova.conf"), :delayed
+      end
     end
   end
   service "nova-consoleauth" do
@@ -79,7 +81,7 @@ else
     nova_path = "/opt/nova"
     pfs_and_install_deps "novnc" do
       reference "master"
-      without_setup true 
+      without_setup true
     end
     [
       "/usr/lib/novnc",
@@ -94,7 +96,7 @@ else
       creates "#{novnc_path}/utils/rebind.so"
     end
     bash "copy_and_install" do
-      cwd novnc_path 
+      cwd novnc_path
       code <<-EOH
         while read line
         do
@@ -123,3 +125,4 @@ else
     end
   end
 end
+
