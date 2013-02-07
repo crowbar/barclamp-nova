@@ -21,7 +21,7 @@ barclamp:
   version: 0
   allow_multiple_proposals: true
   requires:
-    - @crowbar
+    - '@crowbar'
     - mysql
     - glance
     - keystone
