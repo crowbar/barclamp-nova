@@ -33,6 +33,17 @@ if node[:nova][:use_novnc]
     action :upgrade
     options "--force-yes"
   end
+
+  package "nova-novncproxy" do
+    action :upgrade
+    options "--force-yes"
+  end
+  service "nova-novncproxy" do
+    supports :status => true, :restart => true
+    action [:enable, :start]
+    subscribes :restart, resources(:template => "/etc/nova/nova.conf"), :delayed
+   end
+
   # This does not appear to exist for Folsom anymore.
   # service "novnc" do
   #  supports :status => true, :restart => true
