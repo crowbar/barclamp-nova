@@ -111,14 +111,15 @@ end
 admin_api_ip = Chef::Recipe::Barclamp::Inventory.get_network_by_type(api, "admin").address
 Chef::Log.info("Admin API server found at #{admin_api_ip}")
 
-# install python-glanceclient on controller, to be able to upload images
-# from here
-glance_client = "python-glance"
-glance_client = "python-glanceclient" if node.platform == "suse"
-package glance_client do
-  action :upgrade
+if not node[:nova][:use_gitrepo]
+  # install python-glanceclient on controller, to be able to upload images
+  # from here
+  glance_client = "python-glance"
+  glance_client = "python-glanceclient" if node.platform == "suse"
+  package glance_client do
+    action :upgrade
+  end
 end
-
 template "/root/.openrc" do
   source "openrc.erb"
   owner "root"
