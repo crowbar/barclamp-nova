@@ -2,4 +2,5 @@
 <% if node[:nova][:libvirt_type] %>
 libvirt_type=<%= node[:nova][:libvirt_type] %>
 libvirt_cpu_mode=none
+compute_driver=libvirt.LibvirtDriver
 <% end -%>
