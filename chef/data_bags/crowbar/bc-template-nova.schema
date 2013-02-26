@@ -51,6 +51,14 @@
                 "vlan_start": { "type": "int" }
               }
             },
+            "scheduler": {
+              "type": "map",
+              "required": true,
+              "mapping": {
+                "ram_allocation_ratio": { "type": "number", "required": true },
+                "cpu_allocation_ratio": { "type": "number", "required": true }
+              }
+            },
             "db": {
               "type": "map",
               "required": true,
