@@ -17,6 +17,7 @@
       "use_gitrepo": true,
       "use_gitbarclamp": true,
       "use_pip_cache": true,
+      "networking_backend": "quantum",
       "pfs_deps": [
         "dnsmasq-base",
         "dnsmasq-utils",

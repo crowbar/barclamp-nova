@@ -29,7 +29,21 @@ rabbit_virtual_host=<%= @rabbit_settings[:vhost] %>
 osapi_compute_extension=nova.api.openstack.compute.contrib.standard_extensions
 api_rate_limit = False
 
+
 # NETWORK
+<% if node[:nova][:networking_backend]=="quantum" -%>
+# Network settings
+network_api_class=nova.network.quantumv2.api.API
+quantum_url=http://<%= @quantum_server_ip %>:<%= @quantum_server_port %>
+quantum_auth_strategy=keystone
+quantum_admin_tenant_name=<%= @keystone_service_tenant %>
+quantum_admin_username=<%= @quantum_service_user %>
+quantum_admin_password=<%= @quantum_service_password %>
+quantum_admin_auth_url=http://<%= @keystone_address %>:<%= @keystone_admin_port %>/v2.0
+libvirt_vif_driver=nova.virt.libvirt.vif.LibvirtHybridOVSBridgeDriver
+linuxnet_interface_driver=nova.network.linux_net.LinuxOVSInterfaceDriver
+firewall_driver=nova.virt.libvirt.firewall.IptablesFirewallDriver
+<% else -%>
 my_ip=<%= node[:nova][:my_ip] %>
 allow_same_net_traffic=<%= node[:nova][:network][:allow_same_net_traffic] ? "True" : "False" %>
 ec2_host=<%= @ec2_host %>
@@ -64,6 +78,7 @@ flat_interface=<%= node[:nova][:network][:flat_interface] %>
 flat_network_bridge=<%= node[:nova][:network][:flat_network_bridge] %>
 flat_network_dns=<%= @dns_server_public_ip %>
 flat_injected=True
+<% end -%>
 <% end -%>
 
 # GLANCE
