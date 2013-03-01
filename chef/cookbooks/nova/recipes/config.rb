@@ -256,8 +256,8 @@ if quantum_servers.length > 0
   quantum_server = node if quantum_server.name == node.name
   quantum_server_ip = Chef::Recipe::Barclamp::Inventory.get_network_by_type(quantum_server, "admin").address
   quantum_server_port = quantum_server[:quantum][:api][:service_port]
-  quantum_service_user = node[:quantum][:service_user]
-  quantum_service_password = node[:quantum][:service_password]
+  quantum_service_user = quantum_server[:quantum][:service_user]
+  quantum_service_password = quantum_server[:quantum][:service_password]
 else
   quantum_server_ip = nil
   quantum_server_port = nil

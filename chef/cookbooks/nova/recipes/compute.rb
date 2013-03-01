@@ -18,6 +18,39 @@
 # limitations under the License.
 #
 
+if node[:nova][:networking_backend]=="quantum"
+unless node[:nova][:use_gitrepo]
+  package "quantum" do
+    action :install
+  end
+else
+  quantum_servers = search(:node, "roles:quantum-server") || []
+  if quantum_servers.length > 0
+    quantum_node=quantum_servers[0]
+  else
+    quantum_node=node
+  end
+
+  pfs_and_install_deps "quantum" do
+    cookbook "quantum"
+    cnode quantum_node
+  end
+  link_service "quantum-openvswitch-agent" do
+    bin_name "quantum-openvswitch-agent --config-dir /etc/quantum/"
+  end
+  create_user_and_dirs("quantum")
+  execute "quantum_cp_policy.json" do
+    command "cp /opt/quantum/etc/policy.json /etc/quantum/"
+    creates "/etc/quantum/policy.json"
+  end
+  include_recipe "nova::quantum"
+#  pfs_and_install_deps "quantum" do
+#    cookbook "quantum"
+#    cnode quantum
+#  end
+end
+end
+
 include_recipe "nova::config"
 
 package "mysql-client"
@@ -63,7 +96,7 @@ end
 # The nova "network" and "api" recipes need to be included on the compute nodes and
 # we must specify the --multi_host=T switch on "nova-manage network create".     
 
-if node[:nova][:network][:ha_enabled]
+if node[:nova][:network][:ha_enabled] and node[:nova][:networking_backend]=='nova-network'
   include_recipe "nova::api"
   include_recipe "nova::network"
 end
