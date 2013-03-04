@@ -25,6 +25,7 @@ include_recipe "nova::config"
 # ha_enabled activates Nova High Availability (HA) networking.
 # The nova "network" and "api" recipes need to be included on the compute nodes and
 # we must specify the --multi_host=T switch on "nova-manage network create". 
+if node[:nova][:networking_backend]=="nova-network"
 cmd = "nova-manage network create --fixed_range_v4=#{node[:nova][:network][:fixed_range]} --num_networks=#{node[:nova][:network][:num_networks]} --network_size=#{node[:nova][:network][:network_size]} --label private" 
 cmd << " --multi_host=T" if node[:nova][:network][:ha_enabled]
 execute cmd do
@@ -81,6 +82,7 @@ unless node[:nova][:network][:tenant_vlans]
     )
     notifies :run, resources(:execute => "mysql-fix-ranges-fixed"), :immediately
   end
+end
 end
 
 # Setup administrator credentials file
