@@ -122,3 +122,18 @@ end
 execute "set ksm value" do
   command "echo #{node[:nova][:kvm][:ksm_enabled]} > /sys/kernel/mm/ksm/run"
 end  
+
+if node[:nova][:networking_backend]=="quantum"
+  #since using native ovs we have to gain acess to lower networking functions
+  service "libvirt-bin" do
+    action :nothing
+    supports :status => true, :start => true, :stop => true, :restart => true
+  end
+  cookbook_file "/etc/libvirt/qemu.conf" do
+    user "root"
+    group "root"
+    mode "0644"
+    source "qemu.conf"
+    notifies :restart, "service[libvirt-bin]"
+  end
+end
