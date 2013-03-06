@@ -18,6 +18,8 @@ bind_host = <%= @service_host %>
 
 bind_port = <%= @service_port %>
 
+dhcp_agent_notification = True
+notification_driver = quantum.openstack.common.notifier.rpc_notifier
 
 # ================= Syslog Options ============================
 # Send logs to syslog (/dev/log) instead of to file specified
@@ -40,6 +42,7 @@ rabbit_virtual_host=<%= @rabbit_settings[:vhost] %>
 
 #core_plugin = quantum.plugins.linuxbridge.lb_quantum_plugin.LinuxBridgePluginV2
 core_plugin = quantum.plugins.openvswitch.ovs_quantum_plugin.OVSQuantumPluginV2
+external_network_bridge = br-public
 
 
 ################# sql section will be used for OVS plugin config
@@ -88,7 +91,7 @@ api_extensions_path =
 
 root_helper=sudo /usr/local/bin/quantum-rootwrap /etc/quantum/rootwrap.conf
 
-network_vlan_ranges = physnet1, physnet2
+network_vlan_ranges = physnet1
 
 # (BoolOpt) Set to True in the server and the agents to enable support
 # for GRE networks. Requires kernel support for OVS patch ports and
@@ -132,7 +135,6 @@ network_vlan_ranges = physnet1, physnet2
 # Default: bridge_mappings =
 # Example: bridge_mappings = physnet1:br-eth1
 bridge_mappings = physnet1:br-fixed
-bridge_mappings = physnet2:br-public
 
 
 [composite:quantum]
