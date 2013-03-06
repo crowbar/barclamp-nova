@@ -27,6 +27,7 @@ barclamp:
     - keystone
     - nova_dashboard
     - cinder
+    - quantum
   member:
     - openstack 
 
