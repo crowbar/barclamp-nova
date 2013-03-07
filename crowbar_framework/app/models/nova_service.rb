@@ -176,7 +176,7 @@ class NovaService < ServiceObject
         end
         if role.default_attributes["nova"]["networking_backend"]=="quantum"
           net_svc.enable_interface "default", "nova_fixed", n
-          net_svc.enable_interface "default", "public", n
+          net_svc.allocate_ip "default", "public", "host", n
         end
       end
     end

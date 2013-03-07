@@ -189,24 +189,24 @@ execute "create_fixed_br" do
   command "ovs-vsctl add-br br-fixed"
   not_if "ovs-vsctl list-br | grep -q br-fixed"
 end
-execute "create_public_br" do
-  command "ovs-vsctl add-br br-public"
-  not_if "ovs-vsctl list-br | grep -q br-public"
-end
+#execute "create_public_br" do
+#  command "ovs-vsctl add-br br-public"
+#  not_if "ovs-vsctl list-br | grep -q br-public"
+#end
 execute "add_fixed_port" do
   command "ovs-vsctl add-port br-fixed #{flat_network_bridge}"
   not_if "ovs-vsctl list-ports br-fixed | grep -q #{flat_network_bridge}"
 end
-execute "add_public_port" do
-  command "ovs-vsctl add-port br-public #{public_interface}"
-  not_if "ovs-vsctl list-ports br-public | grep -q #{public_interface}"
-end
-execute "move_fixed_ip" do
-  command "ip address flush dev #{fixed_interface} ; ip address flush dev #{flat_network_bridge} ; ifconfig br-fixed #{fixed_address} netmask #{fixed_mask}"
-  not_if "ip addr show br-fixed | grep -q #{fixed_address}"
-end
-execute "move_public_ip" do
-  command "ip address flush dev #{public_interface} ; ifconfig br-public #{public_address} netmask #{public_mask}"
-  not_if "ip addr show br-public | grep -q #{public_address}"
-end
+#execute "add_public_port" do
+#  command "ovs-vsctl add-port br-public #{public_interface}"
+#  not_if "ovs-vsctl list-ports br-public | grep -q #{public_interface}"
+#end
+#execute "move_fixed_ip" do
+#  command "ip address flush dev #{fixed_interface} ; ip address flush dev #{flat_network_bridge} ; ifconfig br-fixed #{fixed_address} netmask #{fixed_mask}"
+#  not_if "ip addr show br-fixed | grep -q #{fixed_address}"
+#end
+#execute "move_public_ip" do
+#  command "ip address flush dev #{public_interface} ; ifconfig br-public #{public_address} netmask #{public_mask}"
+#  not_if "ip addr show br-public | grep -q #{public_address}"
+#end
 
