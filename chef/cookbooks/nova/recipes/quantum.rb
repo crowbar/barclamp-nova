@@ -194,8 +194,8 @@ end
 #  not_if "ovs-vsctl list-br | grep -q br-public"
 #end
 execute "add_fixed_port" do
-  command "ovs-vsctl add-port br-fixed #{flat_network_bridge}"
-  not_if "ovs-vsctl list-ports br-fixed | grep -q #{flat_network_bridge}"
+  command "ovs-vsctl del-port br-fixed #{flat_network_bridge} ; ovs-vsctl add-port br-fixed #{flat_network_bridge}"
+  not_if "ovs-dpctl show system@br-fixed | grep -q #{flat_network_bridge}"
 end
 #execute "add_public_port" do
 #  command "ovs-vsctl add-port br-public #{public_interface}"
