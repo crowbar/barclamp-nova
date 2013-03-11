@@ -33,6 +33,7 @@ api_rate_limit = False
 # NETWORK
 <% if node[:nova][:networking_backend]=="quantum" -%>
 # Network settings
+default_floating_pool=floating
 network_api_class=nova.network.quantumv2.api.API
 quantum_url=http://<%= @quantum_server_ip %>:<%= @quantum_server_port %>
 quantum_auth_strategy=keystone
