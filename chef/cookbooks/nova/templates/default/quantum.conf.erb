@@ -91,7 +91,13 @@ api_extensions_path =
 
 root_helper=sudo /usr/local/bin/quantum-rootwrap /etc/quantum/rootwrap.conf
 
+<% if @per_tenant_vlan -%>
+tenant_network_type = vlan
+network_vlan_ranges = physnet1:<%= @vlan_start %>:<%= @vlan_end %>
+<% else -%>
+tenant_network_type = local
 network_vlan_ranges = physnet1
+<% end -%>
 
 # (BoolOpt) Set to True in the server and the agents to enable support
 # for GRE networks. Requires kernel support for OVS patch ports and

@@ -137,6 +137,14 @@ else
   rabbit_settings = nil
 end
 
+per_tenant_vlan=node[:nova][:network][:tenant_vlans] rescue false
+
+fixed_net=node[:network][:networks]["nova_fixed"]
+flat_network_bridge = fixed_net["use_vlan"] ? "br#{fixed_net["vlan"]}" : "br#{fixed_interface}"
+vlan_start=fixed_net["vlan"]
+vlan_end=vlan_start+2000
+
+
 template "/etc/quantum/quantum.conf" do
     source "quantum.conf.erb"
     mode "0644"
@@ -153,7 +161,10 @@ template "/etc/quantum/quantum.conf" do
       :service_port => quantum_node[:quantum][:api][:service_port], # Compute port
       :service_host => quantum_node[:quantum][:api][:service_host],
       :use_syslog => quantum_node[:quantum][:use_syslog],
-      :rabbit_settings => rabbit_settings
+      :rabbit_settings => rabbit_settings,
+      :per_tenant_vlan => per_tenant_vlan,
+      :vlan_start => vlan_start,
+      :vlan_end => vlan_end
     )
     notifies :restart, resources(:service => "quantum-openvswitch-agent"), :immediately
 end
@@ -176,9 +187,6 @@ if pip
 else
   public_interface = nil
 end
-
-fixed_net=node[:network][:networks]["nova_fixed"]
-flat_network_bridge = fixed_net["use_vlan"] ? "br#{fixed_net["vlan"]}" : "br#{fixed_interface}"
 
 
 execute "create_int_br" do
