@@ -273,6 +273,16 @@ if node[:nova][:networking_backend]=="quantum"
   execute "add_route_for_metadata_service" do
     command "ip ro del #{node[:nova][:network][:fixed_range]} ; ip ro add #{node[:nova][:network][:fixed_range]} via #{quantum_server[:quantum][:network][:fixed_router]}"
     not_if "ip ro get #{node[:nova][:network][:fixed_range]} | grep -q 'via #{quantum_server[:quantum][:network][:fixed_router]}'"
+    ignore_failure true
+  end
+  if node[:nova][:network][:tenant_vlans]
+    quantum_server[:quantum][:network][:private_networks].each do |net|
+      execute "add_route_for_network_#{net}" do
+        command "ip ro replace #{net} via #{quantum_server[:quantum][:network][:fixed_router]}"
+        not_if "ip ro get #{net} | grep -q 'via #{quantum_server[:quantum][:network][:fixed_router]}'"
+        ignore_failure true
+      end
+    end
   end
 end
 
