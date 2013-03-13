@@ -229,6 +229,64 @@ else
   eqlx_params = nil
 end
 
+
+env_filter = " AND keystone_config_environment:keystone-config-#{node[:nova][:keystone_instance]}"
+keystones = search(:node, "recipes:keystone\\:\\:server#{env_filter}") || []
+if keystones.length > 0
+  keystone = keystones[0]
+  keystone = node if keystone.name == node.name
+else
+  keystone = node
+end
+
+keystone_address = Chef::Recipe::Barclamp::Inventory.get_network_by_type(keystone, "admin").address if keystone_address.nil?
+keystone_token = keystone["keystone"]["service"]["token"]
+keystone_service_port = keystone["keystone"]["api"]["service_port"]
+keystone_admin_port = keystone["keystone"]["api"]["admin_port"]
+keystone_service_tenant = keystone["keystone"]["service"]["tenant"]
+keystone_service_user = node[:nova][:service_user]
+keystone_service_password = node[:nova][:service_password]
+Chef::Log.info("Keystone server found at #{keystone_address}")
+
+
+
+quantum_servers = search(:node, "roles:quantum-server") || []
+if quantum_servers.length > 0
+  quantum_server = quantum_servers[0]
+  quantum_server = node if quantum_server.name == node.name
+  quantum_server_ip = Chef::Recipe::Barclamp::Inventory.get_network_by_type(quantum_server, "admin").address
+  quantum_server_port = quantum_server[:quantum][:api][:service_port]
+  quantum_service_user = quantum_server[:quantum][:service_user]
+  quantum_service_password = quantum_server[:quantum][:service_password]
+else
+  quantum_server_ip = nil
+  quantum_server_port = nil
+  quantum_service_user = nil
+  quantum_service_password = nil
+end
+Chef::Log.info("Quantum server at #{quantum_server_ip}")
+
+
+#create route via quantum router to fixed network for metadata service
+#this workaround for metadata service, should be removed when quantum-metadata-proxy will be released
+if node[:nova][:networking_backend]=="quantum"
+  execute "add_route_for_metadata_service" do
+    command "ip ro del #{node[:nova][:network][:fixed_range]} ; ip ro add #{node[:nova][:network][:fixed_range]} via #{quantum_server[:quantum][:network][:fixed_router]}"
+    not_if "ip ro get #{node[:nova][:network][:fixed_range]} | grep -q 'via #{quantum_server[:quantum][:network][:fixed_router]}'"
+    ignore_failure true
+  end
+  if node[:nova][:network][:tenant_vlans]
+    quantum_server[:quantum][:network][:private_networks].each do |net|
+      execute "add_route_for_network_#{net}" do
+        command "ip ro replace #{net} via #{quantum_server[:quantum][:network][:fixed_router]}"
+        not_if "ip ro get #{net} | grep -q 'via #{quantum_server[:quantum][:network][:fixed_router]}'"
+        ignore_failure true
+      end
+    end
+  end
+end
+
+
 template "/etc/nova/nova.conf" do
   source "nova.conf.erb"
   owner node[:nova][:user]
@@ -244,7 +302,14 @@ template "/etc/nova/nova.conf" do
             :glance_server_ip => glance_server_ip,
             :glance_server_port => glance_server_port,
             :vncproxy_public_ip => vncproxy_public_ip,
-            :eqlx_params => eqlx_params
+            :eqlx_params => eqlx_params,
+            :quantum_server_ip => quantum_server_ip,
+            :quantum_server_port => quantum_server_port,
+            :quantum_service_user => quantum_service_user,
+            :quantum_service_password => quantum_service_password,
+            :keystone_service_tenant => keystone_service_tenant,
+            :keystone_address => keystone_address,
+            :keystone_admin_port => keystone_admin_port
             )
 end
 
