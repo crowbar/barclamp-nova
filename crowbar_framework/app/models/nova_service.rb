@@ -168,14 +168,20 @@ class NovaService < ServiceObject
     tnodes = all_nodes if role.default_attributes["nova"]["network"]["ha_enabled"]
     unless tnodes.nil? or tnodes.empty?
       tnodes.each do |n|
-        net_svc.allocate_ip "default", "public", "host", n
-        unless role.default_attributes["nova"]["network"]["tenant_vlans"] 
-          net_svc.allocate_ip "default", "nova_fixed", "router", n
+        if role.default_attributes["nova"]["networking_backend"]=="nova-network"
+          net_svc.allocate_ip "default", "public", "host", n
+          unless role.default_attributes["nova"]["network"]["tenant_vlans"] # or role.default_attributes["nova"]["networking_backend"]=="quantum"
+            net_svc.allocate_ip "default", "nova_fixed", "router", n
+          end
+        end
+        if role.default_attributes["nova"]["networking_backend"]=="quantum"
+          net_svc.enable_interface "default", "nova_fixed", n
+          net_svc.allocate_ip "default", "public", "host", n
         end
       end
     end
 
-    unless role.default_attributes["nova"]["network"]["tenant_vlans"] 
+    unless role.default_attributes["nova"]["network"]["tenant_vlans"] or role.default_attributes["nova"]["networking_backend"]=="quantum"
       all_nodes.each do |n|
         net_svc.enable_interface "default", "nova_fixed", n
       end

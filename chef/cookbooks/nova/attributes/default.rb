@@ -58,6 +58,8 @@ default[:nova][:user] = "nova"
 #
 # General network parameters
 #
+
+default[:nova][:networking_backend] = "quantum"
 default[:nova][:network][:ha_enabled] = true
 default[:nova][:network][:dhcp_enabled] = true
 default[:nova][:network][:tenant_vlans] = true
