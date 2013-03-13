@@ -33,6 +33,9 @@
       %label{ :for => :network_header }= t('.network_header')
     %div.container
       %p
+        %label{ :for => :networking_backend }= t('.networking_backend')
+        = select_tag :networking_backend, options_for_select([['quantum','quantum'], ['nova-network', 'nova-network']], @proposal.raw_data['attributes'][@proposal.barclamp]["networking_backend"].to_s), :onchange => "update_value('networking_backend', 'networking_backend', 'string')"
+      %p
         %label{ :for => :tenant_vlans }= t('.tenant_vlans')
         = select_tag :tenant_vlans, options_for_select([['true','true'], ['false', 'false']], @proposal.raw_data['attributes'][@proposal.barclamp]["network"]["tenant_vlans"].to_s), :onchange => "update_value('network/tenant_vlans', 'tenant_vlans', 'boolean')"
       %p
