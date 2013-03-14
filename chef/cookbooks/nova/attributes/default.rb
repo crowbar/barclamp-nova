@@ -29,13 +29,6 @@ default[:nova][:db][:user] = "nova"
 default[:nova][:db][:database] = "nova"
 
 #
-# RabbitMQ Settings
-#
-set_unless[:nova][:rabbit][:password] = secure_password
-default[:nova][:rabbit][:user] = "nova"
-default[:nova][:rabbit][:vhost] = "/nova"
-
-#
 # Hypervisor Settings
 #
 default[:nova][:libvirt_type] = "kvm"    

@@ -46,8 +46,8 @@ mysql_address = Chef::Recipe::Barclamp::Inventory.get_network_by_type(mysql, "ad
 Chef::Log.info("Mysql server found at #{mysql_address}")
 sql_connection = "mysql://#{node[:nova][:db][:user]}:#{node[:nova][:db][:password]}@#{mysql_address}/#{node[:nova][:db][:database]}"
 
-env_filter = " AND nova_config_environment:#{node[:nova][:config][:environment]}"
-rabbits = search(:node, "recipes:nova\\:\\:rabbit#{env_filter}") || []
+env_filter = " AND rabbitmq_config_environment:rabbitmq-config-#{node[:nova][:rabbitmq_instance]}"
+rabbits = search(:node, "roles:rabbitmq-server#{env_filter}") || []
 if rabbits.length > 0
   rabbit = rabbits[0]
   rabbit = node if rabbit.name == node.name
@@ -58,10 +58,10 @@ rabbit_address = Chef::Recipe::Barclamp::Inventory.get_network_by_type(rabbit, "
 Chef::Log.info("Rabbit server found at #{rabbit_address}")
 rabbit_settings = {
   :address => rabbit_address,
-  :port => rabbit[:nova][:rabbit][:port],
-  :user => rabbit[:nova][:rabbit][:user],
-  :password => rabbit[:nova][:rabbit][:password],
-  :vhost => rabbit[:nova][:rabbit][:vhost]
+  :port => rabbit[:rabbitmq][:port],
+  :user => rabbit[:rabbitmq][:user],
+  :password => rabbit[:rabbitmq][:password],
+  :vhost => rabbit[:rabbitmq][:vhost]
 }
 
 apis = search(:node, "recipes:nova\\:\\:api#{env_filter}") || []

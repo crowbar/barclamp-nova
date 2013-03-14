@@ -29,6 +29,7 @@ class NovaService < ServiceObject
     answer << { "barclamp" => "mysql", "inst" => role.default_attributes["nova"]["db"]["mysql_instance"] }
     answer << { "barclamp" => "keystone", "inst" => role.default_attributes["nova"]["keystone_instance"] }
     answer << { "barclamp" => "glance", "inst" => role.default_attributes["nova"]["glance_instance"] }
+    answer << { "barclamp" => "rabbitmq", "inst" => role.default_attributes["nova"]["rabbitmq_instance"] }
     if role.default_attributes[@bc_name]["use_gitrepo"]
       answer << { "barclamp" => "git", "inst" => role.default_attributes[@bc_name]["git_instance"] }
     end
@@ -103,6 +104,19 @@ class NovaService < ServiceObject
       base["attributes"]["nova"]["db"]["mysql_instance"] = mysqls[0] unless mysqls.empty?
     rescue
       @logger.info("Nova create_proposal: no mysql found")
+    end
+
+    base["attributes"]["nova"]["rabbitmq_instance"] = ""
+    begin
+      rabbitmqService = RabbitmqService.new(@logger)
+      rabbitmqs = rabbitmqService.list_active[1]
+      if rabbitmqs.empty?
+        # No actives, look for proposals
+        rabbitmqs = rabbitmqService.proposals[1]
+      end
+      base["attributes"]["nova"]["rabbitmq_instance"] = rabbitmqs[0] unless rabbitmqs.empty?
+    rescue
+      @logger.info("Nova create_proposal: no rabbitmq found")
     end
 
     base["attributes"]["nova"]["keystone_instance"] = ""

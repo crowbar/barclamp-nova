@@ -12,6 +12,7 @@
           "type": "map", 
           "required": true,
           "mapping": {
+            "rabbitmq_instance": { "type": "str", "required": true },
             "keystone_instance": { "type": "str", "required": true },
             "service_user": { "type": "str", "required": true },
             "service_password": { "type": "str" },
@@ -75,16 +76,6 @@
                 "nova_raw_method": { "type": "str", "required": true },
                 "nova_volume_disks": { "type": "seq", "required": true, "sequence": [ { "type": "str" } ]},
                 "local_size": { "type": "int", "required": true }
-              }
-            },
-            "rabbit": {
-              "type": "map",
-              "required": true,
-              "mapping": {
-                "port": { "type": "int" },
-                "password": { "type": "str", "required": true },
-                "user": { "type": "str", "required": true },
-                "vhost": { "type": "str", "required": true }
               }
             },
             "db": {

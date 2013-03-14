@@ -3,6 +3,7 @@
   "description": "installs and configures the Openstack Nova component. It relies upon the network and glance barclamps for normal operation.",
   "attributes": {
     "nova": {
+      "rabbitmq_instance": "none",
       "keystone_instance": "none",
       "service_user": "nova",
       "glance_instance": "none",
@@ -108,11 +109,6 @@
           "eqlx_ssh_keepalive_interval": 1200,
           "eqlx_cli_timeout": 30
         }
-      },
-      "rabbit": {
-        "password": "secure_password",
-        "user": "nova",
-        "vhost": "/nova"
       },
       "db": {
         "mysql_instance": "none",
