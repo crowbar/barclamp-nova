@@ -91,9 +91,14 @@ api_extensions_path =
 
 root_helper=sudo /usr/local/bin/quantum-rootwrap /etc/quantum/rootwrap.conf
 
-<% if @per_tenant_vlan -%>
+<% if @networking_mode == 'vlan' -%>
 tenant_network_type = vlan
 network_vlan_ranges = physnet1:<%= @vlan_start %>:<%= @vlan_end %>
+<% elsif @networking_mode == 'gre' -%>
+tenant_network_type = gre
+tunnel_id_ranges = 1:1000
+network_vlan_ranges = physnet1
+enable_tunneling = True
 <% else -%>
 tenant_network_type = local
 network_vlan_ranges = physnet1
