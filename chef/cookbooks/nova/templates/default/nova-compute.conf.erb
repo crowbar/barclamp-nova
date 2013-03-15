@@ -4,3 +4,9 @@ libvirt_type=<%= node[:nova][:libvirt_type] %>
 libvirt_cpu_mode=none
 compute_driver=libvirt.LibvirtDriver
 <% end -%>
+
+# nova-compute configuration for ceilometer
+instance_usage_audit=True
+instance_usage_audit_period=hour
+notification_driver=nova.openstack.common.notifier.rpc_notifier
+notification_driver=ceilometer.compute.nova_notifier
