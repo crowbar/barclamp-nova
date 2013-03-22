@@ -27,6 +27,7 @@ barclamp:
     - keystone
     - nova_dashboard
     - cinder
+    - quantum
   member:
     - openstack 
 
@@ -41,6 +42,7 @@ locale_additions:
     barclamp:
       nova:
         edit_attributes: 
+          networking_backend: Backend for networking
           attributes: Attributes
           mysql_instance: MySQL
           keystone_instance: Keystone
