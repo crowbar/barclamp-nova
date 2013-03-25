@@ -5,6 +5,9 @@
   = link_to t('raw'), proposal_barclamp_path(:id => @proposal.name, :controller => @proposal.barclamp, :dep_raw => @dep_raw, :attr_raw => true), :style => "float: right;"
   %div.container
     %p
+      %label{ :for => :rabbitmq_instance }= t('.rabbitmq_instance')
+      = instance_selector("rabbitmq", :rabbitmq_instance, "rabbitmq_instance", @proposal)
+    %p
       %label{ :for => :mysql_instance }= t('.mysql_instance')
       = instance_selector("mysql", :mysql_instance, "mysql_instance", @proposal)
     %p
