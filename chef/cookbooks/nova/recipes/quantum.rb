@@ -137,7 +137,14 @@ else
   rabbit_settings = nil
 end
 
-per_tenant_vlan=node[:nova][:network][:tenant_vlans] rescue false
+#per_tenant_vlan=node[:nova][:network][:tenant_vlans] rescue false
+if quantum_node[:quantum][:networking_mode] != 'local'
+  per_tenant_vlan=true
+else
+  per_tenant_vlan=false
+end
+quantum_networking_mode = quantum_node[:quantum][:networking_mode]
+
 
 fixed_net=node[:network][:networks]["nova_fixed"]
 flat_network_bridge = fixed_net["use_vlan"] ? "br#{fixed_net["vlan"]}" : "br#{fixed_interface}"
@@ -164,7 +171,8 @@ template "/etc/quantum/quantum.conf" do
       :rabbit_settings => rabbit_settings,
       :per_tenant_vlan => per_tenant_vlan,
       :vlan_start => vlan_start,
-      :vlan_end => vlan_end
+      :vlan_end => vlan_end,
+      :networking_mode => quantum_networking_mode
     )
     notifies :restart, resources(:service => "quantum-openvswitch-agent"), :immediately
 end

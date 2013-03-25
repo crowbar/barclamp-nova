@@ -258,6 +258,12 @@ if quantum_servers.length > 0
   quantum_server_port = quantum_server[:quantum][:api][:service_port]
   quantum_service_user = quantum_server[:quantum][:service_user]
   quantum_service_password = quantum_server[:quantum][:service_password]
+  if quantum_server[:quantum][:networking_mode] != 'local'
+    per_tenant_vlan=true
+  else
+    per_tenant_vlan=false
+  end
+  quantum_networking_mode = quantum_server[:quantum][:networking_mode]
 else
   quantum_server_ip = nil
   quantum_server_port = nil
@@ -275,7 +281,7 @@ if node[:nova][:networking_backend]=="quantum"
     not_if "ip ro get #{node[:nova][:network][:fixed_range]} | grep -q 'via #{quantum_server[:quantum][:network][:fixed_router]}'"
     ignore_failure true
   end
-  if node[:nova][:network][:tenant_vlans]
+  if per_tenant_vlan
     quantum_server[:quantum][:network][:private_networks].each do |net|
       execute "add_route_for_network_#{net}" do
         command "ip ro replace #{net} via #{quantum_server[:quantum][:network][:fixed_router]}"
