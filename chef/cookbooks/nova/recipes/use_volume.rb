@@ -19,6 +19,9 @@
 
 include_recipe "nova::config"
 
+nova_path = "/opt/nova"
+venv_path = node[:nova][:use_virtualenv] ? "#{nova_path}/.venv" : nil
+
 volname = node["nova"]["volume"]["volume_name"]
 
 checked_disks = []
@@ -112,7 +115,9 @@ cookbook_file "/etc/tgt/conf.d/nova-volume.conf" do
   source "nova-volume.conf"
 end
 
-nova_package("volume")
+nova_package "volume" do
+  virtualenv venv_path
+end
 
 # Restart doesn't work correct for this service.
 bash "restart-tgt" do

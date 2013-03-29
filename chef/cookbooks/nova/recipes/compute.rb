@@ -18,6 +18,9 @@
 # limitations under the License.
 #
 
+nova_path = "/opt/nova"
+venv_path = node[:nova][:use_virtualenv] ? "#{nova_path}/.venv" : nil
+
 if node[:nova][:networking_backend]=="quantum"
 unless node[:nova][:use_gitrepo]
   package "quantum" do
@@ -36,7 +39,9 @@ include_recipe "nova::config"
 
 package "mysql-client"
 
-nova_package("compute")
+nova_package "compute" do
+  virtualenv venv_path
+end
 
 #
 # These two files are to handle: https://bugs.launchpad.net/ubuntu/+source/libvirt/+bug/996840
