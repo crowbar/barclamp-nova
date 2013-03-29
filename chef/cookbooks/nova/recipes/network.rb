@@ -18,10 +18,15 @@
 # limitations under the License.
 #
 
-include_recipe "nova::config" 
+include_recipe "nova::config"
+
+nova_path = "/opt/nova"
+venv_path = node[:nova][:use_virtualenv] ? "#{nova_path}/.venv" : nil
 
 if node[:nova][:networking_backend]=="nova-network"
-  nova_package("network")
+  nova_package "network" do
+    virtualenv venv_path
+  end
 end
 
 # Crowbar uses the network node as the gateway in flat non-dhcp modes, add the
