@@ -20,7 +20,7 @@ barclamp:
   display: Nova
   version: 0
   requires:
-    - @crowbar
+    - '@crowbar'
     - git
     - mysql
     - rabbitmq
