@@ -13,6 +13,13 @@
 # limitations under the License.
 #
 
+nova_path = "/opt/nova"
+quantum_path = "/opt/quantum"
+venv_nova_path = node[:nova][:use_virtualenv] ? "#{nova_path}/.venv" : nil
+venv_nova_prefix_path = node[:nova][:use_virtualenv] ? "#{venv_nova_path}/bin/activate && " : nil
+venv_quantum_path = node[:nova][:use_virtualenv] ? "#{quantum_path}/.venv" : nil
+venv_quantum_prefix_path = node[:nova][:use_virtualenv] ? "#{venv_quantum_path}/bin/activate && " : nil
+
 unless node[:nova][:use_gitrepo]
   package "quantum" do
     action :install
@@ -25,12 +32,17 @@ else
     quantum_node=node
   end
 
-  pfs_and_install_deps "quantum" do
+  pfs_and_install_deps "quantun" do
+    virtualenv venv_path
+    path quantum_path
     cookbook "quantum"
+    wrap_bins [ "quantum", "quantum-rootwrap" ]
     cnode quantum_node
   end
+
   link_service "quantum-openvswitch-agent" do
     bin_name "quantum-openvswitch-agent --config-dir /etc/quantum/"
+    virtualenv venv_quantum_path
   end
   create_user_and_dirs("quantum")
   execute "quantum_cp_policy.json" do
@@ -113,7 +125,8 @@ ovs_sql_connection = "mysql://#{quantum_node[:quantum][:db][:ovs_user]}:#{quantu
 sql_connection = "mysql://#{quantum_node[:quantum][:db][:user]}:#{quantum_node[:quantum][:db][:password]}@#{mysql_address}/#{quantum_node[:quantum][:db][:database]}"
 
 
-rabbits = search(:node, "recipes:nova\\:\\:rabbit") || []
+env_filter = " AND rabbitmq_config_environment:rabbitmq-config-#{node[:nova][:rabbitmq_instance]}"
+rabbits = search(:node, "roles:rabbitmq-server#{env_filter}") || []
 if rabbits.length > 0
   rabbit = rabbits[0]
   rabbit = node if rabbit.name == node.name
@@ -128,10 +141,10 @@ if rabbit[:nova]
   # and cinder services will be restarted then
   rabbit_settings = {
     :address => rabbit_address,
-    :port => rabbit[:nova][:rabbit][:port],
-    :user => rabbit[:nova][:rabbit][:user],
-    :password => rabbit[:nova][:rabbit][:password],
-    :vhost => rabbit[:nova][:rabbit][:vhost]
+    :port => rabbit[:rabbitmq][:port],
+    :user => rabbit[:rabbitmq][:user],
+    :password => rabbit[:rabbitmq][:password],
+    :vhost => rabbit[:rabbitmq][:vhost]
   }
 else
   rabbit_settings = nil

@@ -37,9 +37,11 @@ else
   pfs_and_install_deps "quantum" do
     cookbook "quantum"
     cnode quantum_node
+    virtualenv venv_path
   end
   link_service "quantum-openvswitch-agent" do
     bin_name "quantum-openvswitch-agent --config-dir /etc/quantum/"
+    virtualenv venv_path
   end
   create_user_and_dirs("quantum")
   execute "quantum_cp_policy.json" do

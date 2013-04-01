@@ -22,7 +22,7 @@
 
 nova_path = "/opt/nova"
 venv_path = node[:nova][:use_virtualenv] ? "#{nova_path}/.venv" : nil
-venv_prefix_path = node[:nova][:use_virtualenv] ? "#{venv_path}/bin/activate && " : nil
+venv_prefix_path = node[:nova][:use_virtualenv] ? ". #{venv_path}/bin/activate && " : nil
 
 include_recipe "mysql::client"
 
