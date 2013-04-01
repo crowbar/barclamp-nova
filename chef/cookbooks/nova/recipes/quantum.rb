@@ -13,7 +13,12 @@
 # limitations under the License.
 #
 
+nova_path = "/opt/nova"
+venv_nova_path = node[:nova][:use_virtualenv] ? "#{nova_path}/.venv" : nil
+venv_nova_prefix_path = node[:nova][:use_virtualenv] ? "#{venv_nova_path}/bin/activate && " : nil
+
 include_recipe "quantum::common_install"
+
 
 fip = Chef::Recipe::Barclamp::Inventory.get_network_by_type(node, "nova_fixed")
 if fip

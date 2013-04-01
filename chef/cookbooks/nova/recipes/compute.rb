@@ -27,6 +27,7 @@ unless node[:nova][:use_gitrepo]
     action :install
   end
 else
+
   include_recipe "nova::quantum"
 #  pfs_and_install_deps "quantum" do
 #    cookbook "quantum"
