@@ -39,6 +39,11 @@
       }
     }
   },
+    "roles": {
+        "nova-multi-volume": { "jig": "chef" },
+        "nova-multi-controller": { "jig": "chef" },
+        "nova-multi-compute": { "jig": "chef" }
+},
   "deployment": {
     "nova": {
       "crowbar-revision": 0,
