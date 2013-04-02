@@ -19,6 +19,8 @@
 #
 
 nova_path = "/opt/nova"
+quantum_path = "/opt/quantum"
+venv_quantum_path = node[:nova][:use_virtualenv] ? "#{quantum_path}/.venv" : nil
 venv_path = node[:nova][:use_virtualenv] ? "#{nova_path}/.venv" : nil
 
 if node[:nova][:networking_backend]=="quantum"
@@ -37,7 +39,7 @@ else
   pfs_and_install_deps "quantum" do
     cookbook "quantum"
     cnode quantum_node
-    virtualenv venv_path
+    virtualenv venv_quantum_path
   end
   link_service "quantum-openvswitch-agent" do
     bin_name "quantum-openvswitch-agent --config-dir /etc/quantum/"

@@ -26,14 +26,15 @@ unless node[:nova][:use_gitrepo]
   end
 else
   quantum_servers = search(:node, "roles:quantum-server") || []
+  quantum_node = nil
   if quantum_servers.length > 0
-    quantum_node=quantum_servers[0]
+    quantum_node = quantum_servers[0]
   else
-    quantum_node=node
+    quantum_node = node
   end
 
-  pfs_and_install_deps "quantun" do
-    virtualenv venv_path
+  pfs_and_install_deps "quantum" do
+    virtualenv venv_quantum_path
     path quantum_path
     cookbook "quantum"
     wrap_bins [ "quantum", "quantum-rootwrap" ]
@@ -69,7 +70,7 @@ end
 
 
 
-kern_release=`uname -r`
+kern_release=(`uname -r`).strip
 package "linux-headers-#{kern_release}" do
     action :install
 end
