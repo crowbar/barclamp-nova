@@ -20,6 +20,9 @@
 
 include_recipe "nova::config"
 
+nova_path = "/opt/nova"
+venv_path = node[:nova][:use_virtualenv] ? "#{nova_path}/.venv" : nil
+
 if node.platform != "suse"
   pkgs=%w[python-numpy nova-console nova-consoleauth]
   pkgs=%w[python-numpy] if node[:nova][:use_gitrepo]
@@ -68,10 +71,16 @@ unless node[:nova][:use_gitrepo]
     subscribes :restart, resources(:template => "/etc/nova/nova.conf"), :delayed
   end
 else
-  nova_package("console")
-  nova_package("consoleauth")
+  nova_package "console" do
+    virtualenv venv_path
+  end
+  nova_package "consoleauth" do
+    virtualenv venv_path
+  end
   unless node[:nova][:use_novnc]
-    nova_package("xvpvncproxy")
+    nova_package "xvpvncproxy" do
+      virtualenv venv_path
+    end
   else
     novnc_service = "nova-novncproxy"
     #agordeev: remove hardcoded paths
