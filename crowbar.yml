@@ -20,7 +20,7 @@ barclamp:
   display: Nova
   version: 0
   requires:
-    - @crowbar
+    - '@crowbar'
     - mysql
     - glance
     - keystone
