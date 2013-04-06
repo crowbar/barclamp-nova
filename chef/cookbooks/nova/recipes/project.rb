@@ -24,8 +24,14 @@ include_recipe "nova::config"
 
 # ha_enabled activates Nova High Availability (HA) networking.
 # The nova "network" and "api" recipes need to be included on the compute nodes and
-# we must specify the --multi_host=T switch on "nova-manage network create". 
-cmd = "nova-manage network create --fixed_range_v4=#{node[:nova][:network][:fixed_range]} --num_networks=#{node[:nova][:network][:num_networks]} --network_size=#{node[:nova][:network][:network_size]} --label private" 
+# we must specify the --multi_host=T switch on "nova-manage network create".
+
+# Make sure that the network size actually relates to the range that is configured
+fixed_net = node[:network][:networks]["nova_fixed"]
+fixed_network = IPAddr.new("#{subnet = fixed_net["subnet"]}/#{netmask = fixed_net["netmask"]}")
+fixed_network_size = fixed_network.to_range.count
+
+cmd = "nova-manage network create --fixed_range_v4=#{node[:nova][:network][:fixed_range]} --num_networks=#{node[:nova][:network][:num_networks]} --network_size=#{fixed_network_size} --label private"
 cmd << " --multi_host=T" if node[:nova][:network][:ha_enabled]
 execute cmd do
   user node[:nova][:user]
@@ -34,12 +40,11 @@ end
 
 # Add private network one day.
 
-base_ip = node[:nova][:network][:floating_range].split("/")[0]
-grep_ip = base_ip[0..-2] + (base_ip[-1].chr.to_i+1).to_s
+first_ip_in_range = IPAddr.new(node[:nova][:network][:floating_range]).succ.to_s
 
 execute "nova-manage floating create --ip_range=#{node[:nova][:network][:floating_range]}" do
-  user node[:nova][:user] if node.platform != "suse"
-  not_if "nova-manage floating list | grep '#{grep_ip}'"
+  user node[:nova][:user] unless platform?("suse")
+  not_if "nova-manage floating list | grep '#{first_ip_in_range}'"
 end
 
 unless node[:nova][:network][:tenant_vlans]
@@ -52,24 +57,24 @@ unless node[:nova][:network][:tenant_vlans]
   end
 
   fixed_net = node[:network][:networks]["nova_fixed"]
-  rangeH = fixed_net["ranges"]["dhcp"]
+  rangeH = fixed_net["ranges"]["router"]
   netmask = fixed_net["netmask"]
   subnet = fixed_net["subnet"]
 
-  index = IPAddr.new(rangeH["start"]) & ~IPAddr.new(netmask)
-  index = index.to_i
-  stop_address = IPAddr.new(rangeH["end"]) & ~IPAddr.new(netmask)
-  stop_address = IPAddr.new(subnet) | (stop_address.to_i + 1)
-  address = IPAddr.new(subnet) | index
-
+  # Reserving the physical hosts that are in the fixed range rather than reserving VM IPs
+  # is faster, because there will always be less physical hosts than VMs.
+  # This does not matter when we are using a /24 network. However, it does matter when using
+  # a bigger network (e.g. a /16 network)
+  stop_address = IPAddr.new(rangeH["end"]).to_s
+  curr = IPAddr.new(rangeH["start"])
   network_list = []
-  while address != stop_address
-    network_list << address.to_s
-    index = index + 1
-    address = IPAddr.new(subnet) | index
+  while stop_address.to_s != curr.to_s
+    network_list << curr.to_s
+    curr = curr.succ
   end
-  network_list << address.to_s
 
+  # We use direct SQL here because running `nova-manage fixed reserve <IP>` for
+  # a large number of hosts in the "router" range is to slow
   template "/etc/mysql/nova-fixed-range.sql" do
     path "/etc/mysql/nova-fixed-range.sql"
     source "fixed-range.sql.erb"
