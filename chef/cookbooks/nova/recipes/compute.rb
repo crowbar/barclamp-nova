@@ -18,6 +18,20 @@
 # limitations under the License.
 #
 
+if node[:nova][:networking_backend]=="quantum"
+unless node[:nova][:use_gitrepo]
+  package "quantum" do
+    action :install
+  end
+else
+  include_recipe "nova::quantum"
+#  pfs_and_install_deps "quantum" do
+#    cookbook "quantum"
+#    cnode quantum
+#  end
+end
+end
+
 include_recipe "nova::config"
 
 package "mysql-client"
@@ -28,40 +42,42 @@ nova_package("compute")
 # These two files are to handle: https://bugs.launchpad.net/ubuntu/+source/libvirt/+bug/996840
 # This is a hack until that gets fixed.
 # 
-cookbook_file "/usr/lib/python2.7/dist-packages/nova/virt/libvirt/connection.py" do
-  user "root"
-  group "root"
-  mode "0755"
-  source "connection.py"
-end
+unless node[:nova][:use_gitrepo]
+  cookbook_file "/usr/lib/python2.7/dist-packages/nova/virt/libvirt/connection.py" do
+    user "root"
+    group "root"
+    mode "0755"
+    source "connection.py"
+  end
+  
+  cookbook_file "/usr/lib/python2.7/dist-packages/nova/rootwrap/compute.py" do
+    user "root"
+    group "root"
+    mode "0755"
+    source "compute.py"
+  end
 
-cookbook_file "/usr/lib/python2.7/dist-packages/nova/rootwrap/compute.py" do
-  user "root"
-  group "root"
-  mode "0755"
-  source "compute.py"
-end
+  ## @@AA- perf. add io=native when mounting volumes. disable memory balooning.
+  cookbook_file "/usr/lib/python2.7/dist-packages/nova/virt/libvirt/volume.py" do
+    user "root"
+    group "root"
+    mode "0755"
+    source "volume.py"
+  end
+  cookbook_file "/usr/lib/python2.7/dist-packages/nova/virt/libvirt.xml.template" do 
+    user "root"
+    group "root"
+    mode "0755"
+    source "libvirt.xml.template"
+  end
 
-## @@AA- perf. add io=native when mounting volumes. disable memory balooning.
-cookbook_file "/usr/lib/python2.7/dist-packages/nova/virt/libvirt/volume.py" do
-  user "root"
-  group "root"
-  mode "0755"
-  source "volume.py"
-end
-cookbook_file "/usr/lib/python2.7/dist-packages/nova/virt/libvirt.xml.template" do 
-  user "root"
-  group "root"
-  mode "0755"
-  source "libvirt.xml.template"
-end
-
+end  
 
 # ha_enabled activates Nova High Availability (HA) networking.
 # The nova "network" and "api" recipes need to be included on the compute nodes and
 # we must specify the --multi_host=T switch on "nova-manage network create".     
 
-if node[:nova][:network][:ha_enabled]
+if node[:nova][:network][:ha_enabled] and node[:nova][:networking_backend]=='nova-network'
   include_recipe "nova::api"
   include_recipe "nova::network"
 end
@@ -108,3 +124,18 @@ end
 execute "IO scheduler" do
   command "find /sys/block -type l -name 'sd*' -exec sh -c 'echo deadline > {}/queue/scheduler' \\;"
 end  
+
+if node[:nova][:networking_backend]=="quantum"
+  #since using native ovs we have to gain acess to lower networking functions
+  service "libvirt-bin" do
+    action :nothing
+    supports :status => true, :start => true, :stop => true, :restart => true
+  end
+  cookbook_file "/etc/libvirt/qemu.conf" do
+    user "root"
+    group "root"
+    mode "0644"
+    source "qemu.conf"
+    notifies :restart, "service[libvirt-bin]"
+  end
+end

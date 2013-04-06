@@ -15,14 +15,20 @@
 define :nova_package do
 
   nova_name="nova-#{params[:name]}"
-  package nova_name do
-    options "--force-yes -o Dpkg::Options::=\"--force-confdef\""
-    action :upgrade
+  if node[:nova][:use_gitrepo]
+    link_service nova_name do
+      user node[:nova][:user]
+    end
+  else
+    package nova_name do
+      options "--force-yes -o Dpkg::Options::=\"--force-confdef\""
+      action :upgrade
+    end
   end
 
   service nova_name do
     if (platform?("ubuntu") && node.platform_version.to_f >= 10.04)
-      restart_command "status #{nova_name} 2>&1 | grep -q Unknown || restart #{nova_name}"
+      restart_command "stop #{nova_name} ; start #{nova_name}"
       stop_command "stop #{nova_name}"
       start_command "start #{nova_name}"
       status_command "status #{nova_name} | cut -d' ' -f2 | cut -d'/' -f1 | grep start"

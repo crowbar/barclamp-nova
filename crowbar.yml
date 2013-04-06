@@ -21,10 +21,14 @@ barclamp:
   version: 0
   requires:
     - '@crowbar'
+    - git
     - mysql
+    - rabbitmq
     - glance
     - keystone
     - nova_dashboard
+    - cinder
+    - quantum
   member:
     - openstack
   os_support:
@@ -41,8 +45,10 @@ locale_additions:
     barclamp:
       nova:
         edit_attributes: 
+          networking_backend: Backend for networking
           attributes: Attributes
           mysql_instance: MySQL
+          rabbitmq_instance: RabbitMQ
           keystone_instance: Keystone
           service_user: Keystone Service User
           service_password: Keystone Service Password
@@ -58,6 +64,8 @@ locale_additions:
           num_networks: Number of Networks
           network_size: Network Size
           volume_header: Volume Options
+          cinder_instance: Cinder
+          use_cinder: Use Cinder (otherwise nova-volume)
           volume_type: Type of Volume
           volume_name: Name of Volume
           volume_file_parameters: File-based Parameters
@@ -142,4 +150,9 @@ debs:
     - python-eventlet
     - bzr
     - mysql-client
+    - socat
+    - python-mox
 
+git_repo:
+  - nova https://github.com/openstack/nova.git grizzly-1
+  - novnc https://github.com/kanaka/noVNC.git master

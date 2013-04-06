@@ -29,13 +29,6 @@ default[:nova][:db][:user] = "nova"
 default[:nova][:db][:database] = "nova"
 
 #
-# RabbitMQ Settings
-#
-set_unless[:nova][:rabbit][:password] = secure_password
-default[:nova][:rabbit][:user] = "nova"
-default[:nova][:rabbit][:vhost] = "/nova"
-
-#
 # Hypervisor Settings
 #
 default[:nova][:libvirt_type] = "kvm"    
@@ -58,6 +51,8 @@ default[:nova][:user] = "nova"
 #
 # General network parameters
 #
+
+default[:nova][:networking_backend] = "quantum"
 default[:nova][:network][:ha_enabled] = true
 default[:nova][:network][:dhcp_enabled] = true
 default[:nova][:network][:tenant_vlans] = true

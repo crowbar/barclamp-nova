@@ -20,8 +20,9 @@
 
 include_recipe "nova::config" 
 
-nova_package("network")
-
+if node[:nova][:networking_backend]=="nova-network"
+  nova_package("network")
+end
 
 # Crowbar uses the network node as the gateway in flat non-dhcp modes, add the
 # firewall rule for UEC images to be able to fetch metadata info

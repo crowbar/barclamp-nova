@@ -1,0 +1,196 @@
+[DEFAULT]
+# Show more verbose log output (sets INFO log level output)
+verbose = <%= @verbose ? "True" : "False" %>
+
+root_helper=sudo /usr/local/bin/quantum-rootwrap /etc/quantum/rootwrap.conf
+
+
+# Show debugging output in logs (sets DEBUG log level output)
+debug = <%= @debug ? "True" : "False" %>
+
+# Log to this file. Make sure you do not set the same log
+# file for both the API and registry servers!
+log_dir = /var/log/quantum
+log_file = quantum.log
+
+
+bind_host = <%= @service_host %>
+
+bind_port = <%= @service_port %>
+
+dhcp_agent_notification = True
+notification_driver = quantum.openstack.common.notifier.rpc_notifier
+
+# ================= Syslog Options ============================
+# Send logs to syslog (/dev/log) instead of to file specified
+# by `log-file`
+use_syslog = <%= @use_syslog ? "True" : "False" %>
+
+# Facility to use. If unset defaults to LOG_USER.
+# syslog_log_facility = LOG_LOCAL0
+
+
+<% if @rabbit_settings -%>
+rabbit_host=<%= @rabbit_settings[:address] %>
+<% unless @rabbit_settings[:port].nil? -%>
+rabbit_port=<%= @rabbit_settings[:port] %>
+<% end -%>
+rabbit_userid=<%= @rabbit_settings[:user] %>
+rabbit_password=<%= @rabbit_settings[:password] %>
+rabbit_virtual_host=<%= @rabbit_settings[:vhost] %>
+<% end -%>
+
+#core_plugin = quantum.plugins.linuxbridge.lb_quantum_plugin.LinuxBridgePluginV2
+core_plugin = quantum.plugins.openvswitch.ovs_quantum_plugin.OVSQuantumPluginV2
+external_network_bridge = br-public
+
+
+################# sql section will be used for OVS plugin config
+[DATABASE]
+## SQLAlchemy connection string for the reference implementation registry
+## server. Any valid SQLAlchemy connection string is fine.
+## See: http://bit.ly/ideIpI
+sql_connection = <%= @sql_connection %>
+## Period in seconds after which SQLAlchemy should reestablish its connection
+## to the database.
+idle_timeout = <%= @sql_idle_timeout %>
+min_pool_size = <%= @sql_min_pool_size %>
+max_pool_size = <%= @sql_max_pool_size %>
+pool_timeout = <%= @sql_pool_timeout %>
+###############
+
+# Path to the extensions.  Note that this can be a colon-separated list of
+# paths.  For example:
+# api_extensions_path = extensions:/path/to/more/extensions:/even/more/extensions
+# The __path__ of quantum.extensions is appended to this, so if your
+# extensions are in there you don't need to specify them here
+api_extensions_path =
+
+[OVS]
+# (StrOpt) Type of network to allocate for tenant networks. The
+# default value 'local' is useful only for single-box testing and
+# provides no connectivity between hosts. You MUST either change this
+# to 'vlan' and configure network_vlan_ranges below or change this to
+# 'gre' and configure tunnel_id_ranges below in order for tenant
+# networks to provide connectivity between hosts. Set to 'none' to
+# disable creation of tenant networks.
+#
+# Default: tenant_network_type = local
+# Example: tenant_network_type = gre
+
+# (ListOpt) Comma-separated list of
+# <physical_network>[:<vlan_min>:<vlan_max>] tuples enumerating ranges
+# of VLAN IDs on named physical networks that are available for
+# allocation. All physical networks listed are available for flat and
+# VLAN provider network creation. Specified ranges of VLAN IDs are
+# available for tenant network allocation if tenant_network_type is
+# 'vlan'. If empty, only gre and local networks may be created.
+#
+# Default: network_vlan_ranges =
+# Example: network_vlan_ranges = physnet1:1000:2999
+
+root_helper=sudo /usr/local/bin/quantum-rootwrap /etc/quantum/rootwrap.conf
+
+<% if @networking_mode == 'vlan' -%>
+tenant_network_type = vlan
+network_vlan_ranges = physnet1:<%= @vlan_start %>:<%= @vlan_end %>
+<% elsif @networking_mode == 'gre' -%>
+tenant_network_type = gre
+tunnel_id_ranges = 1:1000
+network_vlan_ranges = physnet1
+enable_tunneling = True
+<% else -%>
+tenant_network_type = local
+network_vlan_ranges = physnet1
+<% end -%>
+
+# (BoolOpt) Set to True in the server and the agents to enable support
+# for GRE networks. Requires kernel support for OVS patch ports and
+# GRE tunneling.
+#
+# Default: enable_tunneling = False
+
+# (ListOpt) Comma-separated list of <tun_min>:<tun_max> tuples
+# enumerating ranges of GRE tunnel IDs that are available for tenant
+# network allocation if tenant_network_type is 'gre'.
+#
+# Default: tunnel_id_ranges =
+# Example: tunnel_id_ranges = 1:1000
+
+# Do not change this parameter unless you have a good reason to.
+# This is the name of the OVS integration bridge. There is one per hypervisor.
+# The integration bridge acts as a virtual "patch bay". All VM VIFs are
+# attached to this bridge and then "patched" according to their network
+# connectivity.
+#
+# Default: integration_bridge = br-int
+
+# Only used for the agent if tunnel_id_ranges (above) is not empty for
+# the server.  In most cases, the default value should be fine.
+#
+# Default: tunnel_bridge = br-tun
+
+# Uncomment this line for the agent if tunnel_id_ranges (above) is not
+# empty for the server. Set local-ip to be the local IP address of
+# this hypervisor.
+#
+# Default: local_ip =
+
+# (ListOpt) Comma-separated list of <physical_network>:<bridge> tuples
+# mapping physical network names to the agent's node-specific OVS
+# bridge names to be used for flat and VLAN networks. Each bridge must
+# exist, and should have a physical network interface configured as a
+# port. All physical networks listed in network_vlan_ranges on the
+# server should have mappings to appropriate bridges on each agent.
+#
+# Default: bridge_mappings =
+# Example: bridge_mappings = physnet1:br-eth1
+bridge_mappings = physnet1:br-fixed
+
+
+[composite:quantum]
+use = egg:Paste#urlmap
+/: quantumversions
+/v1.0: quantumapi_v1_0
+/v1.1: quantumapi_v1_1
+
+[pipeline:quantumapi_v1_0]
+# By default, authentication is disabled.
+# To enable Keystone integration uncomment the 
+# following line and comment the next one
+pipeline = extensions quantumapiapp_v1_0
+#pipeline = authN extensions quantumapiapp_v1_0
+
+[pipeline:quantumapi_v1_1]
+# By default, authentication is disabled.
+# To enable Keystone integration uncomment the 
+# following line and comment the next one
+pipeline = extensions quantumapiapp_v1_1
+#pipeline = authN extensions quantumapiapp_v1_1
+
+[filter:authN]
+paste.filter_factory = keystone.middleware.quantum_auth_token:filter_factory
+auth_host = 127.0.0.1
+auth_port = 35357
+auth_protocol = http
+auth_version = 2.0
+auth_admin_user = admin
+auth_admin_password = secrete
+#auth_admin_token = <token-value>
+
+[filter:extensions]
+paste.filter_factory = quantum.common.extensions:plugin_aware_extension_middleware_factory
+
+[app:quantumversions]
+paste.app_factory = quantum.api.versions:Versions.factory
+
+[app:quantumapiapp_v1_0]
+paste.app_factory = quantum.api:APIRouterV10.factory
+
+[app:quantumapiapp_v1_1]
+paste.app_factory = quantum.api:APIRouterV11.factory
+
+[AGENT]
+root_helper=sudo /usr/local/bin/quantum-rootwrap /etc/quantum/rootwrap.conf
+polling_interval = 2
+
