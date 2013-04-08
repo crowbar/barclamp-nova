@@ -110,7 +110,10 @@ debs:
       - tgt
       - novnc
       - nova-compute-lxc
-      - nova-compute-xen
+      # Upstream deps busted for now -- appears to depend on Essex packages.
+      # We will see if we get minimal functionality without them.
+      # - nova-compute-xen
+      # - nova-vncproxy
       - nova-compute-xcp
       - nova-compute-kvm
       - nova-compute-uml
@@ -145,7 +148,6 @@ debs:
     - nova-volume
     - nova-scheduler
     - nova-doc
-    - nova-vncproxy
     - nova-ajax-console-proxy
     - python-eventlet
     - bzr
