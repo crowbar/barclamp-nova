@@ -92,28 +92,18 @@ locale_additions:
           deployment: Deployment
 
 debs:
-  ubuntu-10.10:
-    repos:
-      - deb http://ops.rcb.me/packages maverick diablo-final
-  ubuntu-11.04:
-    repos:
-      - deb http://ops.rcb.me/packages natty diablo-final
-  ubuntu-11.10:
-    repos:
-      - deb http://ops.rcb.me/packages oneiric diablo-final
   ubuntu-12.04:
     repos:
-      # Added to fix some libvirt errors using qemu with essex on 12.04
-      #- deb http://ppa.launchpad.net/ubuntu-virt/ppa/ubuntu precise main 
-      - deb http://archive.ubuntu.com/ubuntu/ precise-updates repo
+      - deb http://ubuntu-cloud.archive.canonical.com/ubuntu precise-updates/grizzly main
+      - deb http://ubuntu-cloud.archive.canonical.com/ubuntu precise-proposed/grizzly main
     pkgs:
       - tgt
       - novnc
       - nova-compute-lxc
-      # Upstream deps busted for now -- appears to depend on Essex packages.
-      # We will see if we get minimal functionality without them.
+      # Xen deps still busted. :(
       # - nova-compute-xen
-      # - nova-vncproxy
+      - nova-novncproxy
+      - nova-xvpvncproxy
       - nova-compute-xcp
       - nova-compute-kvm
       - nova-compute-uml
