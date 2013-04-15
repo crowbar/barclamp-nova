@@ -19,17 +19,17 @@
 #
 
 if node[:nova][:networking_backend]=="quantum"
-unless node[:nova][:use_gitrepo]
-  package "quantum" do
-    action :install
-  end
-else
+#unless node[:nova][:use_gitrepo]
+#  package "quantum" do
+#    action :install
+#  end
+#else
   include_recipe "nova::quantum"
 #  pfs_and_install_deps "quantum" do
 #    cookbook "quantum"
 #    cnode quantum
 #  end
-end
+#end
 end
 
 include_recipe "nova::config"
@@ -50,11 +50,14 @@ unless node[:nova][:use_gitrepo]
     source "connection.py"
   end
   
-  cookbook_file "/usr/lib/python2.7/dist-packages/nova/rootwrap/compute.py" do
-    user "root"
-    group "root"
-    mode "0755"
-    source "compute.py"
+  ["/usr/lib/python2.7/dist-packages/nova/common/rootwrap/compute.py", "/usr/lib/python2.7/dist-packages/nova/rootwrap/compute.py"].each do |path|
+    cookbook_file "#{path}" do
+      user "root"
+      group "root"
+      mode "0755"
+      source "compute.py"
+      ignore_failure true
+    end
   end
 
   ## @@AA- perf. add io=native when mounting volumes. disable memory balooning.
