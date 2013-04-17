@@ -99,6 +99,7 @@ debs:
     pkgs:
       - tgt
       - novnc
+      - nova-novncproxy
       - nova-compute-lxc
       # Xen deps still busted. :(
       # - nova-compute-xen
