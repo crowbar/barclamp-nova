@@ -5,6 +5,9 @@
   = link_to t('raw'), proposal_barclamp_path(:id => @proposal.name, :controller => @proposal.barclamp, :dep_raw => @dep_raw, :attr_raw => true), :style => "float: right;"
   %div.container
     %p
+      %label{ :for => :rabbitmq_instance }= t('.rabbitmq_instance')
+      = instance_selector("rabbitmq", :rabbitmq_instance, "rabbitmq_instance", @proposal)
+    %p
       %label{ :for => :mysql_instance }= t('.mysql_instance')
       = instance_selector("mysql", :mysql_instance, "mysql_instance", @proposal)
     %p
@@ -32,6 +35,9 @@
     %p
       %label{ :for => :network_header }= t('.network_header')
     %div.container
+      %p
+        %label{ :for => :networking_backend }= t('.networking_backend')
+        = select_tag :networking_backend, options_for_select([['quantum','quantum'], ['nova-network', 'nova-network']], @proposal.raw_data['attributes'][@proposal.barclamp]["networking_backend"].to_s), :onchange => "update_value('networking_backend', 'networking_backend', 'string')"
       %p
         %label{ :for => :tenant_vlans }= t('.tenant_vlans')
         = select_tag :tenant_vlans, options_for_select([['true','true'], ['false', 'false']], @proposal.raw_data['attributes'][@proposal.barclamp]["network"]["tenant_vlans"].to_s), :onchange => "update_value('network/tenant_vlans', 'tenant_vlans', 'boolean')"
@@ -64,7 +70,7 @@
         %input#volume_name{:type => "text", :name => "volume_name", :'data-default' => @proposal.raw_data['attributes'][@proposal.barclamp]["volume"]["volume_name"], :onchange => "update_value('volume/volume_name','volume_name', 'string')"}
       %p
         %label{ :for => :volume_type }= t('.volume_type')
-        = select_tag :volume_type, options_for_select([['raw','raw'], ['local', 'local']], @proposal.raw_data['attributes'][@proposal.barclamp]["volume"]["volume_type"].to_s), :onchange => "update_view();update_value('volume/volume_type', 'volume_type', 'string')"
+        = select_tag :volume_type, options_for_select([['raw','raw'], ['local', 'local'], ['eqlx','eqlx']], @proposal.raw_data['attributes'][@proposal.barclamp]["volume"]["volume_type"].to_s), :onchange => "update_view();update_value('volume/volume_type', 'volume_type', 'string')"
       %div{ :id => 'eqlx_parameters', :class => 'container' }
         %p
           %label{ :for => :eqlx_header }= t('.eqlx_parameters')
@@ -80,6 +86,9 @@
           %p
             %label{ :for => :eqlx_group_name }= t('.eqlx_group_name')
             %input#eqlx_group_name{:type => "text", :name => "eqlx_group_name", :'data-default' => @proposal.raw_data['attributes'][@proposal.barclamp]["volume"]["eqlx"]["eqlx_group_name"], :onchange => "update_value('volume/eqlx/eqlx_group_name', 'eqlx_group_name', 'string')"}
+          %p
+            %label{ :for => :eqlx_pool }= t('.eqlx_pool')
+            %input#eqlx_pool{:type => "text", :name => "eqlx_pool", :'data-default' => @proposal.raw_data['attributes'][@proposal.barclamp]["volume"]["eqlx"]["eqlx_pool"], :onchange => "update_value('volume/eqlx/eqlx_pool', 'eqlx_pool', 'string')"}
           %p
             %label{ :for => :san_thin_provision }= t('.eqlx_san_thin_provision')
             = select_tag :san_thin_provision, options_for_select([['yes','true'], ['no', 'false']], @proposal.raw_data['attributes'][@proposal.barclamp]["volume"]["eqlx"]["san_thin_provision"].to_s), :onchange => "update_value('volume/eqlx/san_thin_provision', 'san_thin_provision', 'boolean')"

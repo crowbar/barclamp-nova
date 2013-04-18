@@ -12,6 +12,7 @@
           "type": "map", 
           "required": true,
           "mapping": {
+            "rabbitmq_instance": { "type": "str", "required": true },
             "keystone_instance": { "type": "str", "required": true },
             "service_user": { "type": "str", "required": true },
             "service_password": { "type": "str" },
@@ -23,6 +24,7 @@
             "gitrepo": { "type": "str", "required": true },
             "git_instance": { "type": "str", "required": true },
             "git_refspec": { "type": "str", "required": true },
+            "networking_backend": { "type": "str", "required": true },
             "use_gitrepo": { "type": "bool", "required": true },
             "use_gitbarclamp": { "type": "bool", "required": true },
             "use_pip_cache": { "type": "bool", "required": true },
@@ -65,7 +67,8 @@
                     "eqlx_chap_login": { "type": "str", "required": true },
                     "eqlx_chap_password": { "type": "str", "required": true },
                     "eqlx_ssh_keepalive_interval": { "type": "int", "required": true },
-                    "eqlx_cli_timeout": { "type": "int", "required": true }
+                    "eqlx_cli_timeout": { "type": "int", "required": true },
+                    "eqlx_pool": { "type": "str", "required": true }
                   }
                 },
                 "use_cinder": { "type": "bool", "required": true },
@@ -75,16 +78,6 @@
                 "nova_raw_method": { "type": "str", "required": true },
                 "nova_volume_disks": { "type": "seq", "required": true, "sequence": [ { "type": "str" } ]},
                 "local_size": { "type": "int", "required": true }
-              }
-            },
-            "rabbit": {
-              "type": "map",
-              "required": true,
-              "mapping": {
-                "port": { "type": "int" },
-                "password": { "type": "str", "required": true },
-                "user": { "type": "str", "required": true },
-                "vhost": { "type": "str", "required": true }
               }
             },
             "db": {

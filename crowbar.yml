@@ -20,15 +20,19 @@ barclamp:
   display: Nova
   version: 0
   requires:
-    - @crowbar
+    - '@crowbar'
     - git
     - mysql
+    - rabbitmq
     - glance
     - keystone
     - nova_dashboard
     - cinder
+    - quantum
   member:
-    - openstack 
+    - openstack
+  os_support:
+    - ubuntu-12.04
 
 crowbar:
   layout: 1
@@ -41,8 +45,10 @@ locale_additions:
     barclamp:
       nova:
         edit_attributes: 
+          networking_backend: Backend for networking
           attributes: Attributes
           mysql_instance: MySQL
+          rabbitmq_instance: RabbitMQ
           keystone_instance: Keystone
           service_user: Keystone Service User
           service_password: Keystone Service Password
@@ -81,29 +87,23 @@ locale_additions:
           eqlx_chap_password: EQLX chap password for targets
           eqlx_ssh_keepalive_interval: EQLX SSH keepalive internal
           eqlx_cli_timeout: EQLX CLI command execution timeout
+          eqlx_pool: EQLX pool name
         edit_deployment: 
           deployment: Deployment
 
 debs:
-  ubuntu-10.10:
-    repos:
-      - deb http://ops.rcb.me/packages maverick diablo-final
-  ubuntu-11.04:
-    repos:
-      - deb http://ops.rcb.me/packages natty diablo-final
-  ubuntu-11.10:
-    repos:
-      - deb http://ops.rcb.me/packages oneiric diablo-final
   ubuntu-12.04:
     repos:
-      # Added to fix some libvirt errors using qemu with essex on 12.04
-      #- deb http://ppa.launchpad.net/ubuntu-virt/ppa/ubuntu precise main 
-      - deb http://archive.ubuntu.com/ubuntu/ precise-updates repo
+      - deb http://ubuntu-cloud.archive.canonical.com/ubuntu precise-updates/grizzly main
+      - deb http://ubuntu-cloud.archive.canonical.com/ubuntu precise-proposed/grizzly main
     pkgs:
       - tgt
       - novnc
       - nova-compute-lxc
-      - nova-compute-xen
+      # Xen deps still busted. :(
+      # - nova-compute-xen
+      - nova-novncproxy
+      - nova-xvpvncproxy
       - nova-compute-xcp
       - nova-compute-kvm
       - nova-compute-uml
@@ -138,7 +138,6 @@ debs:
     - nova-volume
     - nova-scheduler
     - nova-doc
-    - nova-vncproxy
     - nova-ajax-console-proxy
     - python-eventlet
     - bzr
@@ -147,5 +146,5 @@ debs:
     - python-mox
 
 git_repo:
-  - nova http://github.com/openstack/nova.git grizzly-1
-  - novnc http://github.com/kanaka/noVNC.git master
+  - nova https://github.com/openstack/nova.git stable/grizzly
+  - novnc https://github.com/kanaka/noVNC.git master

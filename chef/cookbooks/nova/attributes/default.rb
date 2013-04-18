@@ -29,13 +29,6 @@ default[:nova][:db][:user] = "nova"
 default[:nova][:db][:database] = "nova"
 
 #
-# RabbitMQ Settings
-#
-set_unless[:nova][:rabbit][:password] = secure_password
-default[:nova][:rabbit][:user] = "nova"
-default[:nova][:rabbit][:vhost] = "/nova"
-
-#
 # Hypervisor Settings
 #
 default[:nova][:libvirt_type] = "kvm"    
@@ -58,6 +51,8 @@ default[:nova][:user] = "nova"
 #
 # General network parameters
 #
+
+default[:nova][:networking_backend] = "quantum"
 default[:nova][:network][:ha_enabled] = true
 default[:nova][:network][:dhcp_enabled] = true
 default[:nova][:network][:tenant_vlans] = true
@@ -86,4 +81,11 @@ default[:nova][:volume][:nova_raw_method] = "all"
 default[:nova][:volume][:nova_volume_disks] = []
 default[:nova][:volume][:local_file] = "/var/lib/nova/volume.raw"
 default[:nova][:volume][:local_size] = 2000
+
+#
+# Transparent Hugepage Settings                       
+# 
+default[:nova][:hugepage][:tranparent_hugepage_enabled] = "always"
+default[:nova][:hugepage][:tranparent_hugepage_defrag] = "always"
+
 
