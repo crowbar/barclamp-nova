@@ -38,44 +38,6 @@ package "mysql-client"
 
 nova_package("compute")
 
-#
-# These two files are to handle: https://bugs.launchpad.net/ubuntu/+source/libvirt/+bug/996840
-# This is a hack until that gets fixed.
-# 
-unless node[:nova][:use_gitrepo]
-  cookbook_file "/usr/lib/python2.7/dist-packages/nova/virt/libvirt/connection.py" do
-    user "root"
-    group "root"
-    mode "0755"
-    source "connection.py"
-  end
-  
-  ["/usr/lib/python2.7/dist-packages/nova/common/rootwrap/compute.py", "/usr/lib/python2.7/dist-packages/nova/rootwrap/compute.py"].each do |path|
-    cookbook_file "#{path}" do
-      user "root"
-      group "root"
-      mode "0755"
-      source "compute.py"
-      ignore_failure true
-    end
-  end
-
-  ## @@AA- perf. add io=native when mounting volumes. disable memory balooning.
-  cookbook_file "/usr/lib/python2.7/dist-packages/nova/virt/libvirt/volume.py" do
-    user "root"
-    group "root"
-    mode "0755"
-    source "volume.py"
-  end
-  cookbook_file "/usr/lib/python2.7/dist-packages/nova/virt/libvirt.xml.template" do 
-    user "root"
-    group "root"
-    mode "0755"
-    source "libvirt.xml.template"
-  end
-
-end  
-
 # ha_enabled activates Nova High Availability (HA) networking.
 # The nova "network" and "api" recipes need to be included on the compute nodes and
 # we must specify the --multi_host=T switch on "nova-manage network create".     
