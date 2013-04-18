@@ -164,7 +164,13 @@ keystone_register "register nova-volume service" do
   action :add_service
 end
 
-public_api_ip = Chef::Recipe::Barclamp::Inventory.get_network_by_type(node, "public").address
+loadbalancers = search(:node, "roles:loadbalancer")
+if loadbalances.length > 0
+  loadbalancer = loadbalancers[0]
+  public_api_ip = loadbalancer[:keepalived][:virtual_ipaddress]
+else
+  public_api_ip = Chef::Recipe::Barclamp::Inventory.get_network_by_type(node, "public").address
+end
 admin_api_ip = Chef::Recipe::Barclamp::Inventory.get_network_by_type(node, "admin").address
 
 keystone_register "register nova-volume endpoint" do
