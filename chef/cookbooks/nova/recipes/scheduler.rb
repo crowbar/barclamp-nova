@@ -20,3 +20,4 @@
 include_recipe "nova::config"
 
 nova_package("scheduler")
+nova_package("conductor")
