@@ -129,3 +129,8 @@ volume_driver=nova.volume.eqlx.DellEQLSanISCSIDriver
 enabled_apis=ec2,osapi_compute,metadata
 volume_api_class=nova.volume.cinder.API
 <% end -%>
+
+# This needs to be conditionalized at some point, maybe.
+[conductor]
+use_local=false
+

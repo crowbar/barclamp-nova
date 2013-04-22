@@ -13,15 +13,23 @@
 
 [[ $DEBUG ]] && set -x
 
-die() { res=$1; shift; echo "$@"; exit $res; }
-
-nova_do() {
-    # $1 = address of nova controller
-    # $@ = command to run as the nova user.
-    local address="$1" 
+die() {
+    res=$1
     shift
-    [[ $1 ]] || return 1
-    run_on "$address" sudo -u nova -i "$@"
+    echo "$@"
+    nova console-log smoketest-1 > "$LOGDIR/nova-smoketest-1.console.log"
+    nova delete smoketest-1
+    while nova list |grep -q smoketest-1; do sleep 1; done
+    nova secgroup-delete smoketest
+    exit $res
+}
+
+nova() {
+    command nova --os-auth-url "http://$keystone_ip:5000/v2.0" \
+        --os-username "$nova_user" \
+        --os-password "$nova_pass" \
+        --os-tenant-name service \
+        "$@"
 }
 
 echo "Deploying Nova VMs."
@@ -32,95 +40,91 @@ if ! [[ $nova_ip ]]; then
     exit 1
 fi
 echo "Controller at $nova_ip. Verifying nova services..."
-echo "Rest of smoketest is not functional.  Exiting."
 
-exit 0
+echo "Finding keystone..."
+keystone_ip=$(knife_node_find 'roles:keystone-server' IP)
+if [[ ! $keystone_ip ]]; then
+    die 1 "Cannot find Keystone"
+fi
+
+sudo apt-get install -y python-novaclient
+
+prop_file="$LOGDIR/nova-proposal.json"
+
+crowbar nova proposal show smoketest >"$prop_file"
+
+nova_user=$(grep service_user $prop_file | sed 's/[:,"]//g' | awk '{print $2}')
+nova_pass=$(grep service_password $prop_file | sed 's/[:,"]//g' | awk '{print $2}')
+[[ $nova_user && $nova_pass ]] || die 1 "nova_user: $nova_user | nova_pass: $nova_pass"
 
 while read node_type node zone node_enabled node_status rest; do
     case $node_type in
-	nova-network) [[ $node_enabled = enabled && \
-	    $node_status = ':-)' ]] && nova_network=true;;
-	nova-compute) [[ $node_enabled = enabled && \
-	    $node_status = ':-)' ]] && nova_compute=true;;
-	nova-scheduler) [[ $node_enabled = enabled && \
-	    $node_status = ':-)' ]] && nova_scheduler=true;;
+        nova-compute) [[ $node_enabled = enabled && \
+            $node_status = 'up' ]] && nova_compute=true;;
+        nova-scheduler) [[ $node_enabled = enabled && \
+            $node_status = 'up' ]] && nova_scheduler=true;;
     esac
-done < <(nova_do "$nova_ip" nova-manage service list |tee \
+done < <(nova service-list |tr -d '|' |tee \
     "$LOGDIR/nova-services.status")
-if ! [[ $nova_network && $nova_compute && $nova_scheduler ]]; then
+if ! [[ $nova_compute && $nova_scheduler ]]; then
     echo "Nova services do not report as healthy!"
     exit 1
 fi
 
-echo "Nova services healthy. Finding test image to launch..."
 test_image=''
-ami_re='(ami-[0-9]+)'
-
-###
-# Things after here are broken.
-###
+image_re='([-0-9a-f]+) \| ([^ ]+-image) | ACTIVE'
 
 while read line;do
-    [[ $line =~ $ami_re ]] || continue
-    img_id="${BASH_REMATCH[1]}"
-    [[ $line =~ available && $line =~ public ]] || continue
-    test_image=$img_id
+    [[ $line =~ $image_re ]] || continue
+    test_image="${BASH_REMATCH[1]}"
     break
-done < <(nova_do "$nova_ip" euca-describe-images |tee \
+done < <(nova image-list |tee \
     "$LOGDIR/nova-images.status")
 if [[ ! $test_image ]]; then
     echo "Could not find a test image to run on Nova"
     exit 1
 fi
 
-echo "Launching $test_image..." 
-nova_do "$nova_ip" euca-run-instances "$test_image" -k mykey -t m1.tiny |tee \
-    "$LOGDIR/nova-run-instance.status"
-tries=0
-img_addr=''
+echo "Adding our security group"
+nova secgroup-create smoketest "Security group for smoketest instances."
+nova secgroup-add-rule smoketest icmp -1 -1 192.168.0.0/16
+nova secgroup-add-rule smoketest tcp 1 65535 192.168.0.0/16
+nova secgroup-add-rule smoketest udp 1 65535 192.168.0.0/16
 
-while ((tries++ < 30)); do
-    while read ltype l_id img_id img_addr1 img_addr2 img_status rest; do
-	[[ $img_id = $test_image ]] || continue
-	[[ $img_status =~ fail ]] && {
-	    echo "Nova reports that $test_image failed to deploy"
-	    cat "$LOGDIR/nova-running-instances.$tries.log"
-	    exit 1
-	}
-	[[ $img_id = $test_image && $img_status = running ]] || continue
-	img_addr=${img_addr1}
-    done < <(nova_do "$nova_ip" euca-describe-instances | \
-	tee "$LOGDIR/nova-running-instances.$tries.log")
-    cat "$LOGDIR/nova-running-instances.$tries.log"
-    [[ $img_addr ]] && break
-    sleep 10
-done
-if [[ ! $img_addr ]]; then
-    echo "$test_image failed to deploy after ${tries}0 seconds!"
-    exit 1
-fi	
-echo "Launched. Testing network connectivity..."
-tries=0
-while ! nova_do "$nova_ip" ping -n -c 1 "$img_addr" >> "$LOGDIR/nova-ping-$img_addr.log"; do
-    if ((tries++ > 60)) ; then
-      cat "$LOGDIR/nova-ping-$img_addr.log"
-      echo "Could not ping $img_addr from $nova_ip"
-      exit 1
-    fi
-done
-echo "Could ping deployed image."
-tries=0
+echo "Launching $test_image..."
+nova boot --poll --image "$test_image" --flavor 1 smoketest-1 | tee "$LOGDIR/nova-run-instance.status"
 
-## The SSH test is known to not work right now.
-# Leave it enabled, but do not fail the smoketest if it fails.
-while ! nova_do "$nova_ip" ssh -o 'StrictHostKeyChecking=no' -o 'UserKnownHostsFile=/dev/null' -i /var/lib/nova/mykey.priv ubuntu@"$img_addr" date >> "$LOGDIR/nova-ssh-$img_addr.log" ; do
-    if ((tries++ > 120)) ; then
-      cat "$LOGDIR/nova-ssh-$img_addr.log"
-      cat "$LOGDIR/nova-ssh-$img_addr.err"
-      echo "Could not ssh $img_addr from $nova_ip"
-      exit 0
-    fi
+sleep 10
+nova add-secgroup smoketest-1 smoketest
+
+if nova show smoketest-1 |grep -q 'status.*ACTIVE'; then
+    echo "Test image launched."
+else
+    die 1 "Failed to launch test image!"
+fi
+
+nova show smoketest-1 > "$LOGDIR/nova-smoketest-1.status"
+IFS='|' read _ _ ip _ < <( grep 'fixed network' "$LOGDIR/nova-smoketest-1.status")
+[[ $ip ]] || die 1 "Could not find fixed IP address of smoketest-1"
+echo "Smoketest-1 at fixed IP $ip"
+alive=false
+for ((i=0; i<120; i++)); do
+    printf '.'
+    ping -q -c 1 -i 1 $ip &>/dev/null || continue
+    alive=true
+    break
 done
+
+[[ $alive = true ]] || die 1 "Could not ping smoketest-1 at $ip"
+echo "Can ping smoketest-1 at $ip"
+
+nova console-log smoketest-1 |tee "$LOGDIR/nova-smoketest-1.console.log"
+
+# Need to test network connectivity here.
+
 
 echo "Nova VM deploy passed."
+nova delete smoketest-1
+while nova list |grep -q smoketest-1; do sleep 1; done
+nova secgroup-delete smoketest
 exit 0
