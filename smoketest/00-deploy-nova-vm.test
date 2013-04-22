@@ -76,6 +76,12 @@ if [[ ! $test_image ]]; then
     exit 1
 fi
 
+echo "Adding our security group"
+nova secgroup-create smoketest
+nova secgroup-add-rule smoektest icmp -1 -1 192.168.0.0/16
+nova secgroup-add-rule smoketest tcp 1 65535 192.168.0.0/16
+nova secgroup-add-rule smoketest udp 1 65535 192.168.0.0/16
+
 echo "Launching $test_image..."
 nova boot --poll --image "$test_image" --flavor 1 smoketest-1 | tee "$LOGDIR/nova-run-instance.status"
 
@@ -92,4 +98,5 @@ fi
 
 echo "Nova VM deploy passed."
 nova delete smoketest-1
+nova secgroup-delete smoketest
 exit 0
