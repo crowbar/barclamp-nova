@@ -14,10 +14,8 @@ firewall_driver=nova.virt.libvirt.firewall.IptablesFirewallDriver
 libvirt_use_virtio_for_bridges=True
 <% end -%>
 
-
 # nova-compute configuration for ceilometer
 instance_usage_audit=True
 instance_usage_audit_period=hour
 notification_driver=nova.openstack.common.notifier.rpc_notifier
 notification_driver=ceilometer.compute.nova_notifier
-
