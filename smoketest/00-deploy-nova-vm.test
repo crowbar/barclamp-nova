@@ -91,4 +91,5 @@ fi
 
 
 echo "Nova VM deploy passed."
+nova delete smoketest-1
 exit 0
