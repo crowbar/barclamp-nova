@@ -86,6 +86,7 @@ echo "Launching $test_image..."
 nova boot --poll --image "$test_image" --flavor 1 smoketest-1 | tee "$LOGDIR/nova-run-instance.status"
 
 sleep 10
+nova add-secgroup smoketest-1 smoketest
 
 if nova show smoketest-1 |grep -q 'status.*ACTIVE'; then
     echo "Test image launched."
