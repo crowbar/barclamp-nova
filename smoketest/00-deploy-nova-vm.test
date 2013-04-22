@@ -13,7 +13,16 @@
 
 [[ $DEBUG ]] && set -x
 
-die() { res=$1; shift; echo "$@"; exit $res; }
+die() {
+    res=$1
+    shift
+    echo "$@"
+    nova console-log smoketest-1 > "$LOGDIR/nova-smoketest-1.console.log"
+    nova delete smoketest-1
+    while nova list |grep -q smoketest-1; do sleep 1; done
+    nova secgroup-delete smoketest
+    exit $res
+}
 
 nova() {
     command nova --os-auth-url "http://$keystone_ip:5000/v2.0" \
@@ -77,8 +86,8 @@ if [[ ! $test_image ]]; then
 fi
 
 echo "Adding our security group"
-nova secgroup-create smoketest
-nova secgroup-add-rule smoektest icmp -1 -1 192.168.0.0/16
+nova secgroup-create smoketest "Security group for smoketest instances."
+nova secgroup-add-rule smoketest icmp -1 -1 192.168.0.0/16
 nova secgroup-add-rule smoketest tcp 1 65535 192.168.0.0/16
 nova secgroup-add-rule smoketest udp 1 65535 192.168.0.0/16
 
@@ -94,10 +103,28 @@ else
     die 1 "Failed to launch test image!"
 fi
 
+nova show smoketest-1 > "$LOGDIR/nova-smoketest-1.status"
+IFS='|' read _ _ ip _ < <( grep 'fixed network' "$LOGDIR/nova-smoketest-1.status")
+[[ $ip ]] || die 1 "Could not find fixed IP address of smoketest-1"
+echo "Smoketest-1 at fixed IP $ip"
+alive=false
+for ((i=0; i<120; i++)); do
+    printf '.'
+    ping -q -c 1 -i 1 $ip &>/dev/null || continue
+    alive=true
+    break
+done
+
+[[ $alive = true ]] || die 1 "Could not ping smoketest-1 at $ip"
+echo "Can ping smoketest-1 at $ip"
+
+nova console-log smoketest-1 |tee "$LOGDIR/nova-smoketest-1.console.log"
+
 # Need to test network connectivity here.
 
 
 echo "Nova VM deploy passed."
 nova delete smoketest-1
+while nova list |grep -q smoketest-1; do sleep 1; done
 nova secgroup-delete smoketest
 exit 0
