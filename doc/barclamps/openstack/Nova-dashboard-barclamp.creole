@@ -1,0 +1,46 @@
+> NOTE: move this to to the Nove Dashboard/Horizon Barclamp directory
+
+
+See all, [[Barclamp List]]
+
+//This is a Creole document//
+
+== Overview
+
+The Nova Dashboard Barclamp installs and configures the Openstack Horizon project.  This was once known as nova_dashboard.  The dashboard is a UI interface to all the other components.
+
+The Nova Dashboard requires a keystone instance.  It can be optionally configured to use a MySQL instance for storing its data.
+
+More information can be found here: [[http://horizon.openstack.org/#]].
+
+== Roles
+
+The Nova Dashboard Barclamp provides a single role: nova_dashboard-server.  This role installs and configures the Nova Dashboard server.
+
+== Scripts
+
+The barclamp provides a single nova_dashboard cookbook. The cookbook handles installation and configuration of the dashboard.
+
+== Parameters
+
+The barclamp has the following parameters:
+
+| **Name** | **Default** | **Description** |
+| keystone_instance | String name of the proposal | Instance of the Keystone barclamp to use |
+| sql_engine | mysql or sqlite | MySQL uses the instance specified in **mysql_instance**.  If no MySQL is present, it will default to a local sqlite database |
+| mysql_instance | String name of the proposal | Instance of the MySQL barclamp to use |
+| show_swift | false or true | Tells Dashboard to show swift components.  Defaults to false unless a swift proposal is detected. |
+
+== Operations
+
+The Nova Dashboard provides a UI on port 80 of the nova_dashboard-server.  Using the keystone credentials, you can access the system.
+
+== Useful Commands and Information
+
+The UI is very useful for managing the other services.
+
+== Limitations and/or Futures
+
+There are a few problems.
+# The dashboard doesn't maintain SQL connections to pieces so pages sometimes fail.  You need to retry pages a couple of times.
+# The VNC proxy for VMs only works on firefox.
