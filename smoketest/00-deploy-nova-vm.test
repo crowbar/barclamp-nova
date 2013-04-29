@@ -108,17 +108,16 @@ IFS='|' read _ _ ip _ < <( grep 'fixed network' "$LOGDIR/nova-smoketest-1.status
 [[ $ip ]] || die 1 "Could not find fixed IP address of smoketest-1"
 echo "Smoketest-1 at fixed IP $ip"
 alive=false
-for ((i=0; i<120; i++)); do
+for ((i=0; i<150; i++)); do
     printf '.'
     ping -q -c 1 -i 1 $ip &>/dev/null || continue
     alive=true
     break
 done
 
-#[[ $alive = true ]] || die 1 "Could not ping smoketest-1 at $ip"
-#echo "Can ping smoketest-1 at $ip"
-
 nova console-log smoketest-1 |tee "$LOGDIR/nova-smoketest-1.console.log"
+[[ $alive = true ]] || die 1 "Could not ping smoketest-1 at $ip"
+echo "Can ping smoketest-1 at $ip"
 
 # Need to test network connectivity here.
 
