@@ -21,7 +21,6 @@ barclamp:
   version: 0
   requires:
     - '@crowbar'
-    - git
     - mysql
     - rabbitmq
     - glance
