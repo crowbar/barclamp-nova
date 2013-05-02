@@ -94,7 +94,7 @@
       },
       "scheduler": {
 	"ram_allocation_ratio": 1.0,
-	"cpu_allocation_ratio": 1.0
+	"cpu_allocation_ratio": 16.0
       },
       "db": {
         "database_instance": "none",

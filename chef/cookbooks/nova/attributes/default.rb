@@ -44,7 +44,7 @@ default[:nova][:kvm][:ksm_enabled] = 0  # 0 = disable, 1 = enable
 # Scheduler Settings
 #
 default[:nova][:scheduler][:ram_allocation_ratio] = 1.0
-default[:nova][:scheduler][:cpu_allocation_ratio] = 1.0
+default[:nova][:scheduler][:cpu_allocation_ratio] = 16.0
 
 #
 # Shared Settings
