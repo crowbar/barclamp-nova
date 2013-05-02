@@ -33,6 +33,10 @@ barclamp:
   os_support:
     - ubuntu-12.04
 
+# Nova needs a longer timeout to wait for test VMs.
+smoketest:
+  timeout: 600
+
 crowbar:
   layout: 1
   order: 95
