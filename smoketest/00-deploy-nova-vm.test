@@ -13,23 +13,26 @@
 
 [[ $DEBUG ]] && set -x
 
+declare -a instances
+
+cleanup() {
+    trap '' QUIT TERM
+    local instance_name
+    for instance_name in "${instances[@]}"; do
+        nova console-log $instance_name > "$LOGDIR/nova-$instance_name.console.log"
+        nova delete $instance_name
+        while nova list |grep -q $instance_name; do sleep 1; done
+    done
+    quantum security-group-delete smoketest
+}
+
+trap cleanup EXIT QUIT TERM
+
 die() {
     res=$1
     shift
     echo "$@"
-    nova console-log smoketest-1 > "$LOGDIR/nova-smoketest-1.console.log"
-    nova delete smoketest-1
-    while nova list |grep -q smoketest-1; do sleep 1; done
-    nova secgroup-delete smoketest
     exit $res
-}
-
-nova() {
-    command nova --os-auth-url "http://$keystone_ip:5000/v2.0" \
-        --os-username "$nova_user" \
-        --os-password "$nova_pass" \
-        --os-tenant-name service \
-        "$@"
 }
 
 echo "Deploying Nova VMs."
@@ -47,14 +50,19 @@ if [[ ! $keystone_ip ]]; then
     die 1 "Cannot find Keystone"
 fi
 
-sudo apt-get install -y python-novaclient
+export OS_AUTH_URL="http://$keystone_ip:5000/v2.0"
+export OS_USERNAME="admin"
+export OS_PASSWORD="crowbar"
+export OS_TENANT_NAME="admin"
+
+sudo apt-get install -y python-novaclient python-quantumclient
 
 prop_file="$LOGDIR/nova-proposal.json"
 
 crowbar nova proposal show smoketest >"$prop_file"
 
-nova_user=$(grep service_user $prop_file | sed 's/[:,"]//g' | awk '{print $2}')
-nova_pass=$(grep service_password $prop_file | sed 's/[:,"]//g' | awk '{print $2}')
+nova_user=admin
+nova_pass=crowbar
 [[ $nova_user && $nova_pass ]] || die 1 "nova_user: $nova_user | nova_pass: $nova_pass"
 
 while read node_type node zone node_enabled node_status rest; do
@@ -86,44 +94,62 @@ if [[ ! $test_image ]]; then
 fi
 
 echo "Adding our security group"
-nova secgroup-create smoketest "Security group for smoketest instances."
-nova secgroup-add-rule smoketest icmp -1 -1 192.168.0.0/16
-nova secgroup-add-rule smoketest tcp 1 65535 192.168.0.0/16
-nova secgroup-add-rule smoketest udp 1 65535 192.168.0.0/16
+quantum security-group-create smoketest
+quantum security-group-rule-create --protocol icmp --direction ingress smoketest
+quantum security-group-rule-create --protocol tcp --port-range-min 1 \
+    --port-range-max 65535 --direction ingress smoketest
+quantum security-group-rule-create --protocol udp --port-range-min 1 \
+    --port-range-max 65535 --direction ingress smoketest
+fixed_net=$(quantum net-list --quote none -F id --format csv -- --name fixed |tail -1 |tr -d '\r')
+floating_net=$(quantum net-list --quote none -F id --format csv -- --name floating |tail -1| tr -d '\r')
 
-echo "Launching $test_image..."
-nova boot --poll --image "$test_image" --flavor 1 smoketest-1 | tee "$LOGDIR/nova-run-instance.status"
+for ((idx=0; idx<6; idx++)); do
+    instance_name="smoketest-$idx"
+    instances[$idx]=$instance_name
+    (
+        # Things to add here:
+        # SSH key injection
+        # Binding a volume with Cinder
+        echo "Launching $instance_name with $test_image"
+        nova boot --poll --image "$test_image" --flavor 1 \
+            --nic net-id=$fixed_net \
+            --nic net-id=$floating_net \
+            --security-groups smoketest \
+            "$instance_name" | tee "$LOGDIR/nova-$instance_name.status"
+    ) &
+    sleep 2
+done
+wait
+declare -A fixed_ips floating_ips
+for instance_name in "${instances[@]}"; do
+    if nova show $instance_name |grep -q 'status.*ACTIVE'; then
+        echo "$instance_name launched."
+    else
+        die 1 "Failed to launch $instance_name"
+    fi
 
-sleep 10
-nova add-secgroup smoketest-1 smoketest
-
-if nova show smoketest-1 |grep -q 'status.*ACTIVE'; then
-    echo "Test image launched."
-else
-    die 1 "Failed to launch test image!"
-fi
-
-nova show smoketest-1 > "$LOGDIR/nova-smoketest-1.status"
-IFS='|' read _ _ ip _ < <( grep 'fixed network' "$LOGDIR/nova-smoketest-1.status")
-[[ $ip ]] || die 1 "Could not find fixed IP address of smoketest-1"
-echo "Smoketest-1 at fixed IP $ip"
-alive=false
-for ((i=0; i<150; i++)); do
-    printf '.'
-    ping -q -c 1 -i 1 $ip &>/dev/null || continue
-    alive=true
-    break
+    nova show $instance_name > "$LOGDIR/nova-$instance_name.status"
+    IFS='|' read _ _ ip _ < <( grep 'fixed network' "$LOGDIR/nova-$instance_name.status")
+    [[ $ip ]] || die 1 "Could not find fixed IP address of $instance_name"
+    echo "$instance_name at fixed IP $ip"
+    fixed_ips[$instance_name]=$ip
+    IFS='|' read _ _ ip _ < <( grep 'floating network' "$LOGDIR/nova-$instance_name.status")
+    [[ $ip ]] || die 1 "Could not find floating IP address of $instance_name"
+    floating_ips[$instance_name]=$ip
+    echo "$instance_name at floating IP $ip"
+    alive=false
+    for ((i=0; i<150; i++)); do
+        printf '.'
+        ping -q -c 1 -i 1 ${fixed_ips[$instance_name]} &>/dev/null || continue
+        alive=true
+        break
+    done
+    nova console-log $instance_name |tee "$LOGDIR/nova-instance_name.console.log"
+    [[ $alive = true ]] || die 1 "Could not ping $instance_name at ${fixed_ips[$instance_name]}"
+    echo "Can ping $instance_name at ${fixed_ips[$instance_name]}"
 done
 
-nova console-log smoketest-1 |tee "$LOGDIR/nova-smoketest-1.console.log"
-[[ $alive = true ]] || die 1 "Could not ping smoketest-1 at $ip"
-echo "Can ping smoketest-1 at $ip"
-
-# Need to test network connectivity here.
-
+# Need to test full netowrk connectivity, Cinder, and instance interconnectivity.
 
 echo "Nova VM deploy passed."
-nova delete smoketest-1
-while nova list |grep -q smoketest-1; do sleep 1; done
-nova secgroup-delete smoketest
 exit 0
