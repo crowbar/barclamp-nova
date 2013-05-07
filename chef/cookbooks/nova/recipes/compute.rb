@@ -18,25 +18,18 @@
 # limitations under the License.
 #
 
-if node[:nova][:networking_backend]=="quantum"
-#unless node[:nova][:use_gitrepo]
-#  package "quantum" do
-#    action :install
-#  end
-#else
-  include_recipe "nova::quantum"
-#  pfs_and_install_deps "quantum" do
-#    cookbook "quantum"
-#    cnode quantum
-#  end
-#end
-end
+nova_path = "/opt/nova"
+quantum_path = "/opt/quantum"
+venv_quantum_path = node[:nova][:use_virtualenv] ? "#{quantum_path}/.venv" : nil
+venv_path = node[:nova][:use_virtualenv] ? "#{nova_path}/.venv" : nil
 
 include_recipe "nova::config"
 
 package "mysql-client"
 
-nova_package("compute")
+nova_package "compute" do
+  virtualenv venv_path
+end
 
 # ha_enabled activates Nova High Availability (HA) networking.
 # The nova "network" and "api" recipes need to be included on the compute nodes and

@@ -4,6 +4,7 @@ libvirt_type=<%= node[:nova][:libvirt_type] %>
 libvirt_cpu_mode=none
 compute_driver=libvirt.LibvirtDriver
 <% end -%>
+
 <% if node[:nova][:networking_backend]=="quantum" -%>
 libvirt_ovs_bridge=br-int
 libvirt_vif_type=ethernet
