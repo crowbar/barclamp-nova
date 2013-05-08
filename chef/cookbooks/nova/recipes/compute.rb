@@ -23,6 +23,8 @@ quantum_path = "/opt/quantum"
 venv_quantum_path = node[:nova][:use_virtualenv] ? "#{quantum_path}/.venv" : nil
 venv_path = node[:nova][:use_virtualenv] ? "#{nova_path}/.venv" : nil
 
+include_recipe "nova::quantum"
+
 include_recipe "nova::config"
 
 package "mysql-client"
