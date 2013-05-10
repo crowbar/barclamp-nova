@@ -9,8 +9,8 @@ libvirt_ovs_bridge=br-int
 libvirt_vif_type=ethernet
 libvirt_vif_driver=nova.virt.libvirt.vif.LibvirtOpenVswitchVirtualPortDriver
 linuxnet_interface_driver=nova.network.linux_net.LinuxOVSInterfaceDriver
-firewall_driver=nova.virt.libvirt.firewall.IptablesFirewallDriver
-#nova.virt.libvirt.vif.LibvirtHybridOVSBridgeDriver
+firewall_driver=nova.virt.firewall.NoopFirewallDriver
+security_group_api=quantum
 libvirt_use_virtio_for_bridges=True
 <% end -%>
 
