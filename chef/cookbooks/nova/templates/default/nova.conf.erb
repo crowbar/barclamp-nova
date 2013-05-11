@@ -45,6 +45,10 @@ libvirt_vif_driver=nova.virt.libvirt.vif.LibvirtHybridOVSBridgeDriver
 linuxnet_interface_driver=nova.network.linux_net.LinuxOVSInterfaceDriver
 security_group_api=quantum
 firewall_driver=nova.virt.firewall.NoopFirewallDriver
+service_quantum_metadata_proxy=True
+# Not really secret.  Quantum should be randomly generating this,
+# and we should be using whatever it generates.
+quantum_metadata_proxy_shared_secret=Secret
 <% else -%>
 my_ip=<%= node[:nova][:my_ip] %>
 allow_same_net_traffic=<%= node[:nova][:network][:allow_same_net_traffic] ? "True" : "False" %>
