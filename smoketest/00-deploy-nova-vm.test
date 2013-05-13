@@ -114,23 +114,17 @@ nova keypair-add smoketest >"$sshkey"
 chmod 600 "$sshkey"
 ssh-add "$sshkey"
 
-for ((idx=0; idx<6; idx++)); do
-    instance_name="smoketest-$idx"
-    instances[$idx]=$instance_name
-    (
-        # Things to add here:
-        # SSH key injection
-        # Binding a volume with Cinder
-        echo "Launching $instance_name with $test_image"
-        nova boot --poll --image "$test_image" --flavor 1 \
-            --nic net-id=$fixed_net \
-            --security-groups smoketest \
-            --key-name smoketest \
-            "$instance_name" | tee "$LOGDIR/nova-$instance_name.status"
-    ) &
-    sleep 2
-done
-wait
+idx=0
+instance_name="smoketest-$idx"
+instances[$idx]=$instance_name
+# Things to add here:
+# Binding a volume with Cinder
+echo "Launching $instance_name with $test_image"
+nova boot --poll --image "$test_image" --flavor 1 \
+    --nic net-id=$fixed_net \
+    --security-groups smoketest \
+    --key-name smoketest \
+    "$instance_name" | tee "$LOGDIR/nova-$instance_name.status"
 declare -A fixed_ips
 for instance_name in "${instances[@]}"; do
     if nova show $instance_name |grep -q 'status.*ACTIVE'; then
