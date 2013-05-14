@@ -26,7 +26,6 @@ barclamp:
     - rabbitmq
     - glance
     - keystone
-    - nova_dashboard
     - cinder
     - quantum
   member:
