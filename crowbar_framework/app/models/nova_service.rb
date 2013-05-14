@@ -67,7 +67,6 @@ class NovaService < ServiceObject
     nodes = [ head ] if nodes.empty?
     base["deployment"]["nova"]["elements"] = {
       "nova-multi-controller" => [ head.name ],
-      "nova-multi-volume" => [ head.name ],
       "nova-multi-compute" => nodes.map { |x| x.name }
     }
     # automatically swap to qemu if using VMs for testing (relies on node.virtual to detect VMs)

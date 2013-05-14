@@ -22,7 +22,6 @@
 # Nova scale data holder
 nova_scale = {
   :computes => [],
-  :volumes => [],
   :networks => [],
   :schedulers => [],
   :apis => []
@@ -32,7 +31,6 @@ env_filter = " AND nova_config_environment:#{node[:nova][:config][:environment]}
 if env_filter
   search(:node, "roles:nova-single-machine #{env_filter}") do |n|
     nova_scale[:computes] << n
-    nova_scale[:volumes] << n
     nova_scale[:networks] << n
     nova_scale[:schedulers] << n
     nova_scale[:apis] << n
@@ -46,10 +44,6 @@ if env_filter
 
   search(:node, "roles:nova-multi-compute #{env_filter}") do |n|
     nova_scale[:computes] << n
-  end
-
-  search(:node, "roles:nova-multi-volume #{env_filter}") do |n|
-    nova_scale[:volumes] << n
   end
 
   # As other nova and swift roles come on-line we should add them here.
