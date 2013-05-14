@@ -21,9 +21,8 @@ venv_nova_path = node[:nova][:use_virtualenv] ? "#{nova_path}/.venv" : nil
 venv_nova_prefix_path = node[:nova][:use_virtualenv] ? "#{venv_nova_path}/bin/activate && " : nil
 venv_quantum_path = node[:nova][:use_virtualenv] ? "#{quantum_path}/.venv" : nil
 venv_quantum_prefix_path = node[:nova][:use_virtualenv] ? "#{venv_quantum_path}/bin/activate && " : nil
-
 unless node[:nova][:use_gitrepo]
-  package "quantum" do
+  package "quantum-server" do
     action :install
   end
 else
@@ -43,7 +42,7 @@ else
     cnode quantum_node
   end
 
-  link_service "quantum-openvswitch-agent" do
+  link_service "quantum-plugin-openvswitch-agent" do
     bin_name "quantum-openvswitch-agent --config-dir /etc/quantum/"
     virtualenv venv_quantum_path
   end
@@ -84,7 +83,7 @@ service "openvswitch-switch" do
   supports :status => true, :restart => true
   action :enable
 end
-service "quantum-openvswitch-agent" do
+service "quantum-plugin-openvswitch-agent" do
   supports :status => true, :restart => true
   action :enable
 end
@@ -184,7 +183,7 @@ template "/etc/quantum/quantum.conf" do
       :vlan_end => vlan_end,
       :networking_mode => quantum_networking_mode
     )
-    notifies :restart, resources(:service => "quantum-openvswitch-agent"), :immediately
+    notifies :restart, resources(:service => "quantum-plugin-openvswitch-agent"), :immediately
 end
 
 fip = Chef::Recipe::Barclamp::Inventory.get_network_by_type(node, "nova_fixed")
