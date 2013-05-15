@@ -6,11 +6,11 @@ command[check_nova_mysql]=/usr/lib/nagios/plugins/check_mysql -H localhost -u <%
 <% end -%>
 
 <% unless @nova_scale.nil? %>
-command[check_nova_manage]=sudo /usr/lib/nagios/plugins/check_nova_manage -S <%= @nova_scale[:schedulers].length %> -N <%= @nova_scale[:networks].length %> -C <%= @nova_scale[:computes].length %> -V <%= @nova_scale[:volumes].length %> -w 1 -c 3
+command[check_nova_manage]=sudo /usr/lib/nagios/plugins/check_nova_manage -S <%= @nova_scale[:schedulers].length %> -N <%= @nova_scale[:networks].length %> -C <%= @nova_scale[:computes].length %> -w 1 -c 3
 <% end %>
 command[check_nova_api]=/usr/lib/nagios/plugins/check_procs -w 2:4 -c 2:10 -a "nova-api"
 command[check_nova_compute]=/usr/lib/nagios/plugins/check_procs -w 2:4 -c 2:10 -a "nova-compute"
 command[check_nova_network]=/usr/lib/nagios/plugins/check_procs -w 2:4 -c 2:10 -a "nova-network"
 command[check_nova_scheduler]=/usr/lib/nagios/plugins/check_procs -w 2:4 -c 2:10 -a "nova-scheduler"
-command[check_nova_volume]=/usr/lib/nagios/plugins/check_procs -w 2:4 -c 2:10 -a "nova-volume"
+
 

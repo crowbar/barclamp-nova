@@ -125,18 +125,16 @@
     "nova": {
       "crowbar-revision": 0,
       "element_states": {
-        "nova-multi-volume": [ "readying", "ready", "applying" ],
         "nova-multi-controller": [ "readying", "ready", "applying" ],
         "nova-multi-compute": [ "readying", "ready", "applying" ]
       },
       "elements": {},
       "element_order": [
         [ "nova-multi-controller" ],
-        [ "nova-multi-compute", "nova-multi-volume" ]
+        [ "nova-multi-compute" ]
       ],
       "element_run_list_order": {
         "nova-multi-controller": 95,
-        "nova-multi-volume": 96,
         "nova-multi-compute": 97
       },
       "config": {
