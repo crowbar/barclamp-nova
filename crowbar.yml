@@ -18,10 +18,10 @@
 barclamp:
   name: nova
   display: Nova
+  description: 'OpenStack Compute: Provision and manage large network of virtual machines'
   version: 0
   requires:
     - '@crowbar'
-    - git
     - mysql
     - rabbitmq
     - glance
@@ -32,6 +32,10 @@ barclamp:
     - openstack
   os_support:
     - ubuntu-12.04
+
+# Nova needs a longer timeout to wait for test VMs.
+smoketest:
+  timeout: 600
 
 crowbar:
   layout: 1
