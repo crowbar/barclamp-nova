@@ -8,6 +8,7 @@
       "service_user": "nova",
       "glance_instance": "none",
       "cinder_instance": "none",
+      "quantum_instance": "none",
       "libvirt_type": "kvm",
       "use_novnc": true,
       "verbose": true,

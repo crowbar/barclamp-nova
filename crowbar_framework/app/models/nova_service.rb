@@ -36,6 +36,9 @@ class NovaService < ServiceObject
     if role.default_attributes[@bc_name]["volume"]["use_cinder"]
       answer << { "barclamp" => "cinder", "inst" => role.default_attributes[@bc_name]["cinder_instance"] }
     end
+    if role.default_attributes[@bc_name]["networking_backend"] == "quantum"
+      answer << { "barclamp" => "quantum", "inst" => role.default_attributes[@bc_name]["quantum_instance"] }
+    end
     answer
   end
 
@@ -156,6 +159,19 @@ class NovaService < ServiceObject
       base["attributes"]["nova"]["cinder_instance"] = cinders[0] unless cinders.empty?
     rescue
       @logger.info("Nova create_proposal: no cinder found")
+    end
+
+    base["attributes"]["nova"]["quantum_instance"] = ""
+    begin
+      quantumService = QuantumService.new(@logger)
+      quantums = quantumService.list_active[1]
+      if quantums.empty?
+        # No actives, look for proposals
+        quantums = quantumService.proposals[1]
+      end
+      base["attributes"]["nova"]["quantum_instance"] = quantums[0] unless quantums.empty?
+    rescue
+      @logger.info("Nova create_proposal: no quantum found")
     end
 
     base["attributes"]["nova"]["db"]["password"] = random_password
