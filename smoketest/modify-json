@@ -14,3 +14,4 @@
 # limitations under the License.
 # 
 sed '/libvirt_type/ s/kvm/qemu/'
+sed '/allow_same_net_traffic/ s/false/true/'
