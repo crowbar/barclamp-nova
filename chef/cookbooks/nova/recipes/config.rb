@@ -272,25 +272,6 @@ else
 end
 Chef::Log.info("Quantum server at #{quantum_server_ip}")
 
-
-#create route via quantum router to fixed network for metadata service
-#this workaround for metadata service, should be removed when quantum-metadata-proxy will be released
-if node[:nova][:networking_backend]=="quantum"
-  execute "add_route_for_metadata_service" do
-    command "ip ro del #{node[:nova][:network][:fixed_range]} ; ip ro add #{node[:nova][:network][:fixed_range]} via #{quantum_server[:quantum][:network][:fixed_router]}"
-    not_if "ip ro get #{node[:nova][:network][:fixed_range]} | grep -q 'via #{quantum_server[:quantum][:network][:fixed_router]}'"
-  end
-  if per_tenant_vlan
-    quantum_server[:quantum][:network][:private_networks].each do |net|
-      execute "add_route_for_network_#{net}" do
-        command "ip ro replace #{net} via #{quantum_server[:quantum][:network][:fixed_router]}"
-        not_if "ip ro get #{net} | grep -q 'via #{quantum_server[:quantum][:network][:fixed_router]}'"
-      end
-    end
-  end
-end
-
-
 template "/etc/nova/nova.conf" do
   source "nova.conf.erb"
   owner node[:nova][:user]

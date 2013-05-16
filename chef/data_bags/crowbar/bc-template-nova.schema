@@ -18,6 +18,7 @@
             "service_password": { "type": "str" },
             "glance_instance": { "type": "str", "required": true },
             "cinder_instance": { "type": "str", "required": true },
+            "quantum_instance": { "type": "str", "required": true },
             "libvirt_type": { "type": "str", "required": true },
             "use_novnc": { "type": "bool", "required": true },
             "verbose": { "type": "bool", "required": true },
