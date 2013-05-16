@@ -12,7 +12,7 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 
 [[ $DEBUG ]] && set -x
-
+ip_re='(([0-9]{1,3}\.){3}[0-9]{1,3})'
 declare -a instances
 
 cleanup() {
@@ -21,6 +21,7 @@ cleanup() {
     for instance_name in "${instances[@]}"; do
         nova console-log $instance_name > "$LOGDIR/nova-$instance_name.console.log"
         nova delete $instance_name
+        nova floating-ip-delete "${floating_ips[$instance_name]}"
         while nova list |grep -q $instance_name; do sleep 1; done
     done
     nova keypair-delete smoketest
@@ -113,19 +114,24 @@ fi
 nova keypair-add smoketest >"$sshkey"
 chmod 600 "$sshkey"
 ssh-add "$sshkey"
-
-idx=0
-instance_name="smoketest-$idx"
-instances[$idx]=$instance_name
-# Things to add here:
-# Binding a volume with Cinder
-echo "Launching $instance_name with $test_image"
-nova boot --poll --image "$test_image" --flavor 1 \
-    --nic net-id=$fixed_net \
-    --security-groups smoketest \
-    --key-name smoketest \
-    "$instance_name" | tee "$LOGDIR/nova-$instance_name.status"
-declare -A fixed_ips
+for ((idx=0; idx <= 2; idx++)); do
+    instance_name="smoketest-$idx"
+    instances[$idx]=$instance_name
+    # Things to add here:
+    # Binding a volume with Cinder
+    echo "Launching $instance_name with $test_image"
+    (
+        nova boot --poll --image "$test_image" --flavor 1 \
+            --nic net-id=$fixed_net \
+            --security-groups smoketest \
+            --key-name smoketest \
+            "$instance_name" | \
+            tee "$LOGDIR/nova-$instance_name.status"
+    ) &
+    sleep 2
+done
+wait
+declare -A fixed_ips floating_ips
 for instance_name in "${instances[@]}"; do
     if nova show $instance_name |grep -q 'status.*ACTIVE'; then
         echo "$instance_name launched."
@@ -134,20 +140,26 @@ for instance_name in "${instances[@]}"; do
     fi
 
     nova show $instance_name > "$LOGDIR/nova-$instance_name.status"
-    IFS='|' read _ _ ip _ < <( grep 'fixed network' "$LOGDIR/nova-$instance_name.status")
-    [[ $ip ]] || die 1 "Could not find fixed IP address of $instance_name"
-    echo "$instance_name at fixed IP $ip"
-    fixed_ips[$instance_name]=$ip
+    [[ $(grep 'fixed network' "$LOGDIR/nova-$instance_name.status") =~ $ip_re ]] || \
+        die 1 "$instance_name has no fixed IP!"
+    echo "$instance_name at fixed IP ${BASH_REMATCH[1]}"
+    fixed_ips[$instance_name]=${BASH_REMATCH[1]}
+    echo "Allocating a floating IP"
+    [[ $(nova floating-ip-create) =~ $ip_re ]] || \
+        die 1 "Could not allocate floating IP for $instance_name"
+    floating_ips[$instance_name]=${BASH_REMATCH[1]}
+    nova add-floating-ip "$instance_name" "${BASH_REMATCH[1]}" || \
+        die 1 "Could not attach ${BASH_REMATCH[1]} to $instance_name"
     alive=false
     for ((i=0; i<150; i++)); do
         printf '.'
-        ping -q -c 1 -i 1 ${fixed_ips[$instance_name]} &>/dev/null || continue
+        ping -q -c 1 -i 1 ${floating_ips[$instance_name]} &>/dev/null || continue
         alive=true
         break
     done
     nova console-log $instance_name |tee "$LOGDIR/nova-instance_name.console.log"
-    [[ $alive = true ]] || die 1 "Could not ping $instance_name at ${fixed_ips[$instance_name]}"
-    echo "Can ping $instance_name at ${fixed_ips[$instance_name]}"
+    [[ $alive = true ]] || die 1 "Could not ping $instance_name at ${floating_ips[$instance_name]}"
+    echo "Can ping $instance_name at ${floating_ips[$instance_name]}"
 done
 
 # Need to test full network connectivity, Cinder, and instance interconnectivity.
