@@ -75,6 +75,7 @@ default[:nova][:network][:vlan_start] = 100
 default[:nova][:service_user] = "nova"
 default[:nova][:service_password] = "nova"
 
+default[:nova][:volume][:use_cinder] = "true"
 default[:nova][:volume][:volume_name] = "nova-volumes"
 default[:nova][:volume][:type] = "local"
 default[:nova][:volume][:nova_raw_method] = "all"
