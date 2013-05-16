@@ -21,6 +21,7 @@ cleanup() {
     for instance_name in "${instances[@]}"; do
         nova console-log $instance_name > "$LOGDIR/nova-$instance_name.console.log"
         nova delete $instance_name
+        nova floating-ip-delete "${floating_ips[$instance_name]}"
         while nova list |grep -q $instance_name; do sleep 1; done
     done
     nova keypair-delete smoketest
@@ -113,18 +114,23 @@ fi
 nova keypair-add smoketest >"$sshkey"
 chmod 600 "$sshkey"
 ssh-add "$sshkey"
-
-idx=0
-instance_name="smoketest-$idx"
-instances[$idx]=$instance_name
-# Things to add here:
-# Binding a volume with Cinder
-echo "Launching $instance_name with $test_image"
-nova boot --poll --image "$test_image" --flavor 1 \
-    --nic net-id=$fixed_net \
-    --security-groups smoketest \
-    --key-name smoketest \
-    "$instance_name" | tee "$LOGDIR/nova-$instance_name.status"
+for ((idx=0; idx <= 2; idx++)); do
+    instance_name="smoketest-$idx"
+    instances[$idx]=$instance_name
+    # Things to add here:
+    # Binding a volume with Cinder
+    echo "Launching $instance_name with $test_image"
+    (
+        nova boot --poll --image "$test_image" --flavor 1 \
+            --nic net-id=$fixed_net \
+            --security-groups smoketest \
+            --key-name smoketest \
+            "$instance_name" | \
+            tee "$LOGDIR/nova-$instance_name.status"
+    ) &
+    sleep 2
+done
+wait
 declare -A fixed_ips floating_ips
 for instance_name in "${instances[@]}"; do
     if nova show $instance_name |grep -q 'status.*ACTIVE'; then
