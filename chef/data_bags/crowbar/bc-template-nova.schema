@@ -53,10 +53,9 @@
             },
             "scheduler": {
               "type": "map",
-              "required": true,
               "mapping": {
-                "ram_allocation_ratio": { "type": "number", "required": true },
-                "cpu_allocation_ratio": { "type": "number", "required": true }
+                "ram_allocation_ratio": { "type": "number" },
+                "cpu_allocation_ratio": { "type": "number" }
               }
             },
             "db": {
