@@ -20,6 +20,9 @@
 
 include_recipe "nova::config"
 
+novnc_path = "/opt/novnc"
+venv_path = node[:nova][:use_virtualenv] ? "#{novnc_path}/.venv" : nil
+
 if node.platform != "suse"
   pkgs=%w[python-numpy nova-console nova-consoleauth]
   pkgs=%w[python-numpy] if node[:nova][:use_gitrepo]
@@ -70,10 +73,16 @@ unless node[:nova][:use_gitrepo]
     subscribes :restart, resources(:template => "/etc/nova/nova.conf"), :delayed
   end
 else
-  nova_package("console")
-  nova_package("consoleauth")
+  nova_package "console" do
+    virtualenv venv_path
+  end
+  nova_package "consoleauth" do
+    virtualenv venv_path
+  end
   unless node[:nova][:use_novnc]
-    nova_package("xvpvncproxy")
+    nova_package "xvpvncproxy" do
+      virtualenv venv_path
+    end
   else
     novnc_service = "nova-novncproxy"
     #agordeev: remove hardcoded paths
@@ -82,6 +91,7 @@ else
     pfs_and_install_deps "novnc" do
       reference "master"
       without_setup true
+      virtualenv venv_path
     end
     [
       "/usr/lib/novnc",
@@ -117,6 +127,7 @@ else
       user node[:nova][:user]
       opt_params "--web /usr/share/novnc"
       opt_path "#{novnc_path}/utils"
+      virtualenv venv_path
     end
     service novnc_service do
       supports :status => true, :restart => true

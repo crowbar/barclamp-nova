@@ -19,6 +19,7 @@
       "use_gitrepo": false,
       "use_gitbarclamp": false,
       "use_pip_cache": false,
+      "use_virtualenv": false,
       "networking_backend": "quantum",
       "pfs_deps": [
         "dnsmasq-base",
@@ -82,7 +83,7 @@
         "pip://python-novaclient",
         "pip://python-cinderclient",
         "pip://python-keystoneclient>=0.2.0",
-        "pip://prettytable>=0.6,<0.7"
+        "pip://prettytable>=0.6,<0.8"
       ],
       "network": {
         "ha_enabled": true,

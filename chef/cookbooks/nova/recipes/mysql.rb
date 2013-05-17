@@ -20,6 +20,10 @@
 
 ::Chef::Recipe.send(:include, Opscode::OpenSSL::Password)
 
+nova_path = "/opt/nova"
+venv_path = node[:nova][:use_virtualenv] ? "#{nova_path}/.venv" : nil
+venv_prefix_path = node[:nova][:use_virtualenv] ? ". #{venv_path}/bin/activate && " : nil
+
 include_recipe "mysql::client"
 
 # find mysql server configured by mysql-client
@@ -51,7 +55,7 @@ mysql_database "create nova database user" do
 end
 
 execute "nova-manage db sync" do
-  command "nova-manage db sync"
+  command "#{venv_prefix_path} nova-manage db sync"
   action :run
 end
 

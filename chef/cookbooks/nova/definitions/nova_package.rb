@@ -15,9 +15,11 @@
 define :nova_package do
 
   nova_name="nova-#{params[:name]}"
+  venv_path = params[:virtualenv]
   if node[:nova][:use_gitrepo]
     link_service nova_name do
       user node[:nova][:user]
+      virtualenv venv_path
     end
   else
     package nova_name do

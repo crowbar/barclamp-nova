@@ -18,6 +18,10 @@
 # limitations under the License.
 #
 
+nova_path = "/opt/nova"
+venv_path = node[:nova][:use_virtualenv] ? "#{nova_path}/.venv" : nil
+venv_prefix_path = node[:nova][:use_virtualenv] ? ". #{venv_path}/bin/activate && " : nil
+
 node[:nova][:my_ip] = Chef::Recipe::Barclamp::Inventory.get_network_by_type(node, "admin").address
 
 unless node[:nova][:use_gitrepo]
@@ -30,7 +34,10 @@ unless node[:nova][:use_gitrepo]
     action :upgrade
   end
 else
-  pfs_and_install_deps("nova")
+  pfs_and_install_deps "nova" do
+    virtualenv venv_path
+    wrap_bins(["nova-rootwrap", "nova"])
+  end
 end
 
 package "python-mysqldb"

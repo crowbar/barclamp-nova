@@ -19,5 +19,13 @@
 
 include_recipe "nova::config"
 
-nova_package("scheduler")
-nova_package("conductor")
+nova_path = "/opt/nova"
+venv_path = node[:nova][:use_virtualenv] ? "#{nova_path}/.venv" : nil
+
+nova_package "scheduler" do
+  virtualenv venv_path
+end
+
+nova_package "conductor" do
+  virtualenv venv_path
+end

@@ -22,6 +22,10 @@
 include_recipe "nova::mysql"
 include_recipe "nova::config"
 
+nova_path = "/opt/nova"
+venv_path = node[:nova][:use_virtualenv] ? "#{nova_path}/.venv" : nil
+venv_prefix_path = node[:nova][:use_virtualenv] ? "#{venv_path}/bin/activate && " : nil
+
 # ha_enabled activates Nova High Availability (HA) networking.
 # The nova "network" and "api" recipes need to be included on the compute nodes and
 # we must specify the --multi_host=T switch on "nova-manage network create". 
@@ -38,9 +42,9 @@ end
 base_ip = node[:nova][:network][:floating_range].split("/")[0]
 grep_ip = base_ip[0..-2] + (base_ip[-1].chr.to_i+1).to_s
 
-execute "nova-manage floating create --ip_range=#{node[:nova][:network][:floating_range]}" do
+execute "#{venv_prefix_path} nova-manage floating create --ip_range=#{node[:nova][:network][:floating_range]}" do
   user node[:nova][:user] if node.platform != "suse" and not node[:nova][:use_gitrepo]
-  not_if "nova-manage floating list | grep '#{grep_ip}'"
+  not_if "#{venv_prefix_path} nova-manage floating list | grep '#{grep_ip}'"
 end
 
 unless node[:nova][:network][:tenant_vlans]
