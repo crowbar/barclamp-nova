@@ -8,8 +8,8 @@
       %label{ :for => :rabbitmq_instance }= t('.rabbitmq_instance')
       = instance_selector("rabbitmq", :rabbitmq_instance, "rabbitmq_instance", @proposal)
     %p
-      %label{ :for => :mysql_instance }= t('.mysql_instance')
-      = instance_selector("mysql", :mysql_instance, "mysql_instance", @proposal)
+      %label{ :for => :database_instance }= t('.database_instance')
+      = instance_selector("database", :database_instance, "db/database_instance", @proposal)
     %p
       %label{ :for => :keystone_instance }= t('.keystone_instance')
       = instance_selector("keystone", :keystone_instance, "keystone_instance", @proposal)

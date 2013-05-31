@@ -26,7 +26,7 @@ class NovaService < ServiceObject
 
   def proposal_dependencies(role)
     answer = []
-    answer << { "barclamp" => "mysql", "inst" => role.default_attributes["nova"]["db"]["mysql_instance"] }
+    answer << { "barclamp" => "database", "inst" => role.default_attributes["nova"]["db"]["database_instance"] }
     answer << { "barclamp" => "keystone", "inst" => role.default_attributes["nova"]["keystone_instance"] }
     answer << { "barclamp" => "glance", "inst" => role.default_attributes["nova"]["glance_instance"] }
     answer << { "barclamp" => "rabbitmq", "inst" => role.default_attributes["nova"]["rabbitmq_instance"] }
@@ -95,17 +95,25 @@ class NovaService < ServiceObject
       @logger.info("#{@bc_name} create_proposal: no git found")
     end
 
-    base["attributes"]["nova"]["db"]["mysql_instance"] = ""
+    base["attributes"]["nova"]["db"]["database_instance"] = ""
     begin
-      mysqlService = MysqlService.new(@logger)
-      mysqls = mysqlService.list_active[1]
-      if mysqls.empty?
+      databaseService = DatabaseService.new(@logger)
+      dbs = databaseService.list_active[1]
+      if dbs.empty?
         # No actives, look for proposals
-        mysqls = mysqlService.proposals[1]
+        dbs = databaseService.proposals[1]
       end
-      base["attributes"]["nova"]["db"]["mysql_instance"] = mysqls[0] unless mysqls.empty?
+      if dbs.empty?
+        @logger.info("Nova create_proposal: no database proposal found")
+      else
+        base["attributes"]["nova"]["db"]["database_instance"] = dbs[0]
+      end
     rescue
-      @logger.info("Nova create_proposal: no mysql found")
+      @logger.info("Nova create_proposal: no database found")
+    end
+
+    if base["attributes"]["nova"]["db"]["database_instance"] == ""
+      raise(I18n.t('model.service.dependency_missing', :name => @bc_name, :dependson => "database"))
     end
 
     base["attributes"]["nova"]["rabbitmq_instance"] = ""
@@ -121,6 +129,10 @@ class NovaService < ServiceObject
       @logger.info("Nova create_proposal: no rabbitmq found")
     end
 
+    if base["attributes"]["nova"]["rabbitmq_instance"] == ""
+      raise(I18n.t('model.service.dependency_missing', :name => @bc_name, :dependson => "rabbitmq"))
+    end
+
     base["attributes"]["nova"]["keystone_instance"] = ""
     begin
       keystoneService = KeystoneService.new(@logger)
@@ -133,6 +145,11 @@ class NovaService < ServiceObject
     rescue
       @logger.info("Nova create_proposal: no keystone found")
     end
+
+    if base["attributes"]["nova"]["keystone_instance"] == ""
+      raise(I18n.t('model.service.dependency_missing', :name => @bc_name, :dependson => "keystone"))
+    end
+
     base["attributes"]["nova"]["service_password"] = '%012d' % rand(1e12)
 
     base["attributes"]["nova"]["glance_instance"] = ""
@@ -148,6 +165,10 @@ class NovaService < ServiceObject
       @logger.info("Nova create_proposal: no glance found")
     end
 
+    if base["attributes"]["nova"]["glance_instance"] == ""
+      raise(I18n.t('model.service.dependency_missing', :name => @bc_name, :dependson => "glance"))
+    end
+
     base["attributes"]["nova"]["cinder_instance"] = ""
     begin
       cinderService = CinderService.new(@logger)
@@ -161,6 +182,10 @@ class NovaService < ServiceObject
       @logger.info("Nova create_proposal: no cinder found")
     end
 
+    if base["attributes"]["nova"]["cinder_instance"] == ""
+      raise(I18n.t('model.service.dependency_missing', :name => @bc_name, :dependson => "cinder"))
+    end
+
     base["attributes"]["nova"]["quantum_instance"] = ""
     begin
       quantumService = QuantumService.new(@logger)
@@ -172,6 +197,10 @@ class NovaService < ServiceObject
       base["attributes"]["nova"]["quantum_instance"] = quantums[0] unless quantums.empty?
     rescue
       @logger.info("Nova create_proposal: no quantum found")
+    end
+
+    if base["attributes"]["nova"]["quantum_instance"] == ""
+      raise(I18n.t('model.service.dependency_missing', :name => @bc_name, :dependson => "quantum"))
     end
 
     base["attributes"]["nova"]["db"]["password"] = random_password
