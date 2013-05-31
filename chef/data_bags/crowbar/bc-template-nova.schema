@@ -85,7 +85,7 @@
               "type": "map",
               "required": true,
               "mapping": {
-                "mysql_instance": { "type": "str", "required": true },
+                "database_instance": { "type": "str", "required": true },
                 "password": { "type": "str", "required": true },
                 "user": { "type": "str", "required": true },
                 "database": { "type": "str", "required": true }

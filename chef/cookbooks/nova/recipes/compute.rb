@@ -33,8 +33,7 @@ if node[:nova][:networking_backend]=="quantum"
 end
 
 include_recipe "nova::config"
-
-package "mysql-client"
+include_recipe "nova::database"
 
 nova_package("compute")
 

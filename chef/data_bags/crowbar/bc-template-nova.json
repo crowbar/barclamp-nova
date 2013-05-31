@@ -115,7 +115,7 @@
         }
       },
       "db": {
-        "mysql_instance": "none",
+        "database_instance": "none",
         "password": "",
         "user": "nova",
         "database": "nova"

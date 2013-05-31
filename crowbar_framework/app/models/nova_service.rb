@@ -26,7 +26,7 @@ class NovaService < ServiceObject
 
   def proposal_dependencies(role)
     answer = []
-    answer << { "barclamp" => "mysql", "inst" => role.default_attributes["nova"]["db"]["mysql_instance"] }
+    answer << { "barclamp" => "database", "inst" => role.default_attributes["nova"]["db"]["database_instance"] }
     answer << { "barclamp" => "keystone", "inst" => role.default_attributes["nova"]["keystone_instance"] }
     answer << { "barclamp" => "glance", "inst" => role.default_attributes["nova"]["glance_instance"] }
     answer << { "barclamp" => "rabbitmq", "inst" => role.default_attributes["nova"]["rabbitmq_instance"] }
@@ -95,17 +95,21 @@ class NovaService < ServiceObject
       @logger.info("#{@bc_name} create_proposal: no git found")
     end
 
-    base["attributes"]["nova"]["db"]["mysql_instance"] = ""
+    base["attributes"]["nova"]["db"]["database_instance"] = ""
     begin
-      mysqlService = MysqlService.new(@logger)
-      mysqls = mysqlService.list_active[1]
-      if mysqls.empty?
+      databaseService = DatabaseService.new(@logger)
+      dbs = databaseService.list_active[1]
+      if dbs.empty?
         # No actives, look for proposals
-        mysqls = mysqlService.proposals[1]
+        dbs = databaseService.proposals[1]
       end
-      base["attributes"]["nova"]["db"]["mysql_instance"] = mysqls[0] unless mysqls.empty?
+      if dbs.empty?
+        @logger.info("Nova create_proposal: no database proposal found")
+      else
+        base["attributes"]["nova"]["db"]["database_instance"] = dbs[0]
+      end
     rescue
-      @logger.info("Nova create_proposal: no mysql found")
+      @logger.info("Nova create_proposal: no database found")
     end
 
     base["attributes"]["nova"]["rabbitmq_instance"] = ""
