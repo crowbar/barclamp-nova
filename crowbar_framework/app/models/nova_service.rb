@@ -30,27 +30,15 @@ class NovaService < ServiceObject
     answer << { "barclamp" => "keystone", "inst" => role.default_attributes["nova"]["keystone_instance"] }
     answer << { "barclamp" => "glance", "inst" => role.default_attributes["nova"]["glance_instance"] }
     answer << { "barclamp" => "rabbitmq", "inst" => role.default_attributes["nova"]["rabbitmq_instance"] }
+    answer << { "barclamp" => "cinder", "inst" => role.default_attributes[@bc_name]["cinder_instance"] }
     if role.default_attributes[@bc_name]["use_gitrepo"]
       answer << { "barclamp" => "git", "inst" => role.default_attributes[@bc_name]["git_instance"] }
     end
-    if role.default_attributes[@bc_name]["volume"]["use_cinder"]
-      answer << { "barclamp" => "cinder", "inst" => role.default_attributes[@bc_name]["cinder_instance"] }
-    end
+
     if role.default_attributes[@bc_name]["networking_backend"] == "quantum"
       answer << { "barclamp" => "quantum", "inst" => role.default_attributes[@bc_name]["quantum_instance"] }
     end
     answer
-  end
-
-
-  #
-  # This can be overridden to get better validation if needed.
-  #
-  def validate_proposal proposal
-    super proposal
-
-    val = proposal["attributes"]["nova"]["volume"]["local_size"] rescue -1
-    raise I18n.t('barclamp.nova.edit_attributes.volume_file_size_error') if val < 2
   end
 
   #

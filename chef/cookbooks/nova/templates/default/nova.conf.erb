@@ -123,20 +123,7 @@ use_deprecated_auth=false
 allow_admin_api=true
 enable_zone_routing=true
 auth_strategy=keystone
-
-<% unless node[:nova][:volume][:use_cinder] -%>
-# VOLUME
-volume_group=<%= node[:nova][:volume][:volume_name] %>
-iscsi_helper=tgtadm
-<% unless @eqlx_params.nil? -%>
-volume_driver=nova.volume.eqlx.DellEQLSanISCSIDriver
-<%   @eqlx_params.each do |k, v| -%>
-<%=    k + '=' + v.to_s %> 
-<%   end -%>
-<% end -%>
-<% else -%>
 volume_api_class=nova.volume.cinder.API
-<% end -%>
 enabled_apis=ec2,osapi_compute,metadata
 
 # This needs to be conditionalized at some point, maybe.
