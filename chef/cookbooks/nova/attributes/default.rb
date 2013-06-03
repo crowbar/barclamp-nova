@@ -75,12 +75,8 @@ default[:nova][:network][:vlan_start] = 100
 default[:nova][:service_user] = "nova"
 default[:nova][:service_password] = "nova"
 
-default[:nova][:volume][:use_cinder] = "true"
-
 #
 # Transparent Hugepage Settings                       
 # 
 default[:nova][:hugepage][:tranparent_hugepage_enabled] = "always"
 default[:nova][:hugepage][:tranparent_hugepage_defrag] = "always"
-
-

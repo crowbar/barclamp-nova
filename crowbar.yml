@@ -60,28 +60,6 @@ locale_additions:
           libvirt_type: Hypervisor
           quantum_instance: Quantum
           cinder_instance: Cinder
-          volume_type: Type of Volume
-          volume_name: Name of Volume
-          volume_file_parameters: File-based Parameters
-          volume_file_name: Volume File Name
-          volume_file_size: Maximum File Size (GB)
-          volume_file_size_error: Maximum File Size must be at least 2GB
-          volume_file_location: Volume File Location
-          volume_disk_parameters: Disk-based Parameters
-          volume_raw_mode: Disk selection method
-          nova_volume_disks: Disks for nova-volume storage volume group
-          eqlx_parameters: EQLX Parameters
-          eqlx_san_ip: EQLX SAN IP
-          eqlx_san_login: EQLX SAN login
-          eqlx_san_password: EQLX SAN password
-          eqlx_group_name: EQLX group name (prompt)
-          eqlx_san_thin_provision: Use thin provision for volumes
-          eqlx_use_chap: Use chap auth for targets
-          eqlx_chap_login: EQLX chap login for targets
-          eqlx_chap_password: EQLX chap password for targets
-          eqlx_ssh_keepalive_interval: EQLX SSH keepalive internal
-          eqlx_cli_timeout: EQLX CLI command execution timeout
-          eqlx_pool: EQLX pool name
         edit_deployment: 
           deployment: Deployment
 
