@@ -19,7 +19,7 @@
 # limitations under the License.
 #
 
-include_recipe "nova::mysql"
+include_recipe "nova::database"
 include_recipe "nova::config"
 
 # ha_enabled activates Nova High Availability (HA) networking.
@@ -44,11 +44,18 @@ execute "nova-manage floating create --ip_range=#{node[:nova][:network][:floatin
 end
 
 unless node[:nova][:network][:tenant_vlans]
-  env_filter = " AND mysql_config_environment:mysql-config-#{node[:nova][:db][:mysql_instance]}"
-  db_server = search(:node, "roles:mysql-server#{env_filter}")[0]
+  env_filter = " AND database_config_environment:database-config-#{node[:nova][:db][:database_instance]}"
+  db_server = search(:node, "roles:database-server#{env_filter}")[0]
   db_server = node if db_server.name == node.name
-  execute "mysql-fix-ranges-fixed" do
-    command "/usr/bin/mysql -u #{node[:nova][:db][:user]} -h #{db_server[:mysql][:api_bind_host]} -p#{node[:nova][:db][:password]} #{node[:nova][:db][:database]} < /etc/mysql/nova-fixed-range.sql"
+  backend_name = Chef::Recipe::Database::Util.get_backend_name(db_server)
+
+  execute "sql-fix-ranges-fixed" do
+    case backend_name
+      when "mysql"
+        command "/usr/bin/mysql -u #{node[:nova][:db][:user]} -h #{db_server[:database][:api_bind_host]} -p#{node[:nova][:db][:password]} #{node[:nova][:db][:database]} < /etc/nova/nova-fixed-range.sql"
+      when "postgresql"
+        command "PGPASSWORD=#{node[:nova][:db][:password]} psql -h #{db_server[:database][:api_bind_host]} -U #{node[:nova][:db][:user]} #{node[:nova][:db][:database]} < /etc/nova/nova-fixed-range.sql"
+    end
     action :nothing
   end
 
@@ -71,8 +78,8 @@ unless node[:nova][:network][:tenant_vlans]
   end
   network_list << address.to_s
 
-  template "/etc/mysql/nova-fixed-range.sql" do
-    path "/etc/mysql/nova-fixed-range.sql"
+  template "/etc/nova/nova-fixed-range.sql" do
+    path "/etc/nova/nova-fixed-range.sql"
     source "fixed-range.sql.erb"
     owner "root"
     group "root"
@@ -80,7 +87,7 @@ unless node[:nova][:network][:tenant_vlans]
     variables(
       :network => network_list
     )
-    notifies :run, resources(:execute => "mysql-fix-ranges-fixed"), :immediately
+    notifies :run, resources(:execute => "sql-fix-ranges-fixed"), :immediately
   end
 end
 end

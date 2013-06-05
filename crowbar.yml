@@ -22,7 +22,7 @@ barclamp:
   version: 0
   requires:
     - '@crowbar'
-    - mysql
+    - database
     - rabbitmq
     - glance
     - keystone
@@ -49,7 +49,7 @@ locale_additions:
       nova:
         edit_attributes: 
           attributes: Attributes
-          mysql_instance: MySQL
+          database_instance: Database Instance
           rabbitmq_instance: RabbitMQ
           keystone_instance: Keystone
           service_user: Keystone Service User
