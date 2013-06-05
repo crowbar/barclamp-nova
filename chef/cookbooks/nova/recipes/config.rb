@@ -33,18 +33,24 @@ else
   pfs_and_install_deps("nova")
 end
 
-package "python-mysqldb"
-env_filter = " AND mysql_config_environment:mysql-config-#{node[:nova][:db][:mysql_instance]}"
-mysqls = search(:node, "roles:mysql-server#{env_filter}") || []
-if mysqls.length > 0
-  mysql = mysqls[0]
-  mysql = node if mysql.name == node.name
+include_recipe "database::client"
+
+env_filter = " AND database_config_environment:database-config-#{node[:nova][:db][:database_instance]}"
+sqls = search(:node, "roles:database-server#{env_filter}") || []
+if sqls.length > 0
+  sql = sqls[0]
+  sql = node if sql.name == node.name
 else
-  mysql = node
+  sql = node
 end
-mysql_address = Chef::Recipe::Barclamp::Inventory.get_network_by_type(mysql, "admin").address if mysql_address.nil?
-Chef::Log.info("Mysql server found at #{mysql_address}")
-sql_connection = "mysql://#{node[:nova][:db][:user]}:#{node[:nova][:db][:password]}@#{mysql_address}/#{node[:nova][:db][:database]}"
+backend_name = Chef::Recipe::Database::Util.get_backend_name(sql)
+
+include_recipe "#{backend_name}::client"
+include_recipe "#{backend_name}::python-client"
+
+database_address = Chef::Recipe::Barclamp::Inventory.get_network_by_type(sql, "admin").address if database_address.nil?
+Chef::Log.info("database server found at #{database_address}")
+database_connection = "#{backend_name}://#{node[:nova][:db][:user]}:#{node[:nova][:db][:password]}@#{database_address}/#{node[:nova][:db][:database]}"
 
 env_filter = " AND rabbitmq_config_environment:rabbitmq-config-#{node[:nova][:rabbitmq_instance]}"
 rabbits = search(:node, "roles:rabbitmq-server#{env_filter}") || []
@@ -279,7 +285,7 @@ template "/etc/nova/nova.conf" do
   mode 0640
   variables(
             :dhcpbridge => "#{node[:nova][:use_gitrepo] ? nova_path:"/usr"}/bin/nova-dhcpbridge",
-            :sql_connection => sql_connection,
+            :database_connection => database_connection,
             :rabbit_settings => rabbit_settings,
             :ec2_host => admin_api_ip,
             :ec2_dmz_host => public_api_ip,
