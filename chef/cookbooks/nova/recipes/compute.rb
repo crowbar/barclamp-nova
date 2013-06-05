@@ -190,7 +190,7 @@ execute "IO scheduler" do
   command "find /sys/block -type l -name 'sd*' -exec sh -c 'echo deadline > {}/queue/scheduler' \\;"
 end  
 
-if node[:nova][:networking_backend]=="quantum"
+if node[:nova][:networking_backend]=="quantum" and node.platform != "suse"
   #since using native ovs we have to gain acess to lower networking functions
   service "libvirt-bin" do
     action :nothing
