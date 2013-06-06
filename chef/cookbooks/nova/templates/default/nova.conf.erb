@@ -95,7 +95,7 @@ glance_api_servers=<%= @glance_server_ip %>:<%= @glance_server_port %>
 
 # COMPUTE
 <% if @database_connection -%>
-database_connection=<%= @database_connection %>
+sql_connection=<%= @database_connection %>
 <% end -%>
 connection_type=libvirt
 compute_manager=nova.compute.manager.ComputeManager
