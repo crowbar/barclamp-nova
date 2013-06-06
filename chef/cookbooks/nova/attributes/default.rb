@@ -75,18 +75,8 @@ default[:nova][:network][:vlan_start] = 100
 default[:nova][:service_user] = "nova"
 default[:nova][:service_password] = "nova"
 
-default[:nova][:volume][:use_cinder] = "true"
-default[:nova][:volume][:volume_name] = "nova-volumes"
-default[:nova][:volume][:type] = "local"
-default[:nova][:volume][:nova_raw_method] = "all"
-default[:nova][:volume][:nova_volume_disks] = []
-default[:nova][:volume][:local_file] = "/var/lib/nova/volume.raw"
-default[:nova][:volume][:local_size] = 2000
-
 #
 # Transparent Hugepage Settings                       
 # 
 default[:nova][:hugepage][:tranparent_hugepage_enabled] = "always"
 default[:nova][:hugepage][:tranparent_hugepage_defrag] = "always"
-
-

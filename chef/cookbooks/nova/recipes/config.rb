@@ -228,14 +228,6 @@ if node[:nova][:use_gitrepo]
   end
 end
 
-if node.recipes.include?("nova::volume") and node[:nova][:volume][:volume_type] == "eqlx"
-  Chef::Log.info("Pushing EQLX params to nova.conf template")
-  eqlx_params = node[:nova][:volume][:eqlx]
-else
-  eqlx_params = nil
-end
-
-
 env_filter = " AND keystone_config_environment:keystone-config-#{node[:nova][:keystone_instance]}"
 keystones = search(:node, "recipes:keystone\\:\\:server#{env_filter}") || []
 if keystones.length > 0
@@ -293,7 +285,6 @@ template "/etc/nova/nova.conf" do
             :glance_server_ip => glance_server_ip,
             :glance_server_port => glance_server_port,
             :vncproxy_public_ip => vncproxy_public_ip,
-            :eqlx_params => eqlx_params,
             :quantum_server_ip => quantum_server_ip,
             :quantum_server_port => quantum_server_port,
             :quantum_service_user => quantum_service_user,
