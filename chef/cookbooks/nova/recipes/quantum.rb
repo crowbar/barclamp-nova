@@ -13,4 +13,8 @@
 # limitations under the License.
 #
 
+node.set[:cookbook] = cookbook_name
+
 include_recipe "quantum::common_install"
+
+node.delete(:cookbook)
