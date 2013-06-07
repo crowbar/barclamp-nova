@@ -33,7 +33,6 @@ if node[:nova][:networking_backend]=="quantum"
 end
 
 include_recipe "nova::config"
-include_recipe "database::client"
 
 def set_boot_kernel_and_trigger_reboot(flavor='default')
   # only default and xen flavor is supported by this helper right now
