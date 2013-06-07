@@ -92,28 +92,6 @@
         "num_networks": 1,
         "network_size": 256
       },
-      "volume": {
-        "use_cinder": true,
-        "volume_name": "nova-volumes",
-        "volume_type": "raw",
-        "nova_raw_method": "all",
-        "nova_volume_disks": [],
-        "local_file": "/var/lib/nova/volume.raw",
-        "local_size": 2000,
-        "eqlx": {
-          "san_ip": "192.168.124.11",
-          "san_login": "grpadmin",
-          "san_password": "12345",
-          "san_thin_provision": false,
-          "eqlx_group_name": "group-0",
-          "eqlx_use_chap": false,
-          "eqlx_chap_login": "chapadmin",
-          "eqlx_chap_password": "12345",
-          "eqlx_ssh_keepalive_interval": 1200,
-          "eqlx_cli_timeout": 30,
-          "eqlx_pool": "default"
-        }
-      },
       "db": {
         "database_instance": "none",
         "password": "",
