@@ -147,13 +147,13 @@ if node[:nova][:network][:ha_enabled] and node[:nova][:networking_backend]=='nov
   include_recipe "nova::network"
 end
 
-template "/etc/nova/nova-compute.conf" do
-  source "nova-compute.conf.erb"
+cookbook_file "/etc/nova/nova-compute.conf" do
+  source "nova-compute.conf"
   owner "root"
   group "root"
   mode 0644
   notifies :restart, "service[nova-compute]"
-end
+end unless node.platform == "suse"
 
 # kill all the libvirt default networks.
 execute "Destroy the libvirt default network" do

@@ -43,7 +43,9 @@ quantum_admin_tenant_name=<%= @keystone_service_tenant %>
 quantum_admin_username=<%= @quantum_service_user %>
 quantum_admin_password=<%= @quantum_service_password %>
 quantum_admin_auth_url=http://<%= @keystone_address %>:<%= @keystone_admin_port %>/v2.0
+libvirt_ovs_bridge=br-int
 libvirt_vif_driver=nova.virt.libvirt.vif.LibvirtHybridOVSBridgeDriver
+libvirt_vif_type=ethernet
 linuxnet_interface_driver=nova.network.linux_net.LinuxOVSInterfaceDriver
 security_group_api=quantum
 firewall_driver=nova.virt.firewall.NoopFirewallDriver
@@ -103,6 +105,7 @@ connection_type=libvirt
 libvirt_type=<%= @libvirt_type %>
 libvirt_inject_key=false
 libvirt_inject_password=false
+libvirt_cpu_mode=none
 <% if @libvirt_type.eql?('xen') -%>
 libvirt_disk_prefix=xvd
 additional_compute_capabilities=pv,hvm
@@ -113,6 +116,11 @@ compute_driver=libvirt.LibvirtDriver
 compute_manager=nova.compute.manager.ComputeManager
 instance_name_template=instance-%08x
 compute_scheduler_driver=nova.scheduler.filter_scheduler.FilterScheduler
+# nova-compute configuration for ceilometer
+instance_usage_audit=True
+instance_usage_audit_period=hour
+notification_driver=nova.openstack.common.notifier.rpc_notifier
+notification_driver=ceilometer.compute.nova_notifier
 
 # VNCPROXY
 <% unless @vncproxy_public_ip.nil? -%>
