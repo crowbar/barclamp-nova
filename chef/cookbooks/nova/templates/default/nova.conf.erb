@@ -105,9 +105,18 @@ glance_api_servers=<%= @glance_server_ip %>:<%= @glance_server_port %>
 sql_connection=<%= @database_connection %>
 <% end -%>
 connection_type=libvirt
+libvirt_type=qemu
+libvirt_cpu_mode=none
+libvirt_use_virtio_for_bridges=True
+compute_driver=libvirt.LibvirtDriver
 compute_manager=nova.compute.manager.ComputeManager
 instance_name_template=instance-%08x
 compute_scheduler_driver=nova.scheduler.filter_scheduler.FilterScheduler
+# nova-compute configuration for ceilometer
+instance_usage_audit=True
+instance_usage_audit_period=hour
+notification_driver=nova.openstack.common.notifier.rpc_notifier
+notification_driver=ceilometer.compute.nova_notifier
 
 # VNCPROXY
 <% unless @vncproxy_public_ip.nil? -%>
