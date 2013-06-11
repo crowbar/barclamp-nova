@@ -31,6 +31,17 @@ if node.platform != "suse"
   end
 end
 
+  package "nova-novncproxy" do
+    action :upgrade
+    options "--force-yes"
+  end
+  service "nova-novncproxy" do
+    supports :status => true, :restart => true
+    action [:enable, :start]
+    subscribes :restart, resources(:template => "/etc/nova/nova.conf"), :delayed
+   end
+
+
 # forcing novnc is deliberate on suse
 unless node[:nova][:use_gitrepo]
   if node[:nova][:use_novnc]
