@@ -38,3 +38,11 @@
     %p
       %label{ :for => :cinder_instance }= t('.cinder_instance')
       = instance_selector("cinder", :cinder_instance, "cinder_instance", @proposal)
+    %label{ :for => :scheduler }= t('.scheduler_header')
+    %div.container{ :id => :scheduler }
+      %p
+        %label{ :for => :ram_allocation_ratio }= t('.ram_allocation_ratio')
+        %input#ram_allocation_ratio{:type => "text", :name => "ram_allocation_ratio", :'data-default' => @proposal.raw_data['attributes'][@proposal.barclamp]["scheduler"]["ram_allocation_ratio"], :onchange => "update_value('scheduler/ram_allocation_ratio','ram_allocation_ratio', 'float')"}
+      %p
+        %label{ :for => :cpu_allocation_ratio }= t('.cpu_allocation_ratio')
+        %input#cpu_allocation_ratio{:type => "text", :name => "cpu_allocation_ratio", :'data-default' => (@proposal.raw_data['attributes'][@proposal.barclamp]["scheduler"].nil? ? "16.0" : @proposal.raw_data['attributes'][@proposal.barclamp]["scheduler"]["cpu_allocation_ratio"]), :onchange => "update_value('scheduler/cpu_allocation_ratio','cpu_allocation_ratio', 'float')"}

@@ -60,6 +60,9 @@ locale_additions:
           libvirt_type: Hypervisor
           quantum_instance: Quantum
           cinder_instance: Cinder
+          scheduler_header: Scheduler Options
+          ram_allocation_ratio: Virtual RAM to Physical RAM allocation ratio
+          cpu_allocation_ratio: Virtual CPU to Physical CPU allocation ratio
         edit_deployment: 
           deployment: Deployment
 

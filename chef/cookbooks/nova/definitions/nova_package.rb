@@ -12,21 +12,24 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-define :nova_package do
+define :nova_package, :enable => true do
 
   nova_name="nova-#{params[:name]}"
+
   if node[:nova][:use_gitrepo]
     link_service nova_name do
       user node[:nova][:user]
     end
   else
     package nova_name do
-      options "--force-yes -o Dpkg::Options::=\"--force-confdef\""
+      package_name "openstack-#{nova_name}" if node.platform == "suse"
+      options "--force-yes -o Dpkg::Options::=\"--force-confdef\"" if node.platform != "suse"
       action :upgrade
     end
   end
 
   service nova_name do
+    service_name "openstack-#{nova_name}" if node.platform == "suse"
     if (platform?("ubuntu") && node.platform_version.to_f >= 10.04)
       restart_command "stop #{nova_name} ; start #{nova_name}"
       stop_command "stop #{nova_name}"
@@ -34,7 +37,20 @@ define :nova_package do
       status_command "status #{nova_name} | cut -d' ' -f2 | cut -d'/' -f1 | grep start"
     end
     supports :status => true, :restart => true
-    action [:enable, :start]
+
+    if params[:enable] != false
+      # only enable and start the service, unless a reboot has been triggered
+      # (e.g. because of switching from # kernel-default to kernel-xen)
+      unless node.run_state[:reboot]
+        action [:enable, :start]
+      else
+        # start will happen after reboot, and potentially even fail before
+        # reboot (ie. on installing kernel-xen + expecting libvirt to already
+        # use xen before)
+        action [:enable]
+      end
+    end
+
     subscribes :restart, resources(:template => "/etc/nova/nova.conf")
   end
 

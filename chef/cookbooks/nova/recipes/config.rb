@@ -270,6 +270,12 @@ else
 end
 Chef::Log.info("Quantum server at #{quantum_server_ip}")
 
+directory "/var/lock/nova" do
+  action :create
+  owner node[:nova][:user]
+  group "root"
+end
+
 template "/etc/nova/nova.conf" do
   source "nova.conf.erb"
   owner node[:nova][:user]
@@ -279,6 +285,7 @@ template "/etc/nova/nova.conf" do
             :dhcpbridge => "#{node[:nova][:use_gitrepo] ? nova_path:"/usr"}/bin/nova-dhcpbridge",
             :database_connection => database_connection,
             :rabbit_settings => rabbit_settings,
+            :libvirt_type => node[:nova][:libvirt_type],
             :ec2_host => admin_api_ip,
             :ec2_dmz_host => public_api_ip,
             :dns_server_public_ip => dns_server_public_ip,
