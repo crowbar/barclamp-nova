@@ -83,6 +83,22 @@ class NovaService < ServiceObject
       @logger.info("#{@bc_name} create_proposal: no git found")
     end
 
+    base["attributes"][@bc_name]["itxt_instance"] = ""
+    begin
+      itxtService = InteltxtService.new(@logger)
+      itxts = itxtService.list_active[1]
+      if itxts.empty?
+        # No actives, look for proposals
+        #itxts = itxtService.proposals[1]
+        itxts = [ "None" ]
+      end
+      unless itxts.empty?
+        base["attributes"][@bc_name]["itxt_instance"] = itxts[0]
+      end
+    rescue
+      @logger.info("#{@bc_name} create_proposal: no itxt found")
+    end
+
     base["attributes"]["nova"]["db"]["database_instance"] = ""
     begin
       databaseService = DatabaseService.new(@logger)

@@ -270,7 +270,8 @@ else
 end
 Chef::Log.info("Quantum server at #{quantum_server_ip}")
 
-oat_servers = search(:node, "roles:oat-server") || []
+env_filter = " AND inteltxt_config_environment:inteltxt-config-#{node[:nova][:itxt_instance]}"
+oat_servers = search(:node, "roles:oat-server#{env_filter}") || []
 if oat_servers.length > 0
   oat_server = oat_servers[0]
   execute "fill_cert" do

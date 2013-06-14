@@ -52,6 +52,8 @@ locale_additions:
           database_instance: Database Instance
           rabbitmq_instance: RabbitMQ
           keystone_instance: Keystone
+          itxt_instance: Intel TXT
+          trusted_flavors: Create trusted flavors
           service_user: Keystone Service User
           service_password: Keystone Service Password
           glance_instance: Glance
@@ -122,3 +124,4 @@ debs:
 git_repo:
   - nova https://github.com/openstack/nova.git stable/grizzly
   - novnc https://github.com/kanaka/noVNC.git master
+

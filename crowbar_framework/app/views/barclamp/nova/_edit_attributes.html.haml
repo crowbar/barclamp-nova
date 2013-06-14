@@ -14,6 +14,12 @@
       %label{ :for => :keystone_instance }= t('.keystone_instance')
       = instance_selector("keystone", :keystone_instance, "keystone_instance", @proposal)
     %p
+      %label{ :for => :itxt_instance }= t('.itxt_instance')
+      = instance_selector("inteltxt", :itxt_instance, "itxt_instance", @proposal)
+    %p
+      %label{ :for => :trusted_flavors }= t('.trusted_flavors')
+      = select_tag :trusted_flavors, options_for_select([['true','true'], ['false', 'false']], @proposal.raw_data['attributes'][@proposal.barclamp]["trusted_flavors"].to_s), :onchange => "update_value('trusted_flavors', 'trusted_flavors', 'boolean')"
+    %p
       %label{ :for => :service_user }= t('.service_user')
       %input#service_user{:type => "text", :name => "service_user", :'data-default' => @proposal.raw_data['attributes'][@proposal.barclamp]["service_user"], :onchange => "update_value('service_user','service_user', 'string')"}
     %p
