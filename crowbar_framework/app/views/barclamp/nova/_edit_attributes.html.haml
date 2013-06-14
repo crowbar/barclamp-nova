@@ -11,12 +11,6 @@
     = render_instance_selector("cinder", :cinder_instance, t('.cinder_instance'), "cinder_instance", @proposal)
     = render_instance_selector("quantum", :quantum_instance, t('.quantum_instance'), "quantum_instance", @proposal)
     %p
-      %label{ :for => :service_user }= t('.service_user')
-      %input#service_user{:type => "text", :name => "service_user", :'data-default' => @proposal.raw_data['attributes'][@proposal.barclamp]["service_user"], :onchange => "update_value('service_user','service_user', 'string')"}
-    %p
-      %label{ :for => :service_password }= t('.service_password')
-      %input#service_password{:type => "text", :name => "service_password", :'data-default' => @proposal.raw_data['attributes'][@proposal.barclamp]["service_password"], :onchange => "update_value('service_password','service_password', 'string')"}
-    %p
       %label{ :for => :verbose }= t('.verbose')
       = select_tag :verbose, options_for_select([['true','true'], ['false', 'false']], @proposal.raw_data['attributes'][@proposal.barclamp]["verbose"].to_s), :onchange => "update_value('verbose', 'verbose', 'boolean')"
     %p
