@@ -11,7 +11,7 @@
       "quantum_instance": "none",
       "libvirt_type": "kvm",
       "use_novnc": true,
-      "verbose": true,
+      "verbose": false,
       "use_syslog": false,
       "gitrepo": "http://github.com/openstack/nova.git",
       "git_instance": "",
