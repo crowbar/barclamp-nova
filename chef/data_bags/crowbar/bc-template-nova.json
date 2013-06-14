@@ -82,7 +82,13 @@
         "pip://python-novaclient",
         "pip://python-cinderclient",
         "pip://python-keystoneclient>=0.2.0",
-        "pip://prettytable>=0.6,<0.7"
+        "pip://prettytable>=0.6,<0.8",
+        "pip://websockify<0.4",
+        "pip://stevedore>=0.7",
+        "pip://Babel>=0.9.6",
+        "pip://pyasn1",
+        "pip://netaddr>=0.7.6",
+        "pip://Markdown>=2.0.1"
       ],
       "network": {
         "ha_enabled": true,
