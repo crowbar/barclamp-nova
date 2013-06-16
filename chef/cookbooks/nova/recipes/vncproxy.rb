@@ -41,12 +41,6 @@ unless node[:nova][:use_gitrepo]
       package "openstack-nova-consoleauth" do
         action :install
       end
-      service "novnc" do
-        service_name "openstack-nova-novncproxy" if node.platform == "suse"
-        supports :status => true, :restart => true
-        action [:enable, :start]
-        subscribes :restart, resources(:template => "/etc/nova/nova.conf"), :delayed
-      end
     else
       package "nova-novncproxy" do
         action :install
@@ -56,12 +50,12 @@ unless node[:nova][:use_gitrepo]
         command "sed -i 's/nova$/root/g' /etc/init/nova-novncproxy.conf"
         action :run
       end
-
-      service "nova-novncproxy" do
-        supports :status => true, :restart => true
-        action [:enable, :start]
-        subscribes :restart, resources(:template => "/etc/nova/nova.conf"), :delayed
-      end
+    end
+    service "nova-novncproxy" do
+      service_name "openstack-nova-novncproxy" if node.platform == "suse"
+      supports :status => true, :restart => true
+      action [:enable, :start]
+      subscribes :restart, resources(:template => "/etc/nova/nova.conf"), :delayed
     end
   end
   service "nova-consoleauth" do
