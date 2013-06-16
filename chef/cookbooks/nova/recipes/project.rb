@@ -126,7 +126,7 @@ if not node[:nova][:use_gitrepo]
   glance_client = "python-glance"
   glance_client = "python-glanceclient" if node.platform == "suse"
   package glance_client do
-    action :upgrade
+    action :install
   end
 end
 template "/root/.openrc" do

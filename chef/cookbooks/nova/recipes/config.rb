@@ -27,7 +27,7 @@ unless node[:nova][:use_gitrepo]
     else
       options "--force-yes -o Dpkg::Options::=\"--force-confdef\""
     end
-    action :upgrade
+    action :install
   end
 else
   pfs_and_install_deps("nova")
