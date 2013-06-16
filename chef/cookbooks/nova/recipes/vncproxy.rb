@@ -35,10 +35,8 @@ end
 unless node[:nova][:use_gitrepo]
   if node[:nova][:use_novnc]
     if node.platform == "suse"
-      package "novnc" do
-        package_name "openstack-nova-novncproxy" if node.platform == "suse"
+      package "openstack-nova-novncproxy" do
         action :install
-        options "--force-yes" if node.platform != "suse"
       end
       package "openstack-nova-consoleauth" do
         action :install
