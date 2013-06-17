@@ -13,7 +13,6 @@
 # limitations under the License.
 #
 
-include_recipe "quantum::common_install"
 
 node.set[:cookbook] = cookbook_name
 include_recipe "quantum::common_install"
