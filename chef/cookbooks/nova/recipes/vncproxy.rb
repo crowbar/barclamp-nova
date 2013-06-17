@@ -36,12 +36,15 @@ unless node[:nova][:use_gitrepo]
   if node[:nova][:use_novnc]
     if node.platform == "suse"
       package "novnc" do
-        package_name "openstack-novncproxy" if node.platform == "suse"
+        package_name "openstack-nova-novncproxy" if node.platform == "suse"
         action :upgrade
         options "--force-yes" if node.platform != "suse"
       end
+      package "openstack-nova-consoleauth" do
+        action :upgrade
+      end
       service "novnc" do
-        service_name "openstack-novncproxy" if node.platform == "suse"
+        service_name "openstack-nova-novncproxy" if node.platform == "suse"
         supports :status => true, :restart => true
         action [:enable, :start]
         subscribes :restart, resources(:template => "/etc/nova/nova.conf"), :delayed
@@ -125,4 +128,3 @@ else
     end
   end
 end
-
