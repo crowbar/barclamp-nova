@@ -17,8 +17,13 @@ define :nova_package, :enable => true do
   nova_name="nova-#{params[:name]}"
 
   if node[:nova][:use_gitrepo]
+
+    nova_path = "/opt/nova"
+    venv_path = node[:nova][:use_virtualenv] ? "#{nova_path}/.venv" : nil
+
     link_service nova_name do
       user node[:nova][:user]
+      virtualenv venv_path
     end
   else
     package nova_name do
