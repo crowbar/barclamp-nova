@@ -13,7 +13,7 @@
 
 [[ $DEBUG ]] && set -x
 ip_re='(([0-9]{1,3}\.){3}[0-9]{1,3})'
-declare -a instances
+declare -a instances volumes v_snapshots images instance_ids
 
 cleanup() {
     trap '' QUIT TERM
@@ -27,7 +27,23 @@ cleanup() {
     nova keypair-delete smoketest
     ssh-agent -k
     quantum security-group-delete smoketest
+
+    for a in "${v_snapshots[@]}"; do
+      echo -e "Removing volume_snapshot: $a"
+      nova volume-snapshot-delete $a 
+    done
+
+    for a in "${volumes[@]}"; do
+      echo -e "Removing volume_id: $a"
+      nova volume-delete $a 
+    done
+
+    for a in "${floating_ips[@]}"; do
+      echo -e "Removing host: $a from known hosts"
+      ssh-keygen -f "/root/.ssh/known_hosts" -R $a &>/dev/null
+    done
 }
+
 
 trap cleanup EXIT QUIT TERM
 
@@ -42,7 +58,7 @@ echo "Deploying Nova VMs."
 echo "Finding Nova controller..."
 nova_ip=$(knife_node_find 'roles:nova-multi-controller' FQDN)
 if ! [[ $nova_ip ]]; then
-    echo "Could not find nova controller."
+   echo "Could not find nova controller."
     exit 1
 fi
 echo "Controller at $nova_ip. Verifying nova services..."
@@ -83,18 +99,19 @@ if ! [[ $nova_compute && $nova_scheduler ]]; then
 fi
 
 test_image=''
-image_re='([-0-9a-f]+) \| ([^ ]+-image) | ACTIVE'
+images=`nova image-list | grep "ACTIVE" | grep "ubuntu" | grep "\-image" | awk {'print $2'}`
+[[ ! $images ]] && error="Could not find a test image to run on Nova"
+[[ "${#images[@]}" -gt "1" ]] && error="Failed to select test_image, to many options: ${images[@]}"
+[[ "`nova image-show ${images[0]} | grep "status" | awk {'print $4'}`" != "ACTIVE" ]]  && error="Found test_image is not recognized as valid: ${images[@]}"
 
-while read line;do
-    [[ $line =~ $image_re ]] || continue
-    test_image="${BASH_REMATCH[1]}"
-    break
-done < <(nova image-list |tee \
-    "$LOGDIR/nova-images.status")
-if [[ ! $test_image ]]; then
-    echo "Could not find a test image to run on Nova"
+if [ $error ];  then
+    echo -e  "Error occured during image selection: $error"
     exit 1
+  else
+    test_image=${images[0]}
+    echo -e  "Selected test_image id: $test_image"
 fi
+
 
 echo "Adding our security group"
 quantum security-group-create smoketest
@@ -113,12 +130,33 @@ if [[ ! $SSH_AGENT_PID ]]; then
 fi
 nova keypair-add smoketest >"$sshkey"
 chmod 600 "$sshkey"
+
+
 ssh-add "$sshkey"
+iteration=0
+volume="smoketest-volume"
+v_device="vdb"
+
+
 for ((idx=0; idx <= 2; idx++)); do
     instance_name="smoketest-$idx"
+    iteration=$idx
     instances[$idx]=$instance_name
     # Things to add here:
     # Binding a volume with Cinder
+    make_volume=`nova volume-create --display_name $volume 1 | grep  ' id' | awk {'print $4'}`
+    volume_id=$make_volume && sleep 3
+    echo -e "Volume tests stage - creation:     instance_name: $instance_name voume_name: $volume  volume_id: $volume_id  iteration: $iteration"
+    volume_status=`nova volume-list | grep "$volume_id" | awk {'print $4'}`
+
+    if [ $volume_status = "available" ]; then
+      echo -e "\nVolume tests stage - creation:    volume_id: $volume_id successfully created\n"
+      volumes=("${volumes[@]}" "$volume_id")
+      sleep 3
+      else
+        die 1 "Volume: $volume_id creation failed with status: $volume_status"
+   fi
+
     echo "Launching $instance_name with $test_image"
     (
         nova boot --poll --image "$test_image" --flavor 1 \
@@ -128,9 +166,21 @@ for ((idx=0; idx <= 2; idx++)); do
             "$instance_name" | \
             tee "$LOGDIR/nova-$instance_name.status"
     ) &
-    sleep 2
+    sleep 120
+    instance_ids=("${instance_ids[@]}" "`nova list | grep "$instance_name" | awk {'print $2'}`")
+    echo -e "Volume tests  stage - attachment    Processed instance $instance_name instance_id: $instance_id volume_id: ${volumes[$iteration]} iteration: $iteration"
+    nova volume-attach $instance_name ${volumes[$iteration]} /dev/$v_device && sleep 5
+    volume_status=`nova volume-list | grep "$volume_id" | awk {'print $4'}`
+    echo -e "Volume status: $volume_status"
+    if [  $volume_status = "in-use" ]; then
+     echo -e "\nVolume tests stage - attachment    $volume_id  attached to instance $instance_name successfully.\n"
+       else
+         die 1 "Volume test stage - attachment    $volume is not attached to instance $instance_name"
+    fi
+
 done
 wait
+
 declare -A fixed_ips floating_ips
 for instance_name in "${instances[@]}"; do
     if nova show $instance_name |grep -q 'status.*ACTIVE'; then
@@ -157,9 +207,69 @@ for instance_name in "${instances[@]}"; do
         alive=true
         break
     done
-    nova console-log $instance_name |tee "$LOGDIR/nova-instance_name.console.log"
+    nova console-log $instance_name |tee "$LOGDIR/nova-$instance_name.console.log"
     [[ $alive = true ]] || die 1 "Could not ping $instance_name at ${floating_ips[$instance_name]}"
     echo "Can ping $instance_name at ${floating_ips[$instance_name]}"
+    echo -e "Volume tests stage - accessibility test:    Target instance_id: ${instance_ids[$iteration]} instance name: $instance_name volume_id: ${volumes[$iteration]} device: $v_device instance_ip: ${floating_ips[$instance_name]} used sshkey:  $sshkey" 
+    sleep 5
+    disk_probe=`ssh -i $sshkey -l ubuntu ${floating_ips[$instance_name]} "sudo cat /proc/partitions | grep $v_device"`
+    echo -e "Volume_status: $disk_probe"
+    for ((i=1; i<5; i++)); do
+        echo -e "Quering attached volume status try #$i"
+        [[ $disk_probe ]] && usable=true && break || sleep 20 && continue
+    done
+    if [ $usable = true ]; then 
+      echo -e "\nVolume tests stage - accessibility test:    $volume_id is usable on $instance_name\n"
+      sleep 5
+      else
+        echo -e "Volume tests stage accessibility test:   volume_id: $volume_id  is not usable for instance: $instance_name"
+        exit 1
+    fi
+done
+
+echo -e "\n\n Volume tests completed: creation, attachment, accessibility\n\n"
+nova volume-list
+
+
+
+echo -e "\nNext snapshot tests \n 1. Volume detachment and volume snapshot\n 2. Volume snapshot list\n 3. Create volume from snapshot \n"
+for ((j=0; j<$iteration+1; j++)); do
+  a_status=`nova volume-list | grep "${instance_ids[$j]}" | awk {'print $4'}`
+  a_volume=`nova volume-list | grep "${instance_ids[$j]}" | awk {'print $2'}`
+  a_instance_name=`nova list | grep "${instance_ids[$j]}" | awk {'print $4'}`
+  echo -e "Detachment test volume status query #$j:    volume: $a_volume attached to: ${instance_ids[$j]}  with status: $a_status"
+  nova volume-detach ${instance_ids[$j]} $a_volume
+  sleep 10
+  disk_probe=`ssh -i $sshkey -l ubuntu ${floating_ips[$a_instance_name]} "sudo cat /proc/partitions | grep 'vd'"`
+  echo -e "Volume_status: $disk_probe"
+
+  for ((i=1; i<5; i++)); do
+    echo -e "Quering  volume_id: $a_volume  device: $v_device  instnace_id: ${instance_ids[$j]}  status try #$i"
+    [[ $disk_probe != *$v_device* ]] && detached=true && break || sleep 20 && continue
+  done
+  if [[ $detached = true ]]; then 
+    echo -e "\nVolume $a_volume detached from instance_id: ${instance_ids[$j]} successfully\n"
+  else
+    echo -e "Error: Volume $a_volume is not detached from instance_id: ${instance_ids[$j]}"
+    exit 1
+  fi
+
+
+  echo -e "Volume tests stage snapshot creation test:   volume: $a_volume"
+  v_snapshots=("${v_snapshots[@]}" "`nova volume-snapshot-create $a_volume | grep ' id ' | awk {'print $4'} && sleep 5`")
+  v_snapshot_test=$(nova volume-snapshot-list | grep "${v_snapshots[$j]}" | awk {'print $6'})
+  echo -e "Volume tests stage snapshot creation test:   volume: $a_volume  v_snapshot_id: ${v_snapshots[$j]}  v_snapshot_status: $v_snapshot_test"
+
+
+
+
+ if [[ $v_snapshot_test = "available" ]];  then
+    echo -e "\nVolume $v_id creation completed successfully volume is $v_snapshot_test\n"
+   v_id=$(nova volume-create --snapshot-id ${v_snapshots[$j]} --display_name volume_from_snapshot 1 | grep ' id ' | awk {'print $4'})
+   sleep 20
+   [[ "$(nova volume-list | grep "$v_id" | awk {'print $4'})" = "available" ]] && volumes=("$volumes[@]" "$v_id")
+ fi
+
 done
 
 # Need to test full network connectivity, Cinder, and instance interconnectivity.
