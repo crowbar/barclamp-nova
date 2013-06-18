@@ -103,6 +103,7 @@ else
 end
 
 keystone_address = Chef::Recipe::Barclamp::Inventory.get_network_by_type(keystone, "admin").address if keystone_address.nil?
+keystone_protocol = keystone["keystone"]["api"]["protocol"]
 keystone_token = keystone["keystone"]["admin"]["token"] rescue nil
 admin_username = keystone["keystone"]["admin"]["username"] rescue nil
 admin_password = keystone["keystone"]["admin"]["password"] rescue nil
@@ -135,6 +136,7 @@ template "/root/.openrc" do
   group "root"
   mode 0600
   variables(
+    :keystone_protocol => keystone_protocol,
     :keystone_ip_address => keystone_address,
     :keystone_service_port => keystone_service_port,
     :admin_username => admin_username,
