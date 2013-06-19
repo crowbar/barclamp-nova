@@ -18,7 +18,7 @@
 # limitations under the License.
 #
 
-node[:nova][:my_ip] = Chef::Recipe::Barclamp::Inventory.get_network_by_type(node, "admin").address
+node.set[:nova][:my_ip] = Chef::Recipe::Barclamp::Inventory.get_network_by_type(node, "admin").address
 
 unless node[:nova][:use_gitrepo]
   package "nova-common" do
@@ -79,7 +79,7 @@ else
 end
 public_api_ip = api_ip = Chef::Recipe::Barclamp::Inventory.get_network_by_type(api, "public").address
 admin_api_ip = api_ip = Chef::Recipe::Barclamp::Inventory.get_network_by_type(api, "admin").address
-node[:nova][:api] = public_api_ip
+node.set[:nova][:api] = public_api_ip
 Chef::Log.info("Api server found at #{public_api_ip} #{admin_api_ip}")
 
 dns_servers = search(:node, "roles:dns-server") || []
@@ -146,8 +146,8 @@ public_net = node["network"]["networks"]["public"]
 fixed_net = node["network"]["networks"]["nova_fixed"]
 nova_floating = node[:network][:networks]["nova_floating"]
 
-node[:nova][:network][:fixed_range] = "#{fixed_net["subnet"]}/#{mask_to_bits(fixed_net["netmask"])}"
-node[:nova][:network][:floating_range] = "#{nova_floating["subnet"]}/#{mask_to_bits(nova_floating["netmask"])}"
+node.set[:nova][:network][:fixed_range] = "#{fixed_net["subnet"]}/#{mask_to_bits(fixed_net["netmask"])}"
+node.set[:nova][:network][:floating_range] = "#{nova_floating["subnet"]}/#{mask_to_bits(nova_floating["netmask"])}"
 
 fip = Chef::Recipe::Barclamp::Inventory.get_network_by_type(node, "nova_fixed")
 if fip
@@ -166,17 +166,17 @@ end
 
 flat_network_bridge = fixed_net["use_vlan"] ? "br#{fixed_net["vlan"]}" : "br#{fixed_interface}"
 
-node[:nova][:network][:public_interface] = public_interface
+node.set[:nova][:network][:public_interface] = public_interface
 if !node[:nova][:network][:dhcp_enabled]
-  node[:nova][:network][:flat_network_bridge] = flat_network_bridge
-  node[:nova][:network][:flat_interface] = fixed_interface
+  node.set[:nova][:network][:flat_network_bridge] = flat_network_bridge
+  node.set[:nova][:network][:flat_interface] = fixed_interface
 elsif !node[:nova][:network][:tenant_vlans]
-  node[:nova][:network][:flat_network_bridge] = flat_network_bridge
-  node[:nova][:network][:flat_network_dhcp_start] = fixed_net["ranges"]["dhcp"]["start"]
-  node[:nova][:network][:flat_interface] = fixed_interface
+  node.set[:nova][:network][:flat_network_bridge] = flat_network_bridge
+  node.set[:nova][:network][:flat_network_dhcp_start] = fixed_net["ranges"]["dhcp"]["start"]
+  node.set[:nova][:network][:flat_interface] = fixed_interface
 else
-  node[:nova][:network][:vlan_interface] = fip.interface rescue nil
-  node[:nova][:network][:vlan_start] = fixed_net["vlan"]
+  node.set[:nova][:network][:vlan_interface] = fip.interface rescue nil
+  node.set[:nova][:network][:vlan_start] = fixed_net["vlan"]
 end
 
 if node[:nova][:use_gitrepo]
