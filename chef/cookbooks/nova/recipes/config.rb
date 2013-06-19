@@ -262,6 +262,7 @@ if quantum_servers.length > 0
   else
     per_tenant_vlan=false
   end
+  quantum_networking_plugin = quantum_server[:quantum][:networking_plugin]
   quantum_networking_mode = quantum_server[:quantum][:networking_mode]
 else
   quantum_server_ip = nil
@@ -297,6 +298,7 @@ template "/etc/nova/nova.conf" do
             :quantum_server_port => quantum_server_port,
             :quantum_service_user => quantum_service_user,
             :quantum_service_password => quantum_service_password,
+            :quantum_networking_plugin => quantum_networking_plugin,
             :keystone_service_tenant => keystone_service_tenant,
             :keystone_protocol => keystone_protocol,
             :keystone_address => keystone_address,
