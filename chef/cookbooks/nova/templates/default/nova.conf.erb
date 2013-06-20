@@ -43,7 +43,7 @@ quantum_auth_strategy=keystone
 quantum_admin_tenant_name=<%= @keystone_service_tenant %>
 quantum_admin_username=<%= @quantum_service_user %>
 quantum_admin_password=<%= @quantum_service_password %>
-quantum_admin_auth_url=http://<%= @keystone_address %>:<%= @keystone_admin_port %>/v2.0
+quantum_admin_auth_url=<%= @keystone_protocol %>://<%= @keystone_address %>:<%= @keystone_admin_port %>/v2.0
 libvirt_ovs_bridge=br-int
 libvirt_vif_driver=nova.virt.libvirt.vif.LibvirtHybridOVSBridgeDriver
 libvirt_vif_type=ethernet

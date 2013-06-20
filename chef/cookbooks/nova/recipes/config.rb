@@ -238,6 +238,7 @@ else
 end
 
 keystone_address = Chef::Recipe::Barclamp::Inventory.get_network_by_type(keystone, "admin").address if keystone_address.nil?
+keystone_protocol = keystone["keystone"]["api"]["protocol"]
 keystone_token = keystone["keystone"]["service"]["token"]
 keystone_service_port = keystone["keystone"]["api"]["service_port"]
 keystone_admin_port = keystone["keystone"]["api"]["admin_port"]
@@ -297,6 +298,7 @@ template "/etc/nova/nova.conf" do
             :quantum_service_user => quantum_service_user,
             :quantum_service_password => quantum_service_password,
             :keystone_service_tenant => keystone_service_tenant,
+            :keystone_protocol => keystone_protocol,
             :keystone_address => keystone_address,
             :keystone_admin_port => keystone_admin_port
             )
