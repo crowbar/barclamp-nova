@@ -25,7 +25,7 @@ if node.platform != "suse"
   pkgs=%w[python-numpy] if node[:nova][:use_gitrepo]
   pkgs.each do |pkg|
     package pkg do
-      action :upgrade
+      action :install
       options "--force-yes"
     end
   end
@@ -35,35 +35,27 @@ end
 unless node[:nova][:use_gitrepo]
   if node[:nova][:use_novnc]
     if node.platform == "suse"
-      package "novnc" do
-        package_name "openstack-nova-novncproxy" if node.platform == "suse"
-        action :upgrade
-        options "--force-yes" if node.platform != "suse"
+      package "openstack-nova-novncproxy" do
+        action :install
       end
       package "openstack-nova-consoleauth" do
-        action :upgrade
-      end
-      service "novnc" do
-        service_name "openstack-nova-novncproxy" if node.platform == "suse"
-        supports :status => true, :restart => true
-        action [:enable, :start]
-        subscribes :restart, resources(:template => "/etc/nova/nova.conf"), :delayed
+        action :install
       end
     else
       package "nova-novncproxy" do
-        action :upgrade
+        action :install
         options "--force-yes"
       end
       execute "Fix permission Bug" do
         command "sed -i 's/nova$/root/g' /etc/init/nova-novncproxy.conf"
         action :run
       end
-
-      service "nova-novncproxy" do
-        supports :status => true, :restart => true
-        action [:enable, :start]
-        subscribes :restart, resources(:template => "/etc/nova/nova.conf"), :delayed
-      end
+    end
+    service "nova-novncproxy" do
+      service_name "openstack-nova-novncproxy" if node.platform == "suse"
+      supports :status => true, :restart => true
+      action [:enable, :start]
+      subscribes :restart, resources(:template => "/etc/nova/nova.conf"), :delayed
     end
   end
   service "nova-consoleauth" do
