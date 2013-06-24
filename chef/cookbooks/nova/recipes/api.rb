@@ -19,6 +19,9 @@
 
 include_recipe "nova::config"
 
+nova_path = "/opt/nova"
+venv_path = node[:nova][:use_virtualenv] ? "#{nova_path}/.venv" : nil
+
 env_filter = " AND keystone_config_environment:keystone-config-#{node[:nova][:keystone_instance]}"
 keystones = search(:node, "recipes:keystone\\:\\:server#{env_filter}") || []
 if keystones.length > 0
@@ -35,6 +38,8 @@ else
   pfs_and_install_deps "keystone" do
     cookbook "keystone"
     cnode keystone
+    path File.join(nova_path,"keystone")
+    virtualenv venv_path
   end
 end
 

@@ -20,6 +20,10 @@
 
 node[:nova][:my_ip] = Chef::Recipe::Barclamp::Inventory.get_network_by_type(node, "admin").address
 
+nova_path = "/opt/nova"
+venv_path = node[:nova][:use_virtualenv] ? "#{nova_path}/.venv" : nil
+venv_prefix_path = node[:nova][:use_virtualenv] ? ". #{venv_path}/bin/activate && " : nil
+
 unless node[:nova][:use_gitrepo]
   package "nova-common" do
     if node.platform == "suse"
@@ -30,7 +34,10 @@ unless node[:nova][:use_gitrepo]
     action :upgrade
   end
 else
-  pfs_and_install_deps("nova")
+  pfs_and_install_deps "nova" do
+    virtualenv venv_path
+    wrap_bins(["nova-rootwrap", "nova", "nova-manage"])
+  end
 end
 
 include_recipe "database::client"
@@ -180,7 +187,6 @@ else
 end
 
 if node[:nova][:use_gitrepo]
-  nova_path = "/opt/nova"
   package("libvirt-bin")
   create_user_and_dirs "nova" do
     opt_dirs ["/var/lib/nova/instances"]
