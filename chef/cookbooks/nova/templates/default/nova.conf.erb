@@ -44,10 +44,15 @@ quantum_admin_tenant_name=<%= @keystone_service_tenant %>
 quantum_admin_username=<%= @quantum_service_user %>
 quantum_admin_password=<%= @quantum_service_password %>
 quantum_admin_auth_url=<%= @keystone_protocol %>://<%= @keystone_address %>:<%= @keystone_admin_port %>/v2.0
+<% if @quantum_networking_plugin == "openvswitch" -%>
 libvirt_ovs_bridge=br-int
 libvirt_vif_driver=nova.virt.libvirt.vif.LibvirtHybridOVSBridgeDriver
-libvirt_vif_type=ethernet
 linuxnet_interface_driver=nova.network.linux_net.LinuxOVSInterfaceDriver
+<% elsif @quantum_networking_plugin == "linuxbridge" -%>
+libvirt_vif_driver=nova.virt.libvirt.vif.LibvirtBridgeDriver
+linuxnet_interface_driver=nova.network.linux_net.LinuxBridgeInterfaceDriver
+<% end -%>
+libvirt_vif_type=ethernet
 security_group_api=quantum
 firewall_driver=nova.virt.firewall.NoopFirewallDriver
 service_quantum_metadata_proxy=True
