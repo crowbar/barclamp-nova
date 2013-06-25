@@ -13,7 +13,7 @@
 
 [[ $DEBUG ]] && set -x
 ip_re='(([0-9]{1,3}\.){3}[0-9]{1,3})'
-declare -a instances volumes v_snapshots images instance_ids
+declare -a instances volumes v_snapshots s_volumes images instance_ids
 
 cleanup() {
     trap '' QUIT TERM
@@ -28,17 +28,7 @@ cleanup() {
     ssh-agent -k
     quantum security-group-delete smoketest
 
-    for a in "${v_snapshots[@]}"; do
-      echo -e "Removing volume_snapshot: $a"
-      nova volume-snapshot-delete $a 
-    done
-
-    for a in "${volumes[@]}"; do
-      echo -e "Removing volume_id: $a"
-      nova volume-delete $a 
-    done
-
-    for a in "${floating_ips[@]}"; do
+   for a in "${floating_ips[@]}"; do
       echo -e "Removing host: $a from known hosts"
       ssh-keygen -f "/root/.ssh/known_hosts" -R $a &>/dev/null
     done
@@ -99,10 +89,10 @@ if ! [[ $nova_compute && $nova_scheduler ]]; then
 fi
 
 test_image=''
-images=`nova image-list | grep "ACTIVE" | grep "ubuntu" | grep "\-image" | awk {'print $2'}`
+images=$(nova image-list | grep "ACTIVE" | grep "ubuntu" | grep "\-image" | awk {'print $2'})
 [[ ! $images ]] && error="Could not find a test image to run on Nova"
 [[ "${#images[@]}" -gt "1" ]] && error="Failed to select test_image, to many options: ${images[@]}"
-[[ "`nova image-show ${images[0]} | grep "status" | awk {'print $4'}`" != "ACTIVE" ]]  && error="Found test_image is not recognized as valid: ${images[@]}"
+[[ "$(nova image-show ${images[0]} | grep "status" | awk {'print $4'})" != "ACTIVE" ]]  && error="Found test_image is not recognized as valid: ${images[@]}"
 
 if [ $error ];  then
     echo -e  "Error occured during image selection: $error"
@@ -133,29 +123,12 @@ chmod 600 "$sshkey"
 
 
 ssh-add "$sshkey"
-iteration=0
-volume="smoketest-volume"
-v_device="vdb"
-
 
 for ((idx=0; idx <= 2; idx++)); do
     instance_name="smoketest-$idx"
-    iteration=$idx
     instances[$idx]=$instance_name
     # Things to add here:
     # Binding a volume with Cinder
-    make_volume=`nova volume-create --display_name $volume 1 | grep  ' id' | awk {'print $4'}`
-    volume_id=$make_volume && sleep 3
-    echo -e "Volume tests stage - creation:     instance_name: $instance_name voume_name: $volume  volume_id: $volume_id  iteration: $iteration"
-    volume_status=`nova volume-list | grep "$volume_id" | awk {'print $4'}`
-
-    if [ $volume_status = "available" ]; then
-      echo -e "\nVolume tests stage - creation:    volume_id: $volume_id successfully created\n"
-      volumes=("${volumes[@]}" "$volume_id")
-      sleep 3
-      else
-        die 1 "Volume: $volume_id creation failed with status: $volume_status"
-   fi
 
     echo "Launching $instance_name with $test_image"
     (
@@ -167,17 +140,15 @@ for ((idx=0; idx <= 2; idx++)); do
             tee "$LOGDIR/nova-$instance_name.status"
     ) &
     sleep 120
-    instance_ids=("${instance_ids[@]}" "`nova list | grep "$instance_name" | awk {'print $2'}`")
-    echo -e "Volume tests  stage - attachment    Processed instance $instance_name instance_id: $instance_id volume_id: ${volumes[$iteration]} iteration: $iteration"
-    nova volume-attach $instance_name ${volumes[$iteration]} /dev/$v_device && sleep 5
-    volume_status=`nova volume-list | grep "$volume_id" | awk {'print $4'}`
-    echo -e "Volume status: $volume_status"
-    if [  $volume_status = "in-use" ]; then
-     echo -e "\nVolume tests stage - attachment    $volume_id  attached to instance $instance_name successfully.\n"
-       else
-         die 1 "Volume test stage - attachment    $volume is not attached to instance $instance_name"
-    fi
-
+    for ((i=1; i<=5; i++)); do
+      echo -e "Checking instance: $instance_name status attempt #$i"
+      if [[ "$(nova list | grep "$instance_name" | awk {'print $6'})" = "ACTIVE" ]]; then
+        echo -e "Instance: $instance_name is:		ACTIVE"
+        break
+      fi
+      sleep 10
+    done
+    [[ "$(nova list | grep "$instance_name" | awk {'print $6'})" = "ERROR" ]] && die "Instance: $i_id failed to boot"
 done
 wait
 
@@ -210,67 +181,243 @@ for instance_name in "${instances[@]}"; do
     nova console-log $instance_name |tee "$LOGDIR/nova-$instance_name.console.log"
     [[ $alive = true ]] || die 1 "Could not ping $instance_name at ${floating_ips[$instance_name]}"
     echo "Can ping $instance_name at ${floating_ips[$instance_name]}"
-    echo -e "Volume tests stage - accessibility test:    Target instance_id: ${instance_ids[$iteration]} instance name: $instance_name volume_id: ${volumes[$iteration]} device: $v_device instance_ip: ${floating_ips[$instance_name]} used sshkey:  $sshkey" 
-    sleep 5
-    disk_probe=`ssh -i $sshkey -l ubuntu ${floating_ips[$instance_name]} "sudo cat /proc/partitions | grep $v_device"`
-    echo -e "Volume_status: $disk_probe"
+done
+
+
+
+used_instance_name=${instances[0]}
+used_instance_id=$(nova list | grep "$used_instance_name" | awk {'print $2'})
+
+
+if [[ $alive = true  ]]; then
+    volume="smoketest-volume"
+    v_device="vdb"
+    make_volume=$(nova volume-create --display_name $volume 1 | grep  ' id' | awk {'print $4'})
+    volume_id=$make_volume && sleep 3
+    echo -e "Volume tests stage - volume create:     instance_id: $used_instance_id volume_name: $volume  volume_id: $volume_id"
+    volume_status=$(nova volume-list | grep "$volume_id" | awk {'print $4'})
+    for ((i=1; i<=5; i++)); do
+        echo -e "Quering created volume: $volume_id  status attempt #$i"
+        [[ $volume_status = "available" ]] && exists=true && break || sleep 20 && continue
+     done
+else
+     echo "$instance_name at ${floating_ips[$used_instance_name]} not seems to be reachable"
+     exit 1
+fi
+
+
+
+if [[ $exists = true  ]]; then
+    echo -e "\n\nVolume tests  stage - volume create   volume_id: $volume_id :		SUCCESS\n\n"
+    nova volume-attach $used_instance_id $volume_id /dev/$v_device && sleep 5
+    volume_status=$(nova volume-list | grep "$volume_id" | awk {'print $4'})
+    echo -e "Volume status: $volume_status"
     for ((i=1; i<5; i++)); do
-        echo -e "Quering attached volume status try #$i"
-        [[ $disk_probe ]] && usable=true && break || sleep 20 && continue
-    done
-    if [ $usable = true ]; then 
-      echo -e "\nVolume tests stage - accessibility test:    $volume_id is usable on $instance_name\n"
-      sleep 5
-      else
-        echo -e "Volume tests stage accessibility test:   volume_id: $volume_id  is not usable for instance: $instance_name"
-        exit 1
-    fi
-done
-
-echo -e "\n\n Volume tests completed: creation, attachment, accessibility\n\n"
-nova volume-list
-
-
-
-echo -e "\nNext snapshot tests \n 1. Volume detachment and volume snapshot\n 2. Volume snapshot list\n 3. Create volume from snapshot \n"
-for ((j=0; j<$iteration+1; j++)); do
-  a_status=`nova volume-list | grep "${instance_ids[$j]}" | awk {'print $4'}`
-  a_volume=`nova volume-list | grep "${instance_ids[$j]}" | awk {'print $2'}`
-  a_instance_name=`nova list | grep "${instance_ids[$j]}" | awk {'print $4'}`
-  echo -e "Detachment test volume status query #$j:    volume: $a_volume attached to: ${instance_ids[$j]}  with status: $a_status"
-  nova volume-detach ${instance_ids[$j]} $a_volume
-  sleep 10
-  disk_probe=`ssh -i $sshkey -l ubuntu ${floating_ips[$a_instance_name]} "sudo cat /proc/partitions | grep 'vd'"`
-  echo -e "Volume_status: $disk_probe"
-
-  for ((i=1; i<5; i++)); do
-    echo -e "Quering  volume_id: $a_volume  device: $v_device  instnace_id: ${instance_ids[$j]}  status try #$i"
-    [[ $disk_probe != *$v_device* ]] && detached=true && break || sleep 20 && continue
-  done
-  if [[ $detached = true ]]; then 
-    echo -e "\nVolume $a_volume detached from instance_id: ${instance_ids[$j]} successfully\n"
-  else
-    echo -e "Error: Volume $a_volume is not detached from instance_id: ${instance_ids[$j]}"
+        echo -e "Quering attached volume: $volume_id  instance_id: $used_instance_id   attempt #$i"
+        [[ $volume_status = "in-use" ]] && in_use=true && break || sleep 20 && continue
+     done
+else
+    echo "\n\nERROR: Volume_id: $volume_id creation failed\n\n"
     exit 1
-  fi
-
-
-  echo -e "Volume tests stage snapshot creation test:   volume: $a_volume"
-  v_snapshots=("${v_snapshots[@]}" "`nova volume-snapshot-create $a_volume | grep ' id ' | awk {'print $4'} && sleep 5`")
-  v_snapshot_test=$(nova volume-snapshot-list | grep "${v_snapshots[$j]}" | awk {'print $6'})
-  echo -e "Volume tests stage snapshot creation test:   volume: $a_volume  v_snapshot_id: ${v_snapshots[$j]}  v_snapshot_status: $v_snapshot_test"
+fi
 
 
 
+if [ $in_use = true ]; then
+    echo -e "\n\nVolume tests stage - volume attach: $volume_id  instance_id: $used_instance_id attach status:	SUCCESS\n\n"
+    echo -e "Volume tests stage - accessibility test:    Target instance_id: $used_instance_id attached_volume_id: $volume_id  device: $v_device instance_ip: ${floating_ips[$used_instance_name]} used sshkey: $sshkey"
+    disk_probe=$(ssh -i $sshkey -l ubuntu ${floating_ips[$used_instance_name]} "sudo cat /proc/partitions | grep $v_device")
+    for ((i=1; i<=5; i++)); do
+       echo -e "Quering attached volume status attempt #$i"
+       echo -e "Volume_status: $disk_probe"
+       [[ $disk_probe ]] && usable=true && break || sleep 20 && continue
+    done
+else
+    echo -e "\n\nERROR: Volume tests stage - volume attach: $volume_id  instance_id: $used_instance_id attach failed\n\n"
+    exit 1
+fi
 
- if [[ $v_snapshot_test = "available" ]];  then
-    echo -e "\nVolume $v_id creation completed successfully volume is $v_snapshot_test\n"
-   v_id=$(nova volume-create --snapshot-id ${v_snapshots[$j]} --display_name volume_from_snapshot 1 | grep ' id ' | awk {'print $4'})
-   sleep 20
-   [[ "$(nova volume-list | grep "$v_id" | awk {'print $4'})" = "available" ]] && volumes=("$volumes[@]" "$v_id")
- fi
 
-done
+
+if [ $usable = true ]; then 
+    echo -e "\n\nVolume tests stage - accessibility test:    $volume_id access from instance: $used_instance_name: SUCCESS\n\n"
+    a_status=$(nova volume-list | grep "$used_instance_id" | awk {'print $4'})
+    a_volume=$(nova volume-list | grep "$used_instance_id" | awk {'print $2'})
+    a_instance_name=$(nova list | grep "$used_instance_id" | awk {'print $4'})
+    echo -e "Volume tests stage - detach test :    volume: $a_volume attached to: $used_instance_name  with status: $a_status"
+    nova volume-detach $used_instance_id $a_volume
+    sleep 5
+    disk_probe=`ssh -i $sshkey -l ubuntu ${floating_ips[$a_instance_name]} "sudo cat /proc/partitions | grep 'vd'"`
+    for ((i=1; i<5; i++)); do
+       echo -e "Quering  volume_id: $a_volume  device: $v_device  instnace_id: ${instance_ids[$j]}  status attempt #$i"
+       echo -e "Volume_status: $disk_probe"
+       [[ $disk_probe = *vda* && $disk_probe != *$v_device* ]] && detached=true && break || continue
+       sleep 20
+    done
+else
+    echo -e "\n\nERROR: Volume tests stage - accessibility test:    Target instance_id: $instance_id attached_volume_id: $volume_id  device: $v_device instance_ip: ${floating_ips[$used_instance_name]} used sshkey: $sshkey failed\n\n"
+    exit 1
+fi
+
+echo -e "\n\n\nFollowing volume tests completed:\n"
+[[ $exists = true  ]] && res_1="SUCCESS" || res_1="FAILURE"
+[[ $in_use = true  ]] && res_2="SUCCESS" || res_2="FAILURE"
+[[ $usable = true  ]] && res_3="SUCCESS" || res_3="FAILURE"
+[[ $detached = true  ]] && res_4="SUCCESS" || res_4="FAILURE"
+
+
+echo -e "Create test: $volume_id :		$res_1"
+echo -e "Attach test: volume_id: $volume_id to instance: $used_instance_id  device: $v_device:		$res_2"
+echo -e "Access test: attached_volume_id: $volume_id  from instance: $used_instance_id device: $v_device used sshkey: $sshkey:		$res_3"
+echo -e "Detach test: attached_volume_id: $volume_id  from instance: $used_instance_id device: $v_device :		$res_4"
+
+
+
+echo -e "\nNext snapshot tests \n 1. Volume detach and volume snapshot\n 2. Volume snapshot list\n 3. Create volume from snapshot\n 4. Snapshots and parent volumes deletion\n 5. Attach\Access\Detach\Delete tests for volume created from a snapshot"
+
+
+
+if [[ $detached = true ]]; then
+    echo -e "\n\nVolume $a_volume detached from instance_id: $instance_id  status:	SUCCESS\n\n"
+    v_snapshot_id=$(nova volume-snapshot-create $a_volume | grep ' id ' | awk {'print $4'} && sleep 10)
+    v_snapshot_test=$(nova volume-snapshot-list | grep "$v_snapshot_id" | awk {'print $6'})
+    echo -e "Snapshot tests stage snapshot creation test:   volume: $a_volume  v_snapshot_id: $v_snapshot_id  v_snapshot_status: $v_snapshot_test"
+    for ((i=1; i<=5; i++)); do
+      echo -e "Quering volume snapshot: ${v_snapshots[$j]} status, attempt #$i"
+      [[ $v_snapshot_test = "available" ]] && snapshot_ready=true && break || sleep 10 && continue
+    done
+else
+      echo -e "\n\nERROR: Volume $a_volume is not detached from instance_id: $used_instance_id\n\n"
+    exit 1
+fi
+
+
+
+if [[ $snapshot_ready = true ]];  then
+    echo -e "\n\nSnapshot $v_snapshot_id creation status:	SUCCESS\n\n"
+     vol_id=$(nova volume-create --snapshot-id $v_snapshot_id --display_name volume_from_snapshot 1 | grep ' id ' | awk {'print $4'})
+     sv_id=$vol_id
+     for ((i=1; i<=5; i++)); do
+         echo -e "Quering  status for volume_id: $sv_id  attempt #$i"
+         [[ "$(nova volume-list | grep "$sv_id" | awk {'print $4'})" = "available" ]] && volume_ready=true && break || sleep 10 && continue
+     done
+else
+    echo -e "\n\nERROR: snapshot: $v_snapshot_id is not ready for volume creation\n\n"
+    exit 1
+fi
+
+
+
+if [[ $volume_ready = true ]];  then
+    echo -e "\n\nVolume: $sv_id from snapshot: ${v_snapshots[$j]}  creation  status:		SUCCESS\n\n"
+    echo -e "Snapshot tests stage - Snapshot deletion"
+    echo -e "Removing snapshot: $v_snapshot_id"
+    nova volume-snapshot-delete $v_snapshot_id && sleep 3
+    for ((i=1; i<=5; i++)); do
+        echo -e "Quering  status for snapshot_id: $v_snapshot_id  attempt #$i"
+        [[ "$(nova volume-snapshot-list | grep "$v_snapshot_id")" != *$v_snapshot_id* ]] && snapshot_deleted=true && break || sleep 10 && continue
+    done
+else
+    echo -e "\n\nERROR: snapshot: $v_snapshot_id deletion failed \n\n"
+    exit 1
+fi
+
+
+
+if [[ $snapshot_deleted = true ]];  then
+    echo -e "\n\nSnapshot: $v_snapshot_id  deletion  status:	SUCCESS\n\n"
+    echo -e "Volume tests stage - Parent volume  deletion"
+    echo -e "Removing volume: $volume_id"
+    nova volume-delete $volume_id && sleep 3
+    for ((i=1; i<=5; i++)); do
+        echo -e "Quering  status for volume_id: $volumes_id  attempt #$i"
+        [[ "$(nova volume-list | grep "$volume_id")" != *$volume_id* ]] && p_volume_deleted=true && break || sleep 10 && continue
+    done
+    [[ $volume_deleted = true ]] && echo -e "\n\nVolume tests stage - volume deletion:	SUCCESS\n\n"
+else
+    echo -e "\n\nERROR: Volume: $volume_id deletion failed \n\n"
+    exit 1
+fi
+
+
+
+
+if [[ $p_volume_deleted = true ]];  then
+    echo -e "Parent volume deletion: $volume_id status: SUCCESS\nVolume tests stage - volume from snapshot attach test volume: $sv_id  instance: $used_instance_id"
+    v_attach=$(nova volume-attach $used_instance_id $sv_id /dev/$v_device | grep 'id' | awk {'print $4'})
+    a_id=$v_attach
+    for ((i=1; i<=5; i++)); do
+      echo -e "Checking volume attach status for instance: $used_instance_id and volume_id: $sv_id  attempt #$i"
+      [[ "$(nova volume-list | grep "$sv_id" | awk {'print $4'})" = "in-use" ]] && s_attached=true && break || sleep 10 && continue
+    done
+else
+   echo -e "\n\nERROR: volume: $sv_id is not attached to instance: $used_instance_id\n\n"
+   exit 1
+fi
+
+
+
+if [[ $s_attached = true ]];  then
+    echo -e "\n\nVolume attach status for instance: $used_instance_id and volume_id: $sv_id:		SUCCESS\n\n"
+    echo -e "Volume tests stage - accessibility test instance: $used_instance_id volume: $sv_id device: $v_device" 
+    disk_probe=`ssh -i $sshkey -l ubuntu ${floating_ips[$a_instance_name]} "sudo cat /proc/partitions | grep 'vdb'"`
+    for ((i=1; i<5; i++)); do
+       echo -e "Quering  volume_id: $a_volume  device: $v_device  instnace_id: ${instance_ids[$j]}  status attempt #$i"
+       echo -e "Volume_status: $disk_probe"
+       [[ $disk_probe = *$v_device* ]] && s_usable=true && break || continue
+       sleep 20
+    done
+else
+    echo -e "\n\nERROR: Volume attach status for instance: $used_instance_id and volume_id: $sv_id device: $v_device failed\n\n"
+    exit 1
+fi
+
+
+if [[ $s_usable = true ]];  then
+    echo -e "\n\nVolume access status for instance: $used_instance_id and volume_id: $sv_id:         SUCCESS\n\n"
+    echo -e "Volume tests stage - detach test instance: $used_instance_id volume: $sv_id device: $v_device" 
+    nova volume-detach $used_instance_id $sv_id
+    disk_probe=`ssh -i $sshkey -l ubuntu ${floating_ips[$a_instance_name]} "sudo cat /proc/partitions | grep 'vd'"`
+    for ((i=1; i<5; i++)); do
+       echo -e "Quering  volume_id: $a_volume  device: $v_device  instnace_id: $used_instance_id  status attempt #$i"
+       echo -e "Volume_status: $disk_probe"
+       [[ $disk_probe = *vda* && $disk_probe != *$v_device* ]] && s_detached=true && break || sleep 10 && continue
+    done
+    [[ $s_detached = true ]] && echo -e "\n\nVolume detach status for instance: $used_instance_id and volume_id: $sv_id device: $v_device:		SUCCESS\n\n"
+    echo -e "Volume tests stage - volume remove"
+    nova volume-delete $sv_id
+     for ((i=1; i<=5; i++)); do
+        echo -e "Quering  status for volume from snapshot id: $sv_id  attempt #$i"
+        [[ "$(nova volume-list | grep "$sv_id")" != *$sv_id* ]] && s_volume_deleted=true && echo -e "\n\nVolume tests stage - volume remove status:		SUCCESS\n\n" && break || sleep 10 && continue
+    done
+else
+    echo -e "\n\nERROR: Volume detach status for instance: $used_instance_id and volume_id: $sv_id device: $v_device failed\n\n"
+    exit 1
+fi
+
+
+
+echo -e "\n\n\nFollowing volume tests completed:\n"
+[[ $snapshot_ready = true  ]] && res_1="SUCCESS" || res1_1="FAILURE"
+[[ $volume_ready = true  ]] && res_2="SUCCESS" || res_2="FAILURE"
+[[ $snapshot_deleted = true  ]] && res_3="SUCCESS" || res_3="FAILURE"
+[[ $p_volume_deleted = true  ]] && res_4="SUCCESS" || res_4="FAILURE"
+[[ $s_attached = true  ]] && res_5="SUCCESS" || res_5="FAILURE"
+[[ $s_usable = true  ]] && res_6="SUCCESS" || res_6="FAILURE"
+[[ $s_detached = true  ]] && res_7="SUCCESS" || res_7="FAILURE"
+[[ $s_volume_deleted = true  ]] && res_8="SUCCESS" || res_8="FAILURE"
+
+
+echo -e "Snapshot create test for parent volume $a_volume : snapshot: $v_snapshot_id;             $res_1"
+echo -e "Volume from snapshot create  test: v_snapshot_id: $v_snapshot_id  volume from snapshot id: $sv_id:         $res_2"
+echo -e "Snapshot deletion test: snapshot_id: $v_snapshot_id:          $res_3"
+echo -e "Parent volume deletion test: volume $a_volume: $v_snapshot_id:          $res_4"
+echo -e "Volume from snapshot  attach volume: $sv_id instance: $used_instance_id:              $res_5"
+echo -e "Volume from snapshot access: volume: $sv_id instance: $used_instance_id device: $v_device             $res_6"
+echo -e "Volume from snapshot detach: volume: $sv_id instance: $used_instance_id device: $v_device             $res_7"
+echo -e "Volume from snapshot delete: volume: $sv_id		$res_8"
+
+
 
 # Need to test full network connectivity, Cinder, and instance interconnectivity.
 
