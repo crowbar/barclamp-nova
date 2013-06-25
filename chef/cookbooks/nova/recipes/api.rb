@@ -46,6 +46,7 @@ end
 nova_package("api")
 
 keystone_address = Chef::Recipe::Barclamp::Inventory.get_network_by_type(keystone, "admin").address if keystone_address.nil?
+keystone_protocol = keystone["keystone"]["api"]["protocol"]
 keystone_token = keystone["keystone"]["service"]["token"]
 keystone_service_port = keystone["keystone"]["api"]["service_port"]
 keystone_admin_port = keystone["keystone"]["api"]["admin_port"]
@@ -60,6 +61,7 @@ template "/etc/nova/api-paste.ini" do
   group "root"
   mode "0640"
   variables(
+    :keystone_protocol => keystone_protocol,
     :keystone_ip_address => keystone_address,
     :keystone_admin_token => keystone_token,
     :keystone_service_port => keystone_service_port,
@@ -82,6 +84,7 @@ public_api_ip = Chef::Recipe::Barclamp::Inventory.get_network_by_type(api, "publ
 admin_api_ip = Chef::Recipe::Barclamp::Inventory.get_network_by_type(api, "admin").address
 
 keystone_register "nova api wakeup keystone" do
+  protocol keystone_protocol
   host keystone_address
   port keystone_admin_port
   token keystone_token
@@ -89,6 +92,7 @@ keystone_register "nova api wakeup keystone" do
 end
 
 keystone_register "register nova user" do
+  protocol keystone_protocol
   host keystone_address
   port keystone_admin_port
   token keystone_token
@@ -99,6 +103,7 @@ keystone_register "register nova user" do
 end
 
 keystone_register "give nova user access" do
+  protocol keystone_protocol
   host keystone_address
   port keystone_admin_port
   token keystone_token
@@ -109,6 +114,7 @@ keystone_register "give nova user access" do
 end
 
 keystone_register "register nova service" do
+  protocol keystone_protocol
   host keystone_address
   port keystone_admin_port
   token keystone_token
@@ -119,6 +125,7 @@ keystone_register "register nova service" do
 end
 
 keystone_register "register ec2 service" do
+  protocol keystone_protocol
   host keystone_address
   port keystone_admin_port
   token keystone_token
@@ -129,6 +136,7 @@ keystone_register "register ec2 service" do
 end
 
 keystone_register "register nova endpoint" do
+  protocol keystone_protocol
   host keystone_address
   port keystone_admin_port
   token keystone_token
@@ -143,6 +151,7 @@ keystone_register "register nova endpoint" do
 end
 
 keystone_register "register nova ec2 endpoint" do
+  protocol keystone_protocol
   host keystone_address
   port keystone_admin_port
   token keystone_token

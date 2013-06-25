@@ -29,7 +29,7 @@ define :nova_package, :enable => true do
     package nova_name do
       package_name "openstack-#{nova_name}" if node.platform == "suse"
       options "--force-yes -o Dpkg::Options::=\"--force-confdef\"" if node.platform != "suse"
-      action :upgrade
+      action :install
     end
   end
 
