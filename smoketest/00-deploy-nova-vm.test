@@ -249,7 +249,7 @@ if [ $usable = true ]; then
     sleep 5
     disk_probe=`ssh -i $sshkey -l ubuntu ${floating_ips[$a_instance_name]} "sudo cat /proc/partitions | grep 'vd'"`
     for ((i=1; i<5; i++)); do
-       echo -e "Quering  volume_id: $a_volume  device: $v_device  instnace_id: ${instance_ids[$j]}  status attempt #$i"
+       echo -e "Quering  volume_id: $a_volume  device: $v_device  instnace_id: $used_instance_id  status attempt #$i"
        echo -e "Volume_status: $disk_probe"
        [[ $disk_probe = *vda* && $disk_probe != *$v_device* ]] && detached=true && break || continue
        sleep 20
@@ -283,7 +283,7 @@ if [[ $detached = true ]]; then
     v_snapshot_test=$(nova volume-snapshot-list | grep "$v_snapshot_id" | awk {'print $6'})
     echo -e "Snapshot tests stage snapshot creation test:   volume: $a_volume  v_snapshot_id: $v_snapshot_id  v_snapshot_status: $v_snapshot_test"
     for ((i=1; i<=5; i++)); do
-      echo -e "Quering volume snapshot: ${v_snapshots[$j]} status, attempt #$i"
+      echo -e "Quering volume snapshot: $v_snapshot_id status, attempt #$i"
       [[ $v_snapshot_test = "available" ]] && snapshot_ready=true && break || sleep 10 && continue
     done
 else
@@ -309,7 +309,7 @@ fi
 
 
 if [[ $volume_ready = true ]];  then
-    echo -e "\n\nVolume: $sv_id from snapshot: ${v_snapshots[$j]}  creation  status:		SUCCESS\n\n"
+    echo -e "\n\nVolume: $sv_id from snapshot: $v_snapshot_id  creation  status:		SUCCESS\n\n"
     echo -e "Snapshot tests stage - Snapshot deletion"
     echo -e "Removing snapshot: $v_snapshot_id"
     nova volume-snapshot-delete $v_snapshot_id && sleep 3
@@ -330,7 +330,7 @@ if [[ $snapshot_deleted = true ]];  then
     echo -e "Removing volume: $volume_id"
     nova volume-delete $volume_id && sleep 3
     for ((i=1; i<=5; i++)); do
-        echo -e "Quering  status for volume_id: $volumes_id  attempt #$i"
+        echo -e "Quering  status for volume_id: $volume_id  attempt #$i"
         [[ "$(nova volume-list | grep "$volume_id")" != *$volume_id* ]] && p_volume_deleted=true && break || sleep 10 && continue
     done
     [[ $volume_deleted = true ]] && echo -e "\n\nVolume tests stage - volume deletion:	SUCCESS\n\n"
@@ -362,7 +362,7 @@ if [[ $s_attached = true ]];  then
     echo -e "Volume tests stage - accessibility test instance: $used_instance_id volume: $sv_id device: $v_device" 
     disk_probe=`ssh -i $sshkey -l ubuntu ${floating_ips[$a_instance_name]} "sudo cat /proc/partitions | grep 'vdb'"`
     for ((i=1; i<5; i++)); do
-       echo -e "Quering  volume_id: $a_volume  device: $v_device  instnace_id: ${instance_ids[$j]}  status attempt #$i"
+       echo -e "Quering  volume_id: $a_volume  device: $v_device  instnace_id: $used_instance_id  status attempt #$i"
        echo -e "Volume_status: $disk_probe"
        [[ $disk_probe = *$v_device* ]] && s_usable=true && break || continue
        sleep 20
