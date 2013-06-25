@@ -13,7 +13,7 @@
 
 [[ $DEBUG ]] && set -x
 ip_re='(([0-9]{1,3}\.){3}[0-9]{1,3})'
-declare -a instances volumes v_snapshots s_volumes images instance_ids
+declare -a instances images
 
 cleanup() {
     trap '' QUIT TERM
