@@ -21,6 +21,7 @@ cleanup() {
     for instance_name in "${instances[@]}"; do
         nova console-log $instance_name > "$LOGDIR/nova-$instance_name.console.log"
         nova delete $instance_name
+        ssh-keygen -f "/root/.ssh/known_hosts" -R "${floating_ips[$instance_name]}" &>/dev/null
         nova floating-ip-delete "${floating_ips[$instance_name]}"
         while nova list |grep -q $instance_name; do sleep 1; done
     done
@@ -28,11 +29,6 @@ cleanup() {
     ssh-agent -k
     quantum security-group-delete smoketest
 
-   for a in "${floating_ips[@]}"; do
-      echo -e "Removing host: $a from known hosts"
-      ssh-keygen -f "/root/.ssh/known_hosts" -R $a &>/dev/null
-    done
-}
 
 
 trap cleanup EXIT QUIT TERM
@@ -343,7 +339,8 @@ fi
 
 
 if [[ $p_volume_deleted = true ]];  then
-    echo -e "Parent volume deletion: $volume_id status: SUCCESS\nVolume tests stage - volume from snapshot attach test volume: $sv_id  instance: $used_instance_id"
+    echo -e "Parent volume deletion: $volume_id status: SUCCESS\n\n"
+    echo -e "Volume tests stage - volume from snapshot attach test volume: $sv_id  instance: $used_instance_id"
     v_attach=$(nova volume-attach $used_instance_id $sv_id /dev/$v_device | grep 'id' | awk {'print $4'})
     a_id=$v_attach
     for ((i=1; i<=5; i++)); do
@@ -418,6 +415,72 @@ echo -e "Volume from snapshot detach: volume: $sv_id instance: $used_instance_id
 echo -e "Volume from snapshot delete: volume: $sv_id		$res_8"
 
 
+
+if [[ $s_volume_deleted = true ]];  then
+    echo -e "\n\nVolume deletion status:            SUCCESS\n\n"
+    echo -e "Image tests stage - Create an image from instance: $used_instance_id image_name: $used_instance_name-image" 
+    nova image-create $used_instance_id $used_instance_name-image --poll && sleep 20
+    for ((i=1; i<5; i++)); do
+       echo -e "Quering  image status: instnace_id: $used_instance_id  image_name: $used_instance_name-image status attempt #$i"
+       [[ $(nova image-list | grep "$used_instance_name-image" | awk {'print $6'}) = "ACTIVE" ]] && img_ready=true && break || continue
+       sleep 10
+    done
+else
+    echo -e "\n\nERROR: Volume delete status for instance: $used_instance_id and volume_id: $sv_id  failed\n\n"
+    exit 1
+fi
+
+if [[ $img_ready = true ]];  then
+    echo -e "\n\nImage tests stage - Create an image from instance: $used_instance_id status:   SUCCESS\n\n"
+    image_id=$(nova image-list | grep "$used_instance_name-image" | awk {'print $2'})
+    (
+           nova boot --poll --image "$image_id" --flavor 1 \
+               --nic net-id=$fixed_net \
+               --security-groups smoketest \
+               --key-name smoketest \
+               "image-test" | \
+               tee "$LOGDIR/nova-image-test.status"
+    ) &
+    sleep 120
+    in_id=$(nova list | grep "image-test" | awk {'print $2'})
+    for ((i=1; i<=5; i++)); do
+      echo -e "Checking instance: $in_id status attempt #$i"
+      if [[ "$(nova list | grep "$in_id" | awk {'print $6'})" = "ACTIVE" ]]; then
+        echo -e "Instance: image-test is:           ACTIVE"
+        break
+      fi
+      sleep 10
+    done
+    [[ "$(nova list | grep "$in_id" | awk {'print $6'})" = "ERROR" ]] && die "Instance: $in_id failed to boot"
+    instances=("${instances[@]}" "image-test") && in_ready=true
+    f_ip=$(nova floating-ip-create | grep "floating" | awk {'print $2'}) || die 1 "Failed to create floating IP for instance: $in_id"
+    nova add-floating-ip $in_id $f_ip || die 1 "Failed to attach floating IP: $f_ip  to instance: $in_id"
+    floating_ips[image-test]=$f_ip
+    for ((i=0; i<150; i++)); do
+         echo -e "Pinging instance_name: image-test instance_id: $in_id floating_ip: $f_ip instance: $in_id attempt #$i"
+         ping -q -c 1 -i 1 ${floating_ips[image-test]} &>/dev/null || continue
+         reachable=true
+         break
+    done
+else
+    echo -e "\n\nERROR: Image tests stage - Create an image from instance: $in_id image_name: $used_instance_name-image image_id: $image_id failed\n\n"
+fi
+
+if [[ $reachable = true ]];  then
+    echo -e "\n\nInstance tests stage - ping instance_name: image-test instance_id: $in_id on floating_ip: $f_ip status: SUCCESS\n\n"
+    echo -e "Instance tests stage - getting access through SSH to guest OS: instance_name: image-test instance_id: $in_id on floating_ip: $f_ip"
+    check_alive=$(ssh -i $sshkey -l ubuntu $f_ip "whoami")
+    for ((i=1; i<5; i++)); do
+       echo -e "SSH access test instnace_id: $in_id  ip: $f_ip attempt #$i"
+       echo -e "Response: $check_alive"
+       [[  $check_alive = "ubuntu" ]] && ssh_pass=true && break || sleep 60 && continue
+
+    done
+    [[ $ssh_pass = true ]] && echo -e "\n\nInstance tests stage - SSH test passed for instance: $in_id status: SUCCESS\n\n"
+else
+    echo -e "\n\nERROR: Instance tests stage - SSH access to instance: $in_id on floating_ip: $f_ip failed\n\n"
+    exit 1
+fi
 
 # Need to test full network connectivity, Cinder, and instance interconnectivity.
 
