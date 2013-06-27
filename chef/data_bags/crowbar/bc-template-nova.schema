@@ -68,6 +68,11 @@
                 "user": { "type": "str", "required": true },
                 "database": { "type": "str", "required": true }
               }
+            },
+            "kvm": {
+              "type": "map", "required": true, "mapping": {
+                "ksm_enabled": { "type": "bool", "required": true }
+              }
             }
           }
         }

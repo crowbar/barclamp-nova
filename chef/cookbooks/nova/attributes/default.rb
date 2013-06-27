@@ -34,10 +34,10 @@ default[:nova][:db][:database] = "nova"
 default[:nova][:libvirt_type] = "kvm"    
 
 #
-# KVM Settings                       
-# 
+# KVM Settings
+#
 
-default[:nova][:kvm][:ksm_enabled] = 0  # 0 = disable, 1 = enable
+default[:nova][:kvm][:ksm_enabled] = false
 
 
 #
