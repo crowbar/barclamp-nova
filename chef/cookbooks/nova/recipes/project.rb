@@ -144,7 +144,4 @@ template "/root/.openrc" do
   )
 end
 
-if node[:nova][:trusted_flavors]
-  include_recipe "nova::trusted_flavors"
-end
 

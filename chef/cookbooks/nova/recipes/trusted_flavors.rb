@@ -1,3 +1,4 @@
+if node[:nova][:trusted_flavors]
 flavors={11=>
   {"name"=>"m1.trusted.large",
    "vcpu"=>4,
@@ -52,3 +53,4 @@ flavors={11=>
     end
   end
 
+end
