@@ -61,6 +61,8 @@ locale_additions:
           scheduler_header: Scheduler Options
           ram_allocation_ratio: Virtual RAM to Physical RAM allocation ratio
           cpu_allocation_ratio: Virtual CPU to Physical CPU allocation ratio
+          kvm: KVM Options
+          kvm_ksm: Enable Kernel Samepage Merging
         edit_deployment: 
           deployment: Deployment
 

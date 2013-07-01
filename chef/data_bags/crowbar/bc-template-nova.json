@@ -108,6 +108,9 @@
         "password": "",
         "user": "nova",
         "database": "nova"
+      },
+      "kvm": {
+        "ksm_enabled": false
       }
     }
   },

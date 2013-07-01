@@ -28,3 +28,23 @@
       %p
         %label{ :for => :cpu_allocation_ratio }= t('.cpu_allocation_ratio')
         %input#cpu_allocation_ratio{:type => "text", :name => "cpu_allocation_ratio", :'data-default' => (@proposal.raw_data['attributes'][@proposal.barclamp]["scheduler"].nil? ? "16.0" : @proposal.raw_data['attributes'][@proposal.barclamp]["scheduler"]["cpu_allocation_ratio"]), :onchange => "update_value('scheduler/cpu_allocation_ratio','cpu_allocation_ratio', 'float')"}
+
+
+    %label{ :for => :kvm_div, :id => :kvm_div_label }=  t('.kvm')
+    %div.container{ :id => :kvm_div }
+      %p
+        %label{ :for => :kvm_ksm }= t('.kvm_ksm')
+        = select_tag :kvm_ksm, options_for_select([['true','true'], ['false', 'false']], @proposal.raw_data['attributes'][@proposal.barclamp]["kvm"]["ksm_enabled"].to_s), :onchange => "update_value('kvm/ksm_enabled', 'kvm_ksm', 'boolean')"
+
+
+:javascript
+  function toggle_ksm() {
+    if ($('#libvirt_type option:selected').attr('value') == 'kvm') {
+      $('#kvm_div').show(); $('#kvm_div_label').show();
+    } else {
+      $('#kvm_div').hide(); $('#kvm_div_label').hide();
+    }
+  };
+
+  $(document).ready(function () { toggle_ksm(); });
+  $('#libvirt_type').change(toggle_ksm);
