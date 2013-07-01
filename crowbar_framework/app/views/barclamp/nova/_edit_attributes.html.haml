@@ -10,6 +10,7 @@
     = render_instance_selector("glance", :glance_instance, t('.glance_instance'), "glance_instance", @proposal)
     = render_instance_selector("cinder", :cinder_instance, t('.cinder_instance'), "cinder_instance", @proposal)
     = render_instance_selector("quantum", :quantum_instance, t('.quantum_instance'), "quantum_instance", @proposal)
+    = render_instance_selector("inteltxt", :itxt_instance, t('.itxt_instance'), "itxt_instance", @proposal)
     %p
       %label{ :for => :verbose }= t('.verbose')
       = select_tag :verbose, options_for_select([['true','true'], ['false', 'false']], @proposal.raw_data['attributes'][@proposal.barclamp]["verbose"].to_s), :onchange => "update_value('verbose', 'verbose', 'boolean')"
