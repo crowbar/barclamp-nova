@@ -13,14 +13,15 @@
       "trusted_flavors": "false",
       "libvirt_type": "kvm",
       "use_novnc": true,
-      "verbose": true,
-      "user": "nova",
+      "verbose": false,
+      "use_syslog": false,
       "gitrepo": "http://github.com/openstack/nova.git",
       "git_instance": "",
       "git_refspec": "stable/grizzly",
       "use_gitrepo": false,
       "use_gitbarclamp": false,
       "use_pip_cache": false,
+      "use_virtualenv": false,
       "networking_backend": "quantum",
       "pfs_deps": [
         "dnsmasq-base",
@@ -84,7 +85,13 @@
         "pip://python-novaclient",
         "pip://python-cinderclient",
         "pip://python-keystoneclient>=0.2.0",
-        "pip://prettytable>=0.6,<0.7"
+        "pip://prettytable>=0.6,<0.8",
+        "pip://websockify<0.4",
+        "pip://stevedore>=0.7",
+        "pip://Babel>=0.9.6",
+        "pip://pyasn1",
+        "pip://netaddr>=0.7.6",
+        "pip://Markdown>=2.0.1"
       ],
       "network": {
         "ha_enabled": true,
@@ -94,11 +101,18 @@
         "num_networks": 1,
         "network_size": 256
       },
+      "scheduler": {
+	"ram_allocation_ratio": 1.0,
+	"cpu_allocation_ratio": 16.0
+      },
       "db": {
         "database_instance": "none",
         "password": "",
         "user": "nova",
         "database": "nova"
+      },
+      "kvm": {
+        "ksm_enabled": false
       }
     }
   },

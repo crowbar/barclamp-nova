@@ -18,7 +18,11 @@
 # limitations under the License.
 #
 
-node[:nova][:my_ip] = Chef::Recipe::Barclamp::Inventory.get_network_by_type(node, "admin").address
+node.set[:nova][:my_ip] = Chef::Recipe::Barclamp::Inventory.get_network_by_type(node, "admin").address
+
+nova_path = "/opt/nova"
+venv_path = node[:nova][:use_virtualenv] ? "#{nova_path}/.venv" : nil
+venv_prefix_path = node[:nova][:use_virtualenv] ? ". #{venv_path}/bin/activate && " : nil
 
 unless node[:nova][:use_gitrepo]
   package "nova-common" do
@@ -27,10 +31,13 @@ unless node[:nova][:use_gitrepo]
     else
       options "--force-yes -o Dpkg::Options::=\"--force-confdef\""
     end
-    action :upgrade
+    action :install
   end
 else
-  pfs_and_install_deps("nova")
+  pfs_and_install_deps "nova" do
+    virtualenv venv_path
+    wrap_bins(["nova-rootwrap", "nova", "nova-manage"])
+  end
 end
 
 include_recipe "database::client"
@@ -79,7 +86,7 @@ else
 end
 public_api_ip = api_ip = Chef::Recipe::Barclamp::Inventory.get_network_by_type(api, "public").address
 admin_api_ip = api_ip = Chef::Recipe::Barclamp::Inventory.get_network_by_type(api, "admin").address
-node[:nova][:api] = public_api_ip
+node.set[:nova][:api] = public_api_ip
 Chef::Log.info("Api server found at #{public_api_ip} #{admin_api_ip}")
 
 dns_servers = search(:node, "roles:dns-server") || []
@@ -146,8 +153,8 @@ public_net = node["network"]["networks"]["public"]
 fixed_net = node["network"]["networks"]["nova_fixed"]
 nova_floating = node[:network][:networks]["nova_floating"]
 
-node[:nova][:network][:fixed_range] = "#{fixed_net["subnet"]}/#{mask_to_bits(fixed_net["netmask"])}"
-node[:nova][:network][:floating_range] = "#{nova_floating["subnet"]}/#{mask_to_bits(nova_floating["netmask"])}"
+node.set[:nova][:network][:fixed_range] = "#{fixed_net["subnet"]}/#{mask_to_bits(fixed_net["netmask"])}"
+node.set[:nova][:network][:floating_range] = "#{nova_floating["subnet"]}/#{mask_to_bits(nova_floating["netmask"])}"
 
 fip = Chef::Recipe::Barclamp::Inventory.get_network_by_type(node, "nova_fixed")
 if fip
@@ -166,21 +173,20 @@ end
 
 flat_network_bridge = fixed_net["use_vlan"] ? "br#{fixed_net["vlan"]}" : "br#{fixed_interface}"
 
-node[:nova][:network][:public_interface] = public_interface
+node.set[:nova][:network][:public_interface] = public_interface
 if !node[:nova][:network][:dhcp_enabled]
-  node[:nova][:network][:flat_network_bridge] = flat_network_bridge
-  node[:nova][:network][:flat_interface] = fixed_interface
+  node.set[:nova][:network][:flat_network_bridge] = flat_network_bridge
+  node.set[:nova][:network][:flat_interface] = fixed_interface
 elsif !node[:nova][:network][:tenant_vlans]
-  node[:nova][:network][:flat_network_bridge] = flat_network_bridge
-  node[:nova][:network][:flat_network_dhcp_start] = fixed_net["ranges"]["dhcp"]["start"]
-  node[:nova][:network][:flat_interface] = fixed_interface
+  node.set[:nova][:network][:flat_network_bridge] = flat_network_bridge
+  node.set[:nova][:network][:flat_network_dhcp_start] = fixed_net["ranges"]["dhcp"]["start"]
+  node.set[:nova][:network][:flat_interface] = fixed_interface
 else
-  node[:nova][:network][:vlan_interface] = fip.interface rescue nil
-  node[:nova][:network][:vlan_start] = fixed_net["vlan"]
+  node.set[:nova][:network][:vlan_interface] = fip.interface rescue nil
+  node.set[:nova][:network][:vlan_start] = fixed_net["vlan"]
 end
 
 if node[:nova][:use_gitrepo]
-  nova_path = "/opt/nova"
   package("libvirt-bin")
   create_user_and_dirs "nova" do
     opt_dirs ["/var/lib/nova/instances"]
@@ -238,6 +244,7 @@ else
 end
 
 keystone_address = Chef::Recipe::Barclamp::Inventory.get_network_by_type(keystone, "admin").address if keystone_address.nil?
+keystone_protocol = keystone["keystone"]["api"]["protocol"]
 keystone_token = keystone["keystone"]["service"]["token"]
 keystone_service_port = keystone["keystone"]["api"]["service_port"]
 keystone_admin_port = keystone["keystone"]["api"]["admin_port"]
@@ -261,6 +268,7 @@ if quantum_servers.length > 0
   else
     per_tenant_vlan=false
   end
+  quantum_networking_plugin = quantum_server[:quantum][:networking_plugin]
   quantum_networking_mode = quantum_server[:quantum][:networking_mode]
 else
   quantum_server_ip = nil
@@ -285,6 +293,12 @@ else
 end
 
 
+directory "/var/lock/nova" do
+  action :create
+  owner node[:nova][:user]
+  group "root"
+end
+
 template "/etc/nova/nova.conf" do
   source "nova.conf.erb"
   owner node[:nova][:user]
@@ -294,6 +308,7 @@ template "/etc/nova/nova.conf" do
             :dhcpbridge => "#{node[:nova][:use_gitrepo] ? nova_path:"/usr"}/bin/nova-dhcpbridge",
             :database_connection => database_connection,
             :rabbit_settings => rabbit_settings,
+            :libvirt_type => node[:nova][:libvirt_type],
             :ec2_host => admin_api_ip,
             :ec2_dmz_host => public_api_ip,
             :dns_server_public_ip => dns_server_public_ip,
@@ -304,7 +319,9 @@ template "/etc/nova/nova.conf" do
             :quantum_server_port => quantum_server_port,
             :quantum_service_user => quantum_service_user,
             :quantum_service_password => quantum_service_password,
+            :quantum_networking_plugin => quantum_networking_plugin,
             :keystone_service_tenant => keystone_service_tenant,
+            :keystone_protocol => keystone_protocol,
             :keystone_address => keystone_address,
             :keystone_admin_port => keystone_admin_port,
             :oat_appraiser_host => oat_server[:hostname],

@@ -34,11 +34,17 @@ default[:nova][:db][:database] = "nova"
 default[:nova][:libvirt_type] = "kvm"    
 
 #
-# KVM Settings                       
-# 
+# KVM Settings
+#
 
-default[:nova][:kvm][:ksm_enabled] = 0  # 0 = disable, 1 = enable
+default[:nova][:kvm][:ksm_enabled] = false
 
+
+#
+# Scheduler Settings
+#
+default[:nova][:scheduler][:ram_allocation_ratio] = 1.0
+default[:nova][:scheduler][:cpu_allocation_ratio] = 16.0
 
 #
 # Shared Settings
@@ -46,7 +52,11 @@ default[:nova][:kvm][:ksm_enabled] = 0  # 0 = disable, 1 = enable
 default[:nova][:hostname] = "nova"
 default[:nova][:my_ip] = ipaddress
 default[:nova][:api] = ""
-default[:nova][:user] = "nova"
+unless node[:platform] == 'suse'
+    default[:nova][:user] = "nova"
+else
+    default[:nova][:user] = "openstack-nova"
+end
 
 #
 # General network parameters

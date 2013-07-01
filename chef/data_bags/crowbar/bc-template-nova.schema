@@ -23,6 +23,7 @@
             "use_novnc": { "type": "bool", "required": true },
             "verbose": { "type": "bool", "required": true },
             "trusted_flavors": { "type": "bool", "required": true },
+            "use_syslog": { "type": "bool", "required": true },
             "gitrepo": { "type": "str", "required": true },
             "git_instance": { "type": "str", "required": true },
             "itxt_instance": { "type": "str", "required": true },
@@ -31,8 +32,8 @@
             "use_gitrepo": { "type": "bool", "required": true },
             "use_gitbarclamp": { "type": "bool", "required": true },
             "use_pip_cache": { "type": "bool", "required": true },
+            "use_virtualenv": { "type": "bool", "required": true },
             "pfs_deps": { "type": "seq", "required": true, "sequence": [ { "type": "str" } ] },
-            "user": { "type": "str", "required": true },
             "network": {
               "type": "map",
               "required": true,
@@ -53,6 +54,13 @@
                 "vlan_start": { "type": "int" }
               }
             },
+            "scheduler": {
+              "type": "map",
+              "mapping": {
+                "ram_allocation_ratio": { "type": "number" },
+                "cpu_allocation_ratio": { "type": "number" }
+              }
+            },
             "db": {
               "type": "map",
               "required": true,
@@ -61,6 +69,11 @@
                 "password": { "type": "str", "required": true },
                 "user": { "type": "str", "required": true },
                 "database": { "type": "str", "required": true }
+              }
+            },
+            "kvm": {
+              "type": "map", "required": true, "mapping": {
+                "ksm_enabled": { "type": "bool", "required": true }
               }
             }
           }

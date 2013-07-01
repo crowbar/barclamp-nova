@@ -4,30 +4,13 @@
   %label{:for => "proposal_attributes"}= t('.attributes')
   = link_to t('raw'), proposal_barclamp_path(:id => @proposal.name, :controller => @proposal.barclamp, :dep_raw => @dep_raw, :attr_raw => true), :style => "float: right;"
   %div.container
-    %p
-      %label{ :for => :rabbitmq_instance }= t('.rabbitmq_instance')
-      = instance_selector("rabbitmq", :rabbitmq_instance, "rabbitmq_instance", @proposal)
-    %p
-      %label{ :for => :database_instance }= t('.database_instance')
-      = instance_selector("database", :database_instance, "db/database_instance", @proposal)
-    %p
-      %label{ :for => :keystone_instance }= t('.keystone_instance')
-      = instance_selector("keystone", :keystone_instance, "keystone_instance", @proposal)
-    %p
-      %label{ :for => :itxt_instance }= t('.itxt_instance')
-      = instance_selector("inteltxt", :itxt_instance, "itxt_instance", @proposal)
-    %p
-      %label{ :for => :trusted_flavors }= t('.trusted_flavors')
-      = select_tag :trusted_flavors, options_for_select([['true','true'], ['false', 'false']], @proposal.raw_data['attributes'][@proposal.barclamp]["trusted_flavors"].to_s), :onchange => "update_value('trusted_flavors', 'trusted_flavors', 'boolean')"
-    %p
-      %label{ :for => :service_user }= t('.service_user')
-      %input#service_user{:type => "text", :name => "service_user", :'data-default' => @proposal.raw_data['attributes'][@proposal.barclamp]["service_user"], :onchange => "update_value('service_user','service_user', 'string')"}
-    %p
-      %label{ :for => :service_password }= t('.service_password')
-      %input#service_password{:type => "text", :name => "service_password", :'data-default' => @proposal.raw_data['attributes'][@proposal.barclamp]["service_password"], :onchange => "update_value('service_password','service_password', 'string')"}
-    %p
-      %label{ :for => :glance_instance }= t('.glance_instance')
-      = instance_selector("glance", :glance_instance, "glance_instance", @proposal)
+    = render_instance_selector("database", :database_instance, t('.database_instance'), "db/database_instance", @proposal)
+    = render_instance_selector("rabbitmq", :rabbitmq_instance, t('.rabbitmq_instance'), "rabbitmq_instance", @proposal)
+    = render_instance_selector("keystone", :keystone_instance, t('.keystone_instance'), "keystone_instance", @proposal)
+    = render_instance_selector("glance", :glance_instance, t('.glance_instance'), "glance_instance", @proposal)
+    = render_instance_selector("cinder", :cinder_instance, t('.cinder_instance'), "cinder_instance", @proposal)
+    = render_instance_selector("quantum", :quantum_instance, t('.quantum_instance'), "quantum_instance", @proposal)
+    = render_instance_selector("inteltxt", :itxt_instance, t('.itxt_instance'), "itxt_instance", @proposal)
     %p
       %label{ :for => :verbose }= t('.verbose')
       = select_tag :verbose, options_for_select([['true','true'], ['false', 'false']], @proposal.raw_data['attributes'][@proposal.barclamp]["verbose"].to_s), :onchange => "update_value('verbose', 'verbose', 'boolean')"
@@ -38,9 +21,31 @@
     %p
       %label{ :for => :libvirt_type }= t('.libvirt_type')
       = select_tag :libvirt_type, options_for_select([['kvm','kvm'], ['qemu', 'qemu']], @proposal.raw_data['attributes'][@proposal.barclamp]["libvirt_type"].to_s), :onchange => "update_value('libvirt_type', 'libvirt_type', 'string')"
-    %p
-      %label{ :for => :quantum_instance }= t('.quantum_instance')
-      = instance_selector("quantum", :quantum_instance, "quantum_instance", @proposal)
-    %p
-      %label{ :for => :cinder_instance }= t('.cinder_instance')
-      = instance_selector("cinder", :cinder_instance, "cinder_instance", @proposal)
+    %label{ :for => :scheduler }= t('.scheduler_header')
+    %div.container{ :id => :scheduler }
+      %p
+        %label{ :for => :ram_allocation_ratio }= t('.ram_allocation_ratio')
+        %input#ram_allocation_ratio{:type => "text", :name => "ram_allocation_ratio", :'data-default' => @proposal.raw_data['attributes'][@proposal.barclamp]["scheduler"]["ram_allocation_ratio"], :onchange => "update_value('scheduler/ram_allocation_ratio','ram_allocation_ratio', 'float')"}
+      %p
+        %label{ :for => :cpu_allocation_ratio }= t('.cpu_allocation_ratio')
+        %input#cpu_allocation_ratio{:type => "text", :name => "cpu_allocation_ratio", :'data-default' => (@proposal.raw_data['attributes'][@proposal.barclamp]["scheduler"].nil? ? "16.0" : @proposal.raw_data['attributes'][@proposal.barclamp]["scheduler"]["cpu_allocation_ratio"]), :onchange => "update_value('scheduler/cpu_allocation_ratio','cpu_allocation_ratio', 'float')"}
+
+
+    %label{ :for => :kvm_div, :id => :kvm_div_label }=  t('.kvm')
+    %div.container{ :id => :kvm_div }
+      %p
+        %label{ :for => :kvm_ksm }= t('.kvm_ksm')
+        = select_tag :kvm_ksm, options_for_select([['true','true'], ['false', 'false']], @proposal.raw_data['attributes'][@proposal.barclamp]["kvm"]["ksm_enabled"].to_s), :onchange => "update_value('kvm/ksm_enabled', 'kvm_ksm', 'boolean')"
+
+
+:javascript
+  function toggle_ksm() {
+    if ($('#libvirt_type option:selected').attr('value') == 'kvm') {
+      $('#kvm_div').show(); $('#kvm_div_label').show();
+    } else {
+      $('#kvm_div').hide(); $('#kvm_div_label').hide();
+    }
+  };
+
+  $(document).ready(function () { toggle_ksm(); });
+  $('#libvirt_type').change(toggle_ksm);
