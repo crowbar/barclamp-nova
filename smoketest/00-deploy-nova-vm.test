@@ -511,40 +511,12 @@ else
 fi
 
 
-
-
-
 if [[ $ivolume_ready = true ]];  then
     echo -e "Volume tests stage - Boot from volume created image volume_name: volume-from-image-test volume_id: $ivol_id status:        SUCCESS"
-#    b_device_id=$(nova volume-list | grep "$ivol_id" | awk {'print $2'})
-#    (
-#           nova boot --poll --image "$test_image" --flavor 1 \
-#               --nic net-id=$fixed_net \
-#               --security-groups smoketest \
-#               --key-name smoketest \
-#               --block_device_mapping vda=$b_device_id:::2
-#               "volume-from-image-test" | \
-#               tee "$LOGDIR/nova-image-test.status"
-#    ) &
-#    sleep 120
-#    in_id=$(nova list | grep "volume-from-image-test" | awk {'print $2'})
-#    for ((i=1; i<=5; i++)); do
-#      echo -e "Checking instance: $in_id status attempt #$i"
-#      if [[ "$(nova list | grep "$in_id" | awk {'print $6'})" = "ACTIVE" ]]; then
-#        echo -e "Instance: image-test is:           ACTIVE"
-#        break
-#      fi
-#      sleep 10
-#    done
-#    if [[ "$(nova list | grep "$in_id" | awk {'print $6'})" = "ERROR" ]]; then
-#        echo -e "Instance: $i_id failed to boot"
-#        [[ "$cinder_version" = "$cinder_broken_ver" ]] && die_on_error=false || die_on_error=true
-#        [[ $die_on_error = true ]] && exit 1
-#    fi
-#else
-#   echo -e "\n\nERROR: s stage - Action 'Create volume from image' volume_name: volume-from-image  volume_id: $ivol_id failed\n\n"
-#   [[ "$cinder_version" = "$cinder_broken_ver" ]] && die_on_error=false || die_on_error=true
-#   [[ $die_on_error = true ]] && exit 1
+else
+   echo -e "\n\nERROR: s stage - Action 'Create volume from image' volume_name: volume-from-image  volume_id: $ivol_id failed\n\n"
+   [[ "$cinder_version" = "$cinder_broken_ver" ]] && die_on_error=false || die_on_error=true
+   [[ $die_on_error = true ]] && exit 1
 fi
 
 
