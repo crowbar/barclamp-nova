@@ -38,7 +38,8 @@ api_rate_limit = False
 # Network settings
 default_floating_pool=floating
 network_api_class=nova.network.quantumv2.api.API
-quantum_url=http://<%= @quantum_server_ip %>:<%= @quantum_server_port %>
+quantum_url=<%= @quantum_protocol %>://<%= @quantum_server_ip %>:<%= @quantum_server_port %>
+quantum_api_insecure=<%= @quantum_insecure ? 'True' : 'False' %>
 quantum_auth_strategy=keystone
 quantum_admin_tenant_name=<%= @keystone_service_tenant %>
 quantum_admin_username=<%= @quantum_service_user %>
