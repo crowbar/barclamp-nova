@@ -1,4 +1,5 @@
 
+
 %input#proposal_attributes{:type => "hidden", :name => "proposal_attributes", :value => @proposal.raw_data['attributes'][@proposal.barclamp].to_json}
 %p
   %label{:for => "proposal_attributes"}= t('.attributes')
@@ -23,6 +24,15 @@
       %label{ :for => :use_novnc }= t('.use_novnc')
       = select_tag :use_novnc, options_for_select([['true','true'], ['false', 'false']], @proposal.raw_data['attributes'][@proposal.barclamp]["use_novnc"].to_s), :onchange => "update_value('use_novnc', 'use_novnc', 'boolean')"
     = render 'barclamp/git/pfsdeps.html.haml'
+    %p
+      %label{ :for => :libvirt_type }= t('.libvirt_type')
+      = select_tag :libvirt_type, options_for_select([['kvm','kvm'], ['qemu', 'qemu']], @proposal.raw_data['attributes'][@proposal.barclamp]["libvirt_type"].to_s), :onchange => "update_value('libvirt_type', 'libvirt_type', 'string')"
+    %p
+      %label{ :for => :shared_instance_storage }= t('.shared_instance_storage')
+      = select_tag :shared_instance_storage, options_for_select([['true','true'], ['false', 'false']], @proposal.raw_data['attributes'][@proposal.barclamp]["use_shared_instance_storage"].to_s), :onchange => "update_value('use_shared_instance_storage', 'shared_instance_storage', 'boolean')"
+    %p
+      %label{ :for => :enable_libvirt_migration }= t('.enable_libvirt_migration')
+      = select_tag :enable_libvirt_migration, options_for_select([['true','true'], ['false', 'false']], @proposal.raw_data['attributes'][@proposal.barclamp]["use_migration"].to_s), :onchange => "update_value('use_migration', 'enable_libvirt_migration', 'boolean')"
     %label.h3{ :for => :scheduler }= t('.scheduler_header')
     %div.container{ :id => :scheduler }
       %p

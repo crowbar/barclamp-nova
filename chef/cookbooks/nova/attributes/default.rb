@@ -28,6 +28,9 @@ default[:nova][:db][:password] = nil
 default[:nova][:db][:user] = "nova"
 default[:nova][:db][:database] = "nova"
 
+default[:nova][:use_migration] = false
+default[:nova][:use_shared_instance_storage] = false
+
 #
 # Hypervisor Settings
 #
