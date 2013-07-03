@@ -286,6 +286,21 @@ directory "/var/lock/nova" do
   group "root"
 end
 
+if api == node and api[:nova][:ssl][:enabled]
+  unless ::File.exists? api[:nova][:ssl][:certfile]
+    message = "Certificate \"#{api[:nova][:ssl][:certfile]}\" is not present."
+    Chef::Log.fatal(message)
+    raise message
+  end
+  # we do not check for existence of keyfile, as the private key is allowed to
+  # be in the certfile
+  if api[:nova][:ssl][:cert_required] and !::File.exists? api[:nova][:ssl][:ca_certs]
+    message = "Certificate CA \"#{api[:nova][:ssl][:ca_certs]}\" is not present."
+    Chef::Log.fatal(message)
+    raise message
+  end
+end
+
 template "/etc/nova/nova.conf" do
   source "nova.conf.erb"
   owner node[:nova][:user]
@@ -312,7 +327,12 @@ template "/etc/nova/nova.conf" do
             :keystone_service_tenant => keystone_service_tenant,
             :keystone_protocol => keystone_protocol,
             :keystone_address => keystone_address,
-            :keystone_admin_port => keystone_admin_port
+            :keystone_admin_port => keystone_admin_port,
+            :ssl_enabled => api[:nova][:ssl][:enabled],
+            :ssl_cert_file => api[:nova][:ssl][:certfile],
+            :ssl_key_file => api[:nova][:ssl][:keyfile],
+            :ssl_cert_required => api[:nova][:ssl][:cert_required],
+            :ssl_ca_file => api[:nova][:ssl][:ca_certs]
             )
 end
 

@@ -63,6 +63,7 @@ quantum_metadata_proxy_shared_secret=Secret
 <% else -%>
 my_ip=<%= node[:nova][:my_ip] %>
 allow_same_net_traffic=<%= node[:nova][:network][:allow_same_net_traffic] ? "True" : "False" %>
+ec2_scheme=<%= @ssl_enabled ? "https" : "http" %>
 ec2_host=<%= @ec2_host %>
 ec2_dmz_host=<%= @ec2_dmz_host %>
 osapi_host=<%= @ec2_host %>
@@ -153,6 +154,23 @@ auth_strategy=keystone
 volume_api_class=nova.volume.cinder.API
 enabled_apis=ec2,osapi_compute,metadata
 cinder_catalog_info=volume:cinder:internalURL
+
+# a list of APIs with enabled SSL (list value)
+enabled_ssl_apis = <%= @ssl_enabled ? "ec2,osapi_compute,metadata" : "" %>
+
+# SSL certificate of API server (string value)
+ssl_cert_file = <%= @ssl_cert_file %>
+
+# SSL private key of API server (string value)
+ssl_key_file = <%= @ssl_key_file %>
+
+# CA certificate file to use to verify connecting clients
+# (string value)
+<% if @ssl_cert_required -%>
+ssl_ca_file = <%= @ssl_ca_file %>
+<% else -%>
+#ssl_ca_file = /path/to/cafile
+<% end -%>
 
 # This needs to be conditionalized at some point, maybe.
 [conductor]

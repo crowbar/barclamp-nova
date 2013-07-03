@@ -85,6 +85,13 @@ default[:nova][:network][:vlan_start] = 100
 default[:nova][:service_user] = "nova"
 default[:nova][:service_password] = "nova"
 
+default[:nova][:ssl][:enabled] = false
+default[:nova][:ssl][:insecure] = false
+default[:nova][:ssl][:certfile] = "/etc/nova/ssl/certs/signing_cert.pem"
+default[:nova][:ssl][:keyfile] = "/etc/nova/ssl/private/signing_key.pem"
+default[:nova][:ssl][:cert_required] = false
+default[:nova][:ssl][:ca_certs] = "/etc/nova/ssl/certs/ca.pem"
+
 #
 # Transparent Hugepage Settings                       
 # 

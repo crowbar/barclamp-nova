@@ -63,6 +63,12 @@ locale_additions:
           cpu_allocation_ratio: Virtual CPU to Physical CPU allocation ratio
           kvm: KVM Options
           kvm_ksm: Enable Kernel Samepage Merging
+          protocol: Protocol
+          ssl_insecure: SSL Certificate is insecure (for instance, auto-signed)
+          ssl_certfile: SSL Certificate File
+          ssl_keyfile: SSL (Private) Key File
+          ssl_cert_required: Require Client Certificate
+          ssl_ca_certs: SSL CA Certificates File
         edit_deployment: 
           deployment: Deployment
 
