@@ -1,30 +1,30 @@
 if node[:nova][:trusted_flavors]
-flavors={11=>
-  {"name"=>"m1.trusted.large",
-   "vcpu"=>4,
-   "disk"=>80,
-   "mem"=>4096},
- 12=>
-  {"name"=>"m1.trusted.xlarge",
-   "vcpu"=>8,
-   "disk"=>80,
-   "mem"=>8192},
- 8=>
-  {"name"=>"m1.trusted.tiny",
-   "vcpu"=>1,
-   "disk"=>0,
-   "mem"=>512},
- 9=>
-  {"name"=>"m1.trusted.small",
-   "vcpu"=>1,
-   "disk"=>20,
-   "mem"=>2048},
- 10=>
-  {"name"=>"m1.trusted.medium",
-   "vcpu"=>2,
-   "disk"=>40,
-   "mem"=>4096}
-}
+ flavors={11=>
+   {"name"=>"m1.trusted.large",
+    "vcpu"=>4,
+    "disk"=>80,
+    "mem"=>4096},
+  12=>
+   {"name"=>"m1.trusted.xlarge",
+    "vcpu"=>8,
+    "disk"=>80,
+    "mem"=>8192},
+  8=>
+   {"name"=>"m1.trusted.tiny",
+    "vcpu"=>1,
+    "disk"=>0,
+    "mem"=>512},
+  9=>
+   {"name"=>"m1.trusted.small",
+    "vcpu"=>1,
+    "disk"=>20,
+    "mem"=>2048},
+  10=>
+   {"name"=>"m1.trusted.medium",
+    "vcpu"=>2,
+    "disk"=>40,
+    "mem"=>4096}
+ }
 
 
   nova = node
