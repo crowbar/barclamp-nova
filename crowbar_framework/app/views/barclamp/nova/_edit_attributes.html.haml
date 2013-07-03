@@ -58,6 +58,22 @@
         %label{ :for => :ssl_ca_certs }= t('.ssl_ca_certs')
         = text_field_tag :ssl_ca_certs, @proposal.raw_data['attributes'][@proposal.barclamp]["ssl"]["ca_certs"], :size => 80, :onchange => "update_value('ssl/ca_certs', 'ssl_ca_certs', 'string')"
 
+    %p
+      %label.h3{ :for => :novnc_ssl_header }= t('.novnc_ssl_header')
+    %div.container
+      %p
+        %label{ :for => :novnc_protocol }= t('.protocol')
+        = select_tag :novnc_protocol, options_for_select([['HTTP','false'], ['HTTPS', 'true']], @proposal.raw_data['attributes'][@proposal.barclamp]["novnc"]["ssl"]["enabled"].to_s), :onchange => "update_value('novnc/ssl/enabled', 'novnc_protocol', 'boolean')"
+      %div{ :id => :novnc_ssl_div }
+        %p
+          %em= t('.novnc_ssl_hint')
+        %p
+          %label{ :for => :novnc_ssl_certfile }= t('.ssl_certfile')
+          = text_field_tag :novnc_ssl_certfile, @proposal.raw_data['attributes'][@proposal.barclamp]["novnc"]["ssl"]["certfile"], :size => "80", :onchange => "update_value('novnc/ssl/certfile', 'novnc_ssl_certfile', 'string')"
+        %p
+          %label{ :for => :novnc_ssl_keyfile }= t('.ssl_keyfile')
+          = text_field_tag :novnc_ssl_keyfile, @proposal.raw_data['attributes'][@proposal.barclamp]["novnc"]["ssl"]["keyfile"], :size => "80", :onchange => "update_value('novnc/ssl/keyfile', 'novnc_ssl_keyfile', 'string')"
+
 :javascript
   function toggle_ksm() {
     if ($('#libvirt_type option:selected').attr('value') == 'kvm') {
@@ -83,12 +99,22 @@
     }
   };
 
+  function toggle_novnc_protocol() {
+    if ($('#novnc_protocol option:selected').attr('value') == 'true') {
+      $('#novnc_ssl_div').show();
+    } else {
+      $('#novnc_ssl_div').hide();
+    }
+  };
+
   $(document).ready(function () {
     toggle_ksm();
     toggle_protocol();
     toggle_ssl_cert_required();
+    toggle_novnc_protocol();
   });
 
   $('#libvirt_type').change(toggle_ksm);
   $('#protocol').change(toggle_protocol);
   $('#ssl_cert_required').change(toggle_ssl_cert_required);
+  $('#novnc_protocol').change(toggle_novnc_protocol);
