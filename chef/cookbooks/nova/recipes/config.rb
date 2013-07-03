@@ -86,7 +86,6 @@ else
 end
 public_api_ip = api_ip = Chef::Recipe::Barclamp::Inventory.get_network_by_type(api, "public").address
 admin_api_ip = api_ip = Chef::Recipe::Barclamp::Inventory.get_network_by_type(api, "admin").address
-node.set[:nova][:api] = public_api_ip
 Chef::Log.info("Api server found at #{public_api_ip} #{admin_api_ip}")
 
 dns_servers = search(:node, "roles:dns-server") || []
@@ -286,6 +285,43 @@ directory "/var/lock/nova" do
   group "root"
 end
 
+if api == node and api[:nova][:ssl][:enabled]
+  unless ::File.exists? api[:nova][:ssl][:certfile]
+    message = "Certificate \"#{api[:nova][:ssl][:certfile]}\" is not present."
+    Chef::Log.fatal(message)
+    raise message
+  end
+  # we do not check for existence of keyfile, as the private key is allowed to
+  # be in the certfile
+  if api[:nova][:ssl][:cert_required] and !::File.exists? api[:nova][:ssl][:ca_certs]
+    message = "Certificate CA \"#{api[:nova][:ssl][:ca_certs]}\" is not present."
+    Chef::Log.fatal(message)
+    raise message
+  end
+end
+
+# if there's no certificate for novnc, use the ones from nova-api
+if api[:nova][:novnc][:ssl][:enabled]
+  unless api[:nova][:novnc][:ssl][:certfile].empty?
+    api_novnc_ssl_certfile = api[:nova][:novnc][:ssl][:certfile]
+    api_novnc_ssl_keyfile = api[:nova][:novnc][:ssl][:keyfile]
+  else
+    api_novnc_ssl_certfile = api[:nova][:ssl][:certfile]
+    api_novnc_ssl_keyfile = api[:nova][:ssl][:keyfile]
+  end
+else
+  api_novnc_ssl_certfile = ''
+  api_novnc_ssl_keyfile = ''
+end
+
+if api == node and api[:nova][:novnc][:ssl][:enabled]
+  unless ::File.exists? api_novnc_ssl_certfile
+    message = "Certificate \"#{api_novnc_ssl_certfile}\" is not present."
+    Chef::Log.fatal(message)
+    raise message
+  end
+end
+
 template "/etc/nova/nova.conf" do
   source "nova.conf.erb"
   owner node[:nova][:user]
@@ -302,6 +338,9 @@ template "/etc/nova/nova.conf" do
             :glance_server_ip => glance_server_ip,
             :glance_server_port => glance_server_port,
             :vncproxy_public_ip => vncproxy_public_ip,
+            :vncproxy_ssl_enabled => api[:nova][:novnc][:ssl][:enabled],
+            :vncproxy_cert_file => api_novnc_ssl_certfile,
+            :vncproxy_key_file => api_novnc_ssl_keyfile,
             :quantum_protocol => quantum_protocol,
             :quantum_server_ip => quantum_server_ip,
             :quantum_server_port => quantum_server_port,
@@ -312,7 +351,12 @@ template "/etc/nova/nova.conf" do
             :keystone_service_tenant => keystone_service_tenant,
             :keystone_protocol => keystone_protocol,
             :keystone_address => keystone_address,
-            :keystone_admin_port => keystone_admin_port
+            :keystone_admin_port => keystone_admin_port,
+            :ssl_enabled => api[:nova][:ssl][:enabled],
+            :ssl_cert_file => api[:nova][:ssl][:certfile],
+            :ssl_key_file => api[:nova][:ssl][:keyfile],
+            :ssl_cert_required => api[:nova][:ssl][:cert_required],
+            :ssl_ca_file => api[:nova][:ssl][:ca_certs]
             )
 end
 
