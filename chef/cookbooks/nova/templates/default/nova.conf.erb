@@ -160,11 +160,11 @@ cinder_catalog_info=volume:cinder:internalURL
 use_local=false
 
 [trusted_computing]
-server=<%= @oat_appraiser_host %>
-port=<%= @oat_appraiser_port %>
-server_ca_file=/etc/nova/oat_certfile.cer
+attestation_server=<%= @oat_appraiser_host %>
+attestation_port=<%= @oat_appraiser_port %>
+attestation_server_ca_file=/etc/nova/oat_certfile.cer
 # If using OAT v1.5, use this api_url:
-api_url=/AttestationService/resources
+attestation_api_url=/AttestationService/resources
 # If using OAT pre-v1.5, use this api_url:
-#api_url=/OpenAttestationWebServices/V1.0
-#auth_blob=i-am-openstack
+#attestation_api_url=/OpenAttestationWebServices/V1.0
+#attestation_auth_blob=i-am-openstack
