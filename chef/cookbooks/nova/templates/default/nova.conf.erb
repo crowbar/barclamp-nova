@@ -122,8 +122,10 @@ compute_driver=libvirt.LibvirtDriver
 compute_manager=nova.compute.manager.ComputeManager
 instance_name_template=instance-%08x
 compute_scheduler_driver=nova.scheduler.filter_scheduler.FilterScheduler
+<% if @has_itxt -%>
 scheduler_available_filters=nova.scheduler.filters.standard_filters
 scheduler_default_filters=AvailabilityZoneFilter,RamFilter,ComputeFilter,TrustedFilter
+<% end -%>
 # nova-compute configuration for ceilometer
 instance_usage_audit=True
 instance_usage_audit_period=hour
@@ -159,6 +161,7 @@ cinder_catalog_info=volume:cinder:internalURL
 [conductor]
 use_local=false
 
+<% if @has_itxt -%>
 [trusted_computing]
 attestation_server=<%= @oat_appraiser_host %>
 attestation_port=<%= @oat_appraiser_port %>
@@ -168,3 +171,5 @@ attestation_api_url=/AttestationService/resources
 # If using OAT pre-v1.5, use this api_url:
 #attestation_api_url=/OpenAttestationWebServices/V1.0
 #attestation_auth_blob=i-am-openstack
+<% end -%>
+

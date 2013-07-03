@@ -281,6 +281,7 @@ Chef::Log.info("Quantum server at #{quantum_server_ip}")
 env_filter = " AND inteltxt_config_environment:inteltxt-config-#{node[:nova][:itxt_instance]}"
 oat_servers = search(:node, "roles:oat-server#{env_filter}") || []
 if oat_servers.length > 0
+  has_itxt = true
   oat_server = oat_servers[0]
   execute "fill_cert" do
     command <<-EOF
@@ -289,6 +290,7 @@ if oat_servers.length > 0
     not_if { File.exists? "/etc/nova/oat_certfile.cer" }
   end
 else
+  has_itxt = false
   oat_server = node
 end
 
@@ -325,7 +327,8 @@ template "/etc/nova/nova.conf" do
             :keystone_address => keystone_address,
             :keystone_admin_port => keystone_admin_port,
             :oat_appraiser_host => oat_server[:hostname],
-            :oat_appraiser_port => "8443"
+            :oat_appraiser_port => "8443",
+            :has_itxt => has_itxt
             )
 end
 
