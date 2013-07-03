@@ -150,6 +150,11 @@ if vncproxy_public_host.nil? or vncproxy_public_host.empty?
 end
 Chef::Log.info("VNCProxy server at #{vncproxy_public_host}")
 
+directory "/etc/nova/" do
+   mode 0755
+   action :nothing
+end
+
 cookbook_file "/etc/default/nova-common" do
   source "nova-common"
   owner node[:nova][:user]
