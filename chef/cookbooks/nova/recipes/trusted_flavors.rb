@@ -37,7 +37,7 @@ flavors={11=>
     keystone = node
   end
 
-  keystone_address = Chef::Recipe::Barclamp::Inventory.get_network_by_type(keystone, "public").address if keystone_address.nil?
+  keystone_address = Chef::Recipe::Barclamp::Inventory.get_network_by_type(keystone, "admin").address if keystone_address.nil?
   keystone_service_port = keystone["keystone"]["api"]["service_port"]
   keystone_service_tenant = keystone["keystone"]["service"]["tenant"]
   keystone_service_user = nova["nova"]["service_user"]
