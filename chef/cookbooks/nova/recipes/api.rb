@@ -82,6 +82,7 @@ else
 end
 public_api_ip = Chef::Recipe::Barclamp::Inventory.get_network_by_type(api, "public").address
 admin_api_ip = Chef::Recipe::Barclamp::Inventory.get_network_by_type(api, "admin").address
+api_protocol = api[:nova][:ssl][:enabled] ? 'https' : 'http'
 
 keystone_register "nova api wakeup keystone" do
   protocol keystone_protocol
@@ -142,9 +143,9 @@ keystone_register "register nova endpoint" do
   token keystone_token
   endpoint_service "nova"
   endpoint_region "RegionOne"
-  endpoint_publicURL "http://#{public_api_ip}:8774/v2/$(tenant_id)s"
-  endpoint_adminURL "http://#{admin_api_ip}:8774/v2/$(tenant_id)s"
-  endpoint_internalURL "http://#{admin_api_ip}:8774/v2/$(tenant_id)s"
+  endpoint_publicURL "#{api_protocol}://#{public_api_ip}:8774/v2/$(tenant_id)s"
+  endpoint_adminURL "#{api_protocol}://#{admin_api_ip}:8774/v2/$(tenant_id)s"
+  endpoint_internalURL "#{api_protocol}://#{admin_api_ip}:8774/v2/$(tenant_id)s"
 #  endpoint_global true
 #  endpoint_enabled true
   action :add_endpoint_template
@@ -157,9 +158,9 @@ keystone_register "register nova ec2 endpoint" do
   token keystone_token
   endpoint_service "ec2"
   endpoint_region "RegionOne"
-  endpoint_publicURL "http://#{public_api_ip}:8773/services/Cloud"
-  endpoint_adminURL "http://#{admin_api_ip}:8773/services/Admin"
-  endpoint_internalURL "http://#{admin_api_ip}:8773/services/Cloud"
+  endpoint_publicURL "#{api_protocol}://#{public_api_ip}:8773/services/Cloud"
+  endpoint_adminURL "#{api_protocol}://#{admin_api_ip}:8773/services/Admin"
+  endpoint_internalURL "#{api_protocol}://#{admin_api_ip}:8773/services/Cloud"
 #  endpoint_global true
 #  endpoint_enabled true
   action :add_endpoint_template

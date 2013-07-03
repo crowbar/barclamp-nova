@@ -36,6 +36,27 @@
         %label{ :for => :kvm_ksm }= t('.kvm_ksm')
         = select_tag :kvm_ksm, options_for_select([['true','true'], ['false', 'false']], @proposal.raw_data['attributes'][@proposal.barclamp]["kvm"]["ksm_enabled"].to_s), :onchange => "update_value('kvm/ksm_enabled', 'kvm_ksm', 'boolean')"
 
+    %div{ :id => :protocol_div }
+      %p
+        %label{ :for => :protocol }= t('.protocol')
+        = select_tag :protocol, options_for_select([['HTTP','false'], ['HTTPS', 'true']], @proposal.raw_data['attributes'][@proposal.barclamp]["ssl"]["enabled"].to_s), :onchange => "update_value('ssl/enabled', 'protocol', 'boolean')"
+
+    %div{ :id => :ssl_div }
+      %p
+        %label{ :for => :ssl_certfile }= t('.ssl_certfile')
+        = text_field_tag :ssl_certfile, @proposal.raw_data['attributes'][@proposal.barclamp]["ssl"]["certfile"], :size => 80, :onchange => "update_value('ssl/certfile', 'ssl_certfile', 'string')"
+      %p
+        %label{ :for => :ssl_keyfile }= t('.ssl_keyfile')
+        = text_field_tag :ssl_keyfile, @proposal.raw_data['attributes'][@proposal.barclamp]["ssl"]["keyfile"], :size => 80, :onchange => "update_value('ssl/keyfile', 'ssl_keyfile', 'string')"
+      %p
+        %label{ :for => :ssl_insecure }= t('.ssl_insecure')
+        = select_tag :ssl_insecure, options_for_select([['true','true'], ['false', 'false']], @proposal.raw_data['attributes'][@proposal.barclamp]["ssl"]["insecure"].to_s), :onchange => "update_value('ssl/insecure', 'ssl_insecure', 'boolean')"
+      %p
+        %label{ :for => :ssl_cert_required }= t('.ssl_cert_required')
+        = select_tag :ssl_cert_required, options_for_select([['true','true'], ['false', 'false']], @proposal.raw_data['attributes'][@proposal.barclamp]["ssl"]["cert_required"].to_s), :onchange => "update_value('ssl/cert_required', 'ssl_cert_required', 'boolean')"
+      %p
+        %label{ :for => :ssl_ca_certs }= t('.ssl_ca_certs')
+        = text_field_tag :ssl_ca_certs, @proposal.raw_data['attributes'][@proposal.barclamp]["ssl"]["ca_certs"], :size => 80, :onchange => "update_value('ssl/ca_certs', 'ssl_ca_certs', 'string')"
 
 :javascript
   function toggle_ksm() {
@@ -46,5 +67,28 @@
     }
   };
 
-  $(document).ready(function () { toggle_ksm(); });
+  function toggle_protocol() {
+    if ($('#protocol option:selected').attr('value') == 'true') {
+      $('#ssl_div').show();
+    } else {
+      $('#ssl_div').hide();
+    }
+  };
+
+  function toggle_ssl_cert_required() {
+    if ($('#ssl_cert_required option:selected').attr('value') == 'true') {
+      $('#ssl_ca_certs').removeAttr('disabled');
+    } else {
+      $('#ssl_ca_certs').attr('disabled', 'disabled');
+    }
+  };
+
+  $(document).ready(function () {
+    toggle_ksm();
+    toggle_protocol();
+    toggle_ssl_cert_required();
+  });
+
   $('#libvirt_type').change(toggle_ksm);
+  $('#protocol').change(toggle_protocol);
+  $('#ssl_cert_required').change(toggle_ssl_cert_required);
