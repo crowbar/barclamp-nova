@@ -51,7 +51,6 @@ default[:nova][:scheduler][:cpu_allocation_ratio] = 16.0
 #
 default[:nova][:hostname] = "nova"
 default[:nova][:my_ip] = ipaddress
-default[:nova][:api] = ""
 unless node[:platform] == 'suse'
     default[:nova][:user] = "nova"
 else
