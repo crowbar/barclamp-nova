@@ -20,7 +20,7 @@
     %p
       %label{ :for => :libvirt_type }= t('.libvirt_type')
       = select_tag :libvirt_type, options_for_select([['kvm','kvm'], ['qemu', 'qemu']], @proposal.raw_data['attributes'][@proposal.barclamp]["libvirt_type"].to_s), :onchange => "update_value('libvirt_type', 'libvirt_type', 'string')"
-    %label{ :for => :scheduler }= t('.scheduler_header')
+    %label.h3{ :for => :scheduler }= t('.scheduler_header')
     %div.container{ :id => :scheduler }
       %p
         %label{ :for => :ram_allocation_ratio }= t('.ram_allocation_ratio')
@@ -30,36 +30,38 @@
         %input#cpu_allocation_ratio{:type => "text", :name => "cpu_allocation_ratio", :'data-default' => (@proposal.raw_data['attributes'][@proposal.barclamp]["scheduler"].nil? ? "16.0" : @proposal.raw_data['attributes'][@proposal.barclamp]["scheduler"]["cpu_allocation_ratio"]), :onchange => "update_value('scheduler/cpu_allocation_ratio','cpu_allocation_ratio', 'float')"}
 
 
-    %label{ :for => :kvm_div, :id => :kvm_div_label }=  t('.kvm')
+    %label.h3{ :for => :kvm_div, :id => :kvm_div_label }=  t('.kvm')
     %div.container{ :id => :kvm_div }
       %p
         %label{ :for => :kvm_ksm }= t('.kvm_ksm')
         = select_tag :kvm_ksm, options_for_select([['true','true'], ['false', 'false']], @proposal.raw_data['attributes'][@proposal.barclamp]["kvm"]["ksm_enabled"].to_s), :onchange => "update_value('kvm/ksm_enabled', 'kvm_ksm', 'boolean')"
 
-    %div{ :id => :protocol_div }
-      %p
-        %label{ :for => :protocol }= t('.protocol')
-        = select_tag :protocol, options_for_select([['HTTP','false'], ['HTTPS', 'true']], @proposal.raw_data['attributes'][@proposal.barclamp]["ssl"]["enabled"].to_s), :onchange => "update_value('ssl/enabled', 'protocol', 'boolean')"
+    %p
+      %label.h3= t('.ssl_header')
+      %div.container
+        %p
+          %label{ :for => :protocol }= t('.protocol')
+          = select_tag :protocol, options_for_select([['HTTP','false'], ['HTTPS', 'true']], @proposal.raw_data['attributes'][@proposal.barclamp]["ssl"]["enabled"].to_s), :onchange => "update_value('ssl/enabled', 'protocol', 'boolean')"
 
-    %div{ :id => :ssl_div }
-      %p
-        %label{ :for => :ssl_certfile }= t('.ssl_certfile')
-        = text_field_tag :ssl_certfile, @proposal.raw_data['attributes'][@proposal.barclamp]["ssl"]["certfile"], :size => 80, :onchange => "update_value('ssl/certfile', 'ssl_certfile', 'string')"
-      %p
-        %label{ :for => :ssl_keyfile }= t('.ssl_keyfile')
-        = text_field_tag :ssl_keyfile, @proposal.raw_data['attributes'][@proposal.barclamp]["ssl"]["keyfile"], :size => 80, :onchange => "update_value('ssl/keyfile', 'ssl_keyfile', 'string')"
-      %p
-        %label{ :for => :ssl_insecure }= t('.ssl_insecure')
-        = select_tag :ssl_insecure, options_for_select([['true','true'], ['false', 'false']], @proposal.raw_data['attributes'][@proposal.barclamp]["ssl"]["insecure"].to_s), :onchange => "update_value('ssl/insecure', 'ssl_insecure', 'boolean')"
-      %p
-        %label{ :for => :ssl_cert_required }= t('.ssl_cert_required')
-        = select_tag :ssl_cert_required, options_for_select([['true','true'], ['false', 'false']], @proposal.raw_data['attributes'][@proposal.barclamp]["ssl"]["cert_required"].to_s), :onchange => "update_value('ssl/cert_required', 'ssl_cert_required', 'boolean')"
-      %p
-        %label{ :for => :ssl_ca_certs }= t('.ssl_ca_certs')
-        = text_field_tag :ssl_ca_certs, @proposal.raw_data['attributes'][@proposal.barclamp]["ssl"]["ca_certs"], :size => 80, :onchange => "update_value('ssl/ca_certs', 'ssl_ca_certs', 'string')"
+        %div{ :id => :ssl_div }
+          %p
+            %label{ :for => :ssl_certfile }= t('.ssl_certfile')
+            = text_field_tag :ssl_certfile, @proposal.raw_data['attributes'][@proposal.barclamp]["ssl"]["certfile"], :size => 80, :onchange => "update_value('ssl/certfile', 'ssl_certfile', 'string')"
+          %p
+            %label{ :for => :ssl_keyfile }= t('.ssl_keyfile')
+            = text_field_tag :ssl_keyfile, @proposal.raw_data['attributes'][@proposal.barclamp]["ssl"]["keyfile"], :size => 80, :onchange => "update_value('ssl/keyfile', 'ssl_keyfile', 'string')"
+          %p
+            %label{ :for => :ssl_insecure }= t('.ssl_insecure')
+            = select_tag :ssl_insecure, options_for_select([['true','true'], ['false', 'false']], @proposal.raw_data['attributes'][@proposal.barclamp]["ssl"]["insecure"].to_s), :onchange => "update_value('ssl/insecure', 'ssl_insecure', 'boolean')"
+          %p
+            %label{ :for => :ssl_cert_required }= t('.ssl_cert_required')
+            = select_tag :ssl_cert_required, options_for_select([['true','true'], ['false', 'false']], @proposal.raw_data['attributes'][@proposal.barclamp]["ssl"]["cert_required"].to_s), :onchange => "update_value('ssl/cert_required', 'ssl_cert_required', 'boolean')"
+          %p
+            %label{ :for => :ssl_ca_certs }= t('.ssl_ca_certs')
+            = text_field_tag :ssl_ca_certs, @proposal.raw_data['attributes'][@proposal.barclamp]["ssl"]["ca_certs"], :size => 80, :onchange => "update_value('ssl/ca_certs', 'ssl_ca_certs', 'string')"
 
     %p
-      %label.h3{ :for => :novnc_ssl_header }= t('.novnc_ssl_header')
+      %label.h3= t('.novnc_ssl_header')
     %div.container
       %p
         %label{ :for => :novnc_protocol }= t('.protocol')
