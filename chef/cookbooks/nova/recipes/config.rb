@@ -259,8 +259,10 @@ quantum_servers = search(:node, "roles:quantum-server") || []
 if quantum_servers.length > 0
   quantum_server = quantum_servers[0]
   quantum_server = node if quantum_server.name == node.name
+  quantum_protocol = quantum_server[:quantum][:api][:protocol]
   quantum_server_ip = Chef::Recipe::Barclamp::Inventory.get_network_by_type(quantum_server, "admin").address
   quantum_server_port = quantum_server[:quantum][:api][:service_port]
+  quantum_insecure = quantum_protocol == 'https' && quantum_server[:quantum][:ssl][:insecure]
   quantum_service_user = quantum_server[:quantum][:service_user]
   quantum_service_password = quantum_server[:quantum][:service_password]
   if quantum_server[:quantum][:networking_mode] != 'local'
@@ -300,8 +302,10 @@ template "/etc/nova/nova.conf" do
             :glance_server_ip => glance_server_ip,
             :glance_server_port => glance_server_port,
             :vncproxy_public_ip => vncproxy_public_ip,
+            :quantum_protocol => quantum_protocol,
             :quantum_server_ip => quantum_server_ip,
             :quantum_server_port => quantum_server_port,
+            :quantum_insecure => quantum_insecure,
             :quantum_service_user => quantum_service_user,
             :quantum_service_password => quantum_service_password,
             :quantum_networking_plugin => quantum_networking_plugin,
