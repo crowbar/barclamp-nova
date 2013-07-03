@@ -27,7 +27,7 @@ flavors={11=>
 }
 
 
-  nova=node
+  nova = node
   env_filter = " AND keystone_config_environment:keystone-config-#{nova[:nova][:keystone_instance]}"
   keystones = search(:node, "recipes:keystone\\:\\:server#{env_filter}") || []
   if keystones.length > 0
