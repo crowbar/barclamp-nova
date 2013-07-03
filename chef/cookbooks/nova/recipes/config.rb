@@ -300,6 +300,28 @@ if api == node and api[:nova][:ssl][:enabled]
   end
 end
 
+# if there's no certificate for novnc, use the ones from nova-api
+if api[:nova][:novnc][:ssl][:enabled]
+  unless api[:nova][:novnc][:ssl][:certfile].empty?
+    api_novnc_ssl_certfile = api[:nova][:novnc][:ssl][:certfile]
+    api_novnc_ssl_keyfile = api[:nova][:novnc][:ssl][:keyfile]
+  else
+    api_novnc_ssl_certfile = api[:nova][:ssl][:certfile]
+    api_novnc_ssl_keyfile = api[:nova][:ssl][:keyfile]
+  end
+else
+  api_novnc_ssl_certfile = ''
+  api_novnc_ssl_keyfile = ''
+end
+
+if api == node and api[:nova][:novnc][:ssl][:enabled]
+  unless ::File.exists? api_novnc_ssl_certfile
+    message = "Certificate \"#{api_novnc_ssl_certfile}\" is not present."
+    Chef::Log.fatal(message)
+    raise message
+  end
+end
+
 template "/etc/nova/nova.conf" do
   source "nova.conf.erb"
   owner node[:nova][:user]
@@ -316,6 +338,9 @@ template "/etc/nova/nova.conf" do
             :glance_server_ip => glance_server_ip,
             :glance_server_port => glance_server_port,
             :vncproxy_public_ip => vncproxy_public_ip,
+            :vncproxy_ssl_enabled => api[:nova][:novnc][:ssl][:enabled],
+            :vncproxy_cert_file => api_novnc_ssl_certfile,
+            :vncproxy_key_file => api_novnc_ssl_keyfile,
             :quantum_protocol => quantum_protocol,
             :quantum_server_ip => quantum_server_ip,
             :quantum_server_port => quantum_server_port,

@@ -119,6 +119,13 @@
         "keyfile": "/etc/nova/ssl/private/signing_key.pem",
         "cert_required": false,
         "ca_certs": "/etc/nova/ssl/certs/ca.pem"
+      },
+      "novnc": {
+        "ssl": {
+          "enabled": false,
+          "certfile": "",
+          "keyfile": ""
+        }
       }
     }
   },

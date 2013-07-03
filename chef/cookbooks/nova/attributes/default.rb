@@ -91,6 +91,10 @@ default[:nova][:ssl][:keyfile] = "/etc/nova/ssl/private/signing_key.pem"
 default[:nova][:ssl][:cert_required] = false
 default[:nova][:ssl][:ca_certs] = "/etc/nova/ssl/certs/ca.pem"
 
+default[:nova][:novnc][:ssl][:enabled] = false
+default[:nova][:novnc][:ssl][:certfile] = ""
+default[:nova][:novnc][:ssl][:keyfile] = ""
+
 #
 # Transparent Hugepage Settings                       
 # 
