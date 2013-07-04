@@ -147,5 +147,3 @@ template "/root/.openrc" do
     :nova_api_protocol => api_protocol
   )
 end
-
-
