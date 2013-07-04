@@ -73,6 +73,20 @@ def set_boot_kernel_and_trigger_reboot(flavor='default')
   end
 end
 
+package "libvirt"
+
+template "/etc/libvirt/libvirtd.conf" do
+  source "libvirtd.conf.erb"
+  group "root"
+  owner "root"
+  mode 0644
+  variables(
+    :libvirtd_listen_tcp => node[:nova]["use_migration"] ? 1 : 0,
+    :libvirtd_listen_addr => Chef::Recipe::Barclamp::Inventory.get_network_by_type(node, "admin").address,
+    :libvirtd_auth_tcp => node[:nova]["use_migration"] ? "none" : "sasl"
+  )
+  notifies :restart, "service[libvirtd]", :delayed
+end
 
 if node.platform == "suse"
   case node[:nova][:libvirt_type]
@@ -100,8 +114,6 @@ if node.platform == "suse"
         action [:enable, :start]
       end
   end
-
-  package "libvirt"
 
   libvirt_restart_needed = false
 
@@ -137,7 +149,7 @@ if node.platform == "suse"
 
   if libvirt_restart_needed
     service "libvirtd" do
-      action [:restart]
+      action [:restart], :delayed
     end
   end
 end
