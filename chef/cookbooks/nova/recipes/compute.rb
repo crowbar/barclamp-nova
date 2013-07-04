@@ -166,17 +166,17 @@ link "/etc/libvirt/qemu/networks/autostart/default.xml" do
 end
 
 # enable or disable the ksm setting (performance)
-  
+
 template "/etc/default/qemu-kvm" do
-  source "qemu-kvm.erb" 
+  source "qemu-kvm.erb"
   variables({ 
-    :kvm => node[:nova][:kvm] 
+    :kvm => node[:nova][:kvm]
   })
   mode "0644"
 end
 
 execute "set ksm value" do
-  command "echo #{node[:nova][:kvm][:ksm_enabled]} > /sys/kernel/mm/ksm/run"
+  command "echo #{node[:nova][:kvm][:ksm_enabled] ? 1 : 0} > /sys/kernel/mm/ksm/run"
 end
 
 execute "set tranparent huge page enabled support" do

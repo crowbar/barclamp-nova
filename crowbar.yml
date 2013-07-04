@@ -61,6 +61,17 @@ locale_additions:
           scheduler_header: Scheduler Options
           ram_allocation_ratio: Virtual RAM to Physical RAM allocation ratio
           cpu_allocation_ratio: Virtual CPU to Physical CPU allocation ratio
+          kvm: KVM Options
+          kvm_ksm: Enable Kernel Samepage Merging
+          ssl_header: SSL Support
+          protocol: Protocol
+          ssl_insecure: SSL Certificate is insecure (for instance, auto-signed)
+          ssl_certfile: SSL Certificate File
+          ssl_keyfile: SSL (Private) Key File
+          ssl_cert_required: Require Client Certificate
+          ssl_ca_certs: SSL CA Certificates File
+          novnc_ssl_header: SSL Support for noVNC
+          novnc_ssl_hint: If no specific files are configured, the SSL certificate and key will be taken from the global Nova SSL configuration.
         edit_deployment: 
           deployment: Deployment
 
