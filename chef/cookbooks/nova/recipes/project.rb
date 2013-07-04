@@ -102,14 +102,24 @@ else
   keystone = node
 end
 
-keystone_address = Chef::Recipe::Barclamp::Inventory.get_network_by_type(keystone, "admin").address if keystone_address.nil?
+# For the public endpoint, we prefer the public name. If not set, then we
+# use the IP address except for SSL, where we always prefer a hostname
+# (for certificate validation).
+public_keystone_host = keystone[:crowbar][:public_name]
+if public_keystone_host.nil? or public_keystone_host.empty?
+  unless keystone[:nova][:ssl][:enabled]
+    public_keystone_host = Chef::Recipe::Barclamp::Inventory.get_network_by_type(keystone, "public").address
+  else
+    public_keystone_host = 'public.'+keystone[:fqdn]
+  end
+end
 keystone_protocol = keystone["keystone"]["api"]["protocol"]
 keystone_token = keystone["keystone"]["admin"]["token"] rescue nil
 admin_username = keystone["keystone"]["admin"]["username"] rescue nil
 admin_password = keystone["keystone"]["admin"]["password"] rescue nil
 default_tenant = keystone["keystone"]["default"]["tenant"] rescue nil
 keystone_service_port = keystone["keystone"]["api"]["service_port"] rescue nil
-Chef::Log.info("Keystone server found at #{keystone_address}")
+Chef::Log.info("Keystone server found at #{public_keystone_host}")
 
 apis = search(:node, "recipes:nova\\:\\:api#{env_filter}") || []
 if apis.length > 0 and !node[:nova][:network][:ha_enabled]
@@ -118,9 +128,19 @@ if apis.length > 0 and !node[:nova][:network][:ha_enabled]
 else
   api = node
 end
-admin_api_ip = Chef::Recipe::Barclamp::Inventory.get_network_by_type(api, "admin").address
-Chef::Log.info("Admin API server found at #{admin_api_ip}")
 api_protocol = api[:nova][:ssl][:enabled] ? 'https' : 'http'
+# For the public endpoint, we prefer the public name. If not set, then we
+# use the IP address except for SSL, where we always prefer a hostname
+# (for certificate validation).
+public_api_host = api[:crowbar][:public_name]
+if public_api_host.nil? or public_api_host.empty?
+  unless api[:nova][:ssl][:enabled]
+    public_api_host = Chef::Recipe::Barclamp::Inventory.get_network_by_type(api, "public").address
+  else
+    public_api_host = 'public.'+api[:fqdn]
+  end
+end
+Chef::Log.info("API server found at #{public_api_host}")
 
 if not node[:nova][:use_gitrepo]
   # install python-glanceclient on controller, to be able to upload images
@@ -138,12 +158,12 @@ template "/root/.openrc" do
   mode 0600
   variables(
     :keystone_protocol => keystone_protocol,
-    :keystone_ip_address => keystone_address,
+    :keystone_host => public_keystone_host,
     :keystone_service_port => keystone_service_port,
     :admin_username => admin_username,
     :admin_password => admin_password,
     :default_tenant => default_tenant,
-    :nova_api_ip_address => admin_api_ip,
+    :nova_api_host => public_api_host,
     :nova_api_protocol => api_protocol
   )
 end

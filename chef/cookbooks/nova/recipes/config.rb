@@ -84,9 +84,19 @@ if apis.length > 0 and !node[:nova][:network][:ha_enabled]
 else
   api = node
 end
-public_api_ip = api_ip = Chef::Recipe::Barclamp::Inventory.get_network_by_type(api, "public").address
-admin_api_ip = api_ip = Chef::Recipe::Barclamp::Inventory.get_network_by_type(api, "admin").address
-Chef::Log.info("Api server found at #{public_api_ip} #{admin_api_ip}")
+admin_api_host = api[:fqdn]
+# For the public endpoint, we prefer the public name. If not set, then we
+# use the IP address except for SSL, where we always prefer a hostname
+# (for certificate validation).
+public_api_host = api[:crowbar][:public_name]
+if public_api_host.nil? or public_api_host.empty?
+  unless api[:nova][:ssl][:enabled]
+    public_api_host = Chef::Recipe::Barclamp::Inventory.get_network_by_type(api, "public").address
+  else
+    public_api_host = 'public.'+api[:fqdn]
+  end
+end
+Chef::Log.info("Api server found at #{admin_api_host} #{public_api_host}")
 
 dns_servers = search(:node, "roles:dns-server") || []
 if dns_servers.length > 0
@@ -102,17 +112,17 @@ glance_servers = search(:node, "roles:glance-server") || []
 if glance_servers.length > 0
   glance_server = glance_servers[0]
   glance_server = node if glance_server.name == node.name
-  glance_server_ip = Chef::Recipe::Barclamp::Inventory.get_network_by_type(glance_server, "admin").address
+  glance_server_host = glance_server[:fqdn]
   glance_server_port = glance_server[:glance][:api][:bind_port]
   glance_server_protocol = glance_server[:glance][:api][:protocol]
   glance_server_insecure = glance_server_protocol == 'https' && glance_server[:glance][:ssl][:insecure]
 else
-  glance_server_ip = nil
+  glance_server_host = nil
   glance_server_port = nil
   glance_server_protocol = nil
   glance_server_insecure = nil
 end
-Chef::Log.info("Glance server at #{glance_server_ip}")
+Chef::Log.info("Glance server at #{glance_server_host}")
 
 vncproxies = search(:node, "recipes:nova\\:\\:vncproxy#{env_filter}") || []
 if vncproxies.length > 0
@@ -121,8 +131,18 @@ if vncproxies.length > 0
 else
   vncproxy = node
 end
-vncproxy_public_ip = Chef::Recipe::Barclamp::Inventory.get_network_by_type(vncproxy, "public").address
-Chef::Log.info("VNCProxy server at #{vncproxy_public_ip}")
+# For the public endpoint, we prefer the public name. If not set, then we
+# use the IP address except for SSL, where we always prefer a hostname
+# (for certificate validation).
+vncproxy_public_host = vncproxy[:crowbar][:public_name]
+if vncproxy_public_host.nil? or vncproxy_public_host.empty?
+  unless vncproxy[:nova][:novnc][:ssl][:enabled]
+    vncproxy_public_host = Chef::Recipe::Barclamp::Inventory.get_network_by_type(vncproxy, "public").address
+  else
+    vncproxy_public_host = 'public.'+vncproxy[:fqdn]
+  end
+end
+Chef::Log.info("VNCProxy server at #{vncproxy_public_host}")
 
 cookbook_file "/etc/default/nova-common" do
   source "nova-common"
@@ -246,7 +266,7 @@ else
   keystone = node
 end
 
-keystone_address = Chef::Recipe::Barclamp::Inventory.get_network_by_type(keystone, "admin").address if keystone_address.nil?
+keystone_host = keystone[:fqdn]
 keystone_protocol = keystone["keystone"]["api"]["protocol"]
 keystone_token = keystone["keystone"]["service"]["token"]
 keystone_service_port = keystone["keystone"]["api"]["service_port"]
@@ -254,7 +274,7 @@ keystone_admin_port = keystone["keystone"]["api"]["admin_port"]
 keystone_service_tenant = keystone["keystone"]["service"]["tenant"]
 keystone_service_user = node[:nova][:service_user]
 keystone_service_password = node[:nova][:service_password]
-Chef::Log.info("Keystone server found at #{keystone_address}")
+Chef::Log.info("Keystone server found at #{keystone_host}")
 
 
 
@@ -263,7 +283,7 @@ if quantum_servers.length > 0
   quantum_server = quantum_servers[0]
   quantum_server = node if quantum_server.name == node.name
   quantum_protocol = quantum_server[:quantum][:api][:protocol]
-  quantum_server_ip = Chef::Recipe::Barclamp::Inventory.get_network_by_type(quantum_server, "admin").address
+  quantum_server_host = quantum_server[:fqdn]
   quantum_server_port = quantum_server[:quantum][:api][:service_port]
   quantum_insecure = quantum_protocol == 'https' && quantum_server[:quantum][:ssl][:insecure]
   quantum_service_user = quantum_server[:quantum][:service_user]
@@ -276,12 +296,12 @@ if quantum_servers.length > 0
   quantum_networking_plugin = quantum_server[:quantum][:networking_plugin]
   quantum_networking_mode = quantum_server[:quantum][:networking_mode]
 else
-  quantum_server_ip = nil
+  quantum_server_host = nil
   quantum_server_port = nil
   quantum_service_user = nil
   quantum_service_password = nil
 end
-Chef::Log.info("Quantum server at #{quantum_server_ip}")
+Chef::Log.info("Quantum server at #{quantum_server_host}")
 
 directory "/var/lock/nova" do
   action :create
@@ -336,19 +356,19 @@ template "/etc/nova/nova.conf" do
             :database_connection => database_connection,
             :rabbit_settings => rabbit_settings,
             :libvirt_type => node[:nova][:libvirt_type],
-            :ec2_host => admin_api_ip,
-            :ec2_dmz_host => public_api_ip,
+            :ec2_host => admin_api_host,
+            :ec2_dmz_host => public_api_host,
             :dns_server_public_ip => dns_server_public_ip,
             :glance_server_protocol => glance_server_protocol,
-            :glance_server_ip => glance_server_ip,
+            :glance_server_host => glance_server_host,
             :glance_server_port => glance_server_port,
             :glance_server_insecure => glance_server_insecure,
-            :vncproxy_public_ip => vncproxy_public_ip,
+            :vncproxy_public_host => vncproxy_public_host,
             :vncproxy_ssl_enabled => api[:nova][:novnc][:ssl][:enabled],
             :vncproxy_cert_file => api_novnc_ssl_certfile,
             :vncproxy_key_file => api_novnc_ssl_keyfile,
             :quantum_protocol => quantum_protocol,
-            :quantum_server_ip => quantum_server_ip,
+            :quantum_server_host => quantum_server_host,
             :quantum_server_port => quantum_server_port,
             :quantum_insecure => quantum_insecure,
             :quantum_service_user => quantum_service_user,
@@ -356,7 +376,7 @@ template "/etc/nova/nova.conf" do
             :quantum_networking_plugin => quantum_networking_plugin,
             :keystone_service_tenant => keystone_service_tenant,
             :keystone_protocol => keystone_protocol,
-            :keystone_address => keystone_address,
+            :keystone_host => keystone_host,
             :keystone_admin_port => keystone_admin_port,
             :ssl_enabled => api[:nova][:ssl][:enabled],
             :ssl_cert_file => api[:nova][:ssl][:certfile],
