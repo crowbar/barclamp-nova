@@ -56,7 +56,7 @@ def set_boot_kernel_and_trigger_reboot(flavor='default')
 
         default_boot += 1
       end
-      
+
     end
   end
 
@@ -146,7 +146,7 @@ nova_package("compute")
 
 # ha_enabled activates Nova High Availability (HA) networking.
 # The nova "network" and "api" recipes need to be included on the compute nodes and
-# we must specify the --multi_host=T switch on "nova-manage network create".     
+# we must specify the --multi_host=T switch on "nova-manage network create".
 
 if node[:nova][:network][:ha_enabled] and node[:nova][:networking_backend]=='nova-network'
   include_recipe "nova::api"
@@ -167,6 +167,24 @@ execute "Destroy the libvirt default network" do
   only_if "virsh net-list |grep -q default"
 end
 
+if node[:nova]["use_shared_instance_storage"]
+
+  env_filter = " AND nova_config_environment:#{node[:nova][:config][:environment]}"
+  nova_controller = search(:node, "roles:nova-multi-controller#{env_filter}")
+
+  if !nova_controller.nil? and nova_controller.length > 0
+
+    nova_controller_ip =  Chef::Recipe::Barclamp::Inventory.get_network_by_type(nova_controller[0], "admin").address
+    mount "/var/lib/nova/instances" do
+      action [:mount, :enable]
+      fstype "nfs"
+      options "rw,auto"
+      device nova_controller_ip + ":/var/lib/nova/instances"
+    end
+
+  end
+end
+
 link "/etc/libvirt/qemu/networks/autostart/default.xml" do
   action :delete
 end
@@ -175,7 +193,7 @@ end
 
 template "/etc/default/qemu-kvm" do
   source "qemu-kvm.erb"
-  variables({ 
+  variables({
     :kvm => node[:nova][:kvm]
   })
   mode "0644"

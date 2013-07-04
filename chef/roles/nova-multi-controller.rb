@@ -7,6 +7,7 @@ run_list(
          "recipe[nova::api]",
          "recipe[nova::cert]",
          "recipe[nova::network]",
+         "recipe[nova::instances]",
          "recipe[nova::scheduler]",
          "recipe[nova::vncproxy]",
          "recipe[nova::project]",
