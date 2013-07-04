@@ -31,7 +31,6 @@ if node.platform != "suse"
   end
 end
 
-
 # forcing novnc is deliberate on suse
 unless node[:nova][:use_gitrepo]
   if node[:nova][:use_novnc]
