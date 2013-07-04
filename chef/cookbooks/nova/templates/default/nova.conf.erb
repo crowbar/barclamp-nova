@@ -32,6 +32,9 @@ cpu_allocation_ratio=<%= node[:nova][:scheduler][:cpu_allocation_ratio] %>
 osapi_compute_extension=nova.api.openstack.compute.contrib.standard_extensions
 api_rate_limit = False
 
+# METADATA
+metadata_listen = <%= @metadata_bind_address %>
+
 # EC2
 ec2_scheme=<%= @ssl_enabled ? "https" : "http" %>
 ec2_host=<%= @ec2_host %>
@@ -160,7 +163,7 @@ enabled_apis=ec2,osapi_compute,metadata
 cinder_catalog_info=volume:cinder:internalURL
 
 # a list of APIs with enabled SSL (list value)
-enabled_ssl_apis = <%= @ssl_enabled ? "ec2,osapi_compute,metadata" : "" %>
+enabled_ssl_apis = <%= @ssl_enabled ? "ec2,osapi_compute" : "" %>
 
 # SSL certificate of API server (string value)
 ssl_cert_file = <%= @ssl_cert_file %>
