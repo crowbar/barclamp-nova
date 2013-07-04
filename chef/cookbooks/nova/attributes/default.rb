@@ -51,7 +51,6 @@ default[:nova][:scheduler][:cpu_allocation_ratio] = 16.0
 #
 default[:nova][:hostname] = "nova"
 default[:nova][:my_ip] = ipaddress
-default[:nova][:api] = ""
 unless node[:platform] == 'suse'
     default[:nova][:user] = "nova"
 else
@@ -84,6 +83,17 @@ default[:nova][:network][:vlan_start] = 100
 
 default[:nova][:service_user] = "nova"
 default[:nova][:service_password] = "nova"
+
+default[:nova][:ssl][:enabled] = false
+default[:nova][:ssl][:insecure] = false
+default[:nova][:ssl][:certfile] = "/etc/nova/ssl/certs/signing_cert.pem"
+default[:nova][:ssl][:keyfile] = "/etc/nova/ssl/private/signing_key.pem"
+default[:nova][:ssl][:cert_required] = false
+default[:nova][:ssl][:ca_certs] = "/etc/nova/ssl/certs/ca.pem"
+
+default[:nova][:novnc][:ssl][:enabled] = false
+default[:nova][:novnc][:ssl][:certfile] = ""
+default[:nova][:novnc][:ssl][:keyfile] = ""
 
 #
 # Transparent Hugepage Settings                       

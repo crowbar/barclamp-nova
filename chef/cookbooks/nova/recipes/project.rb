@@ -120,6 +120,7 @@ else
 end
 admin_api_ip = Chef::Recipe::Barclamp::Inventory.get_network_by_type(api, "admin").address
 Chef::Log.info("Admin API server found at #{admin_api_ip}")
+api_protocol = api[:nova][:ssl][:enabled] ? 'https' : 'http'
 
 if not node[:nova][:use_gitrepo]
   # install python-glanceclient on controller, to be able to upload images
@@ -142,8 +143,7 @@ template "/root/.openrc" do
     :admin_username => admin_username,
     :admin_password => admin_password,
     :default_tenant => default_tenant,
-    :nova_api_ip_address => admin_api_ip
+    :nova_api_ip_address => admin_api_ip,
+    :nova_api_protocol => api_protocol
   )
 end
-
-
