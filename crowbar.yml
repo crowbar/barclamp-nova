@@ -136,4 +136,3 @@ debs:
 git_repo:
   - nova https://github.com/openstack/nova.git stable/grizzly
   - novnc https://github.com/kanaka/noVNC.git master
-
