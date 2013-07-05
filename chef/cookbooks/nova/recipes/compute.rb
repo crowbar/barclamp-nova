@@ -187,11 +187,11 @@ if node[:nova]["use_shared_instance_storage"]
   if !nova_controller.nil? and nova_controller.length > 0
 
     nova_controller_ip =  Chef::Recipe::Barclamp::Inventory.get_network_by_type(nova_controller[0], "admin").address
-    mount "/var/lib/nova/instances" do
+    mount node[:nova][:instances_path] do
       action [:mount, :enable]
       fstype "nfs"
       options "rw,auto"
-      device nova_controller_ip + ":/var/lib/nova/instances"
+      device nova_controller_ip + ":" +  node[:nova][:instances_path]
     end
 
   end

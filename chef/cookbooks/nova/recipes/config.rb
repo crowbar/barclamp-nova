@@ -216,7 +216,7 @@ end
 if node[:nova][:use_gitrepo]
   package("libvirt-bin")
   create_user_and_dirs "nova" do
-    opt_dirs ["/var/lib/nova/instances"]
+    opt_dirs [node[:nova][:instances_path]]
     user_gid "libvirtd"
   end
 

@@ -37,7 +37,10 @@ if node[:nova]["use_shared_instance_storage"]
     group "root"
     owner "root"
     mode 0644
-    variables(:admin_subnet => admin_net[:subnet]  + "/" + admin_net[:netmask])
+    variables(
+      :admin_subnet => admin_net[:subnet]  + "/" + admin_net[:netmask],
+      :instances_path => node[:nova][:instances_path]
+    )
     notifies :run, "execute[nfs-export]", :delayed
   end
 

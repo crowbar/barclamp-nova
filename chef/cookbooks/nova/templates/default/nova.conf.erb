@@ -10,7 +10,7 @@ lock_path=/var/lock/nova
 use_syslog=<%= node[:nova][:use_syslog] ? 'True' : 'False' %>
 rootwrap_config=/etc/nova/rootwrap.conf
 root_helper=sudo nova-rootwrap
-
+instances_path=<%= node[:nova][:instances_path] %>
 
 # RABBITMQ
 <% if @rabbit_settings -%>
