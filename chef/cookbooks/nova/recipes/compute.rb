@@ -179,22 +179,20 @@ execute "Destroy the libvirt default network" do
   only_if "virsh net-list |grep -q default"
 end
 
-if node[:nova]["use_shared_instance_storage"]
 
-  env_filter = " AND nova_config_environment:#{node[:nova][:config][:environment]}"
-  nova_controller = search(:node, "roles:nova-multi-controller#{env_filter}")
+env_filter = " AND nova_config_environment:#{node[:nova][:config][:environment]}"
+nova_controller = search(:node, "roles:nova-multi-controller#{env_filter}")
 
-  if !nova_controller.nil? and nova_controller.length > 0
+if !nova_controller.nil? and nova_controller.length > 0
 
-    nova_controller_ip =  Chef::Recipe::Barclamp::Inventory.get_network_by_type(nova_controller[0], "admin").address
-    mount node[:nova][:instances_path] do
-      action [:mount, :enable]
-      fstype "nfs"
-      options "rw,auto"
-      device nova_controller_ip + ":" +  node[:nova][:instances_path]
-    end
-
+  nova_controller_ip =  Chef::Recipe::Barclamp::Inventory.get_network_by_type(nova_controller[0], "admin").address
+  mount node[:nova][:instances_path] do
+    action node[:nova]["use_shared_instance_storage"] ? [:mount, :enable] : [:umount, :disable]
+    fstype "nfs"
+    options "rw,auto"
+    device nova_controller_ip + ":" +  node[:nova][:instances_path]
   end
+
 end
 
 link "/etc/libvirt/qemu/networks/autostart/default.xml" do
