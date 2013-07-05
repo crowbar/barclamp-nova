@@ -134,16 +134,19 @@
       "crowbar-revision": 0,
       "element_states": {
         "nova-multi-controller": [ "readying", "ready", "applying" ],
-        "nova-multi-compute": [ "readying", "ready", "applying" ]
+        "nova-multi-compute-kvm": [ "readying", "ready", "applying" ],
+        "nova-multi-compute-qemu": [ "readying", "ready", "applying" ]
       },
       "elements": {},
       "element_order": [
         [ "nova-multi-controller" ],
-        [ "nova-multi-compute" ]
+        [ "nova-multi-compute-kvm" ],
+        [ "nova-multi-compute-qemu" ]
       ],
       "element_run_list_order": {
         "nova-multi-controller": 95,
-        "nova-multi-compute": 97
+        "nova-multi-compute-kvm": 97,
+        "nova-multi-compute-qemu": 97
       },
       "config": {
         "environment": "nova-config-base",

@@ -59,15 +59,8 @@ class NovaService < ServiceObject
     nodes = [ head ] if nodes.empty?
     base["deployment"]["nova"]["elements"] = {
       "nova-multi-controller" => [ head.name ],
-      "nova-multi-compute" => nodes.map { |x| x.name }
+      "nova-multi-compute-qemu" => nodes.map { |x| x.name if x.virtual? }
     }
-    # automatically swap to qemu if using VMs for testing (relies on node.virtual to detect VMs)
-    nodes.each do |n|
-      if n.virtual?
-        base["attributes"]["nova"]["libvirt_type"] = "qemu"
-        break
-      end
-    end
 
     base["attributes"][@bc_name]["git_instance"] = ""
     begin
@@ -242,5 +235,30 @@ class NovaService < ServiceObject
     @logger.debug("Nova apply_role_pre_chef_call: leaving")
   end
 
-end
+  def validate_proposal_after_save proposal
+    super
 
+    errors = []
+    elements = proposal["deployment"]["nova"]["elements"]
+    nodes = Hash.new(0)
+
+    elements["nova-multi-compute-kvm"].each do |n|
+        nodes[n] += 1
+    end unless elements["nova-multi-compute-kvm"].nil?
+    elements["nova-multi-compute-qemu"].each do |n|
+        nodes[n] += 1
+    end unless elements["nova-multi-compute-qemu"].nil?
+
+    nodes.each do |key,value|
+        if value > 1
+            errors << "Node #{key} has been already assigned to nova-multi-compute role twice"
+        end
+    end unless nodes.nil?
+
+    if errors.length > 0
+      raise Chef::Exceptions::ValidationFailed.new(errors.join("\n"))
+    end
+
+  end
+
+end
