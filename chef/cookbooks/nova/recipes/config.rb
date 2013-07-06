@@ -104,9 +104,13 @@ if glance_servers.length > 0
   glance_server = node if glance_server.name == node.name
   glance_server_ip = Chef::Recipe::Barclamp::Inventory.get_network_by_type(glance_server, "admin").address
   glance_server_port = glance_server[:glance][:api][:bind_port]
+  glance_server_protocol = glance_server[:glance][:api][:protocol]
+  glance_server_insecure = glance_server_protocol == 'https' && glance_server[:glance][:ssl][:insecure]
 else
   glance_server_ip = nil
   glance_server_port = nil
+  glance_server_protocol = nil
+  glance_server_insecure = nil
 end
 Chef::Log.info("Glance server at #{glance_server_ip}")
 
@@ -335,8 +339,10 @@ template "/etc/nova/nova.conf" do
             :ec2_host => admin_api_ip,
             :ec2_dmz_host => public_api_ip,
             :dns_server_public_ip => dns_server_public_ip,
+            :glance_server_protocol => glance_server_protocol,
             :glance_server_ip => glance_server_ip,
             :glance_server_port => glance_server_port,
+            :glance_server_insecure => glance_server_insecure,
             :vncproxy_public_ip => vncproxy_public_ip,
             :vncproxy_ssl_enabled => api[:nova][:novnc][:ssl][:enabled],
             :vncproxy_cert_file => api_novnc_ssl_certfile,
