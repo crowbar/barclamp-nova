@@ -1136,6 +1136,43 @@ dhcpbridge=<%= @dhcpbridge %>
 
 
 
+
+
+#
+# Options defined in bin.nova-novncproxy
+#
+
+# Record sessions to FILE.[session_number] (boolean value)
+#record=false
+
+# Become a daemon (background process) (boolean value)
+#daemon=false
+
+# Disallow non-encrypted connections (boolean value)
+ssl_only=<%= @vncproxy_ssl_enabled ? "True" : "False" %>
+
+# Source is ipv6 (boolean value)
+#source_is_ipv6=false
+
+# SSL certificate file (string value)
+cert=<%= @vncproxy_cert_file %>
+
+# SSL key file (if separate from cert) (string value)
+key=<%= @vncproxy_key_file %>
+
+# Run webserver on same port. Serve files from DIR. (string
+# value)
+#web=/usr/share/novnc
+
+# Host on which to listen for incoming requests (string value)
+#novncproxy_host=0.0.0.0
+
+# Port on which to listen for incoming requests (integer
+# value)
+#novncproxy_port=6080
+
+
+#
 # Options defined in nova.objectstore.s3server
 #
 
@@ -2345,24 +2382,13 @@ libvirt_cpu_mode=none
 # Options defined in nova.vnc
 #
 
-<% unless @vncproxy_public_ip.nil? -%>
-<% if node[:nova][:use_novnc] -%>
-<% if node[:roles].include?("nova-multi-controller") -%>
-novncproxy_host=0.0.0.0
-novncproxy_port=6080
-<% end -%>
 # location of vnc console proxy, in the form
 # "http://127.0.0.1:6080/vnc_auto.html" (string value)
 novncproxy_base_url=<%= @vncproxy_ssl_enabled ? "https" : "http" %>://<%= @vncproxy_public_host %>:6080/vnc_auto.html
-ssl_only=<%= @vncproxy_ssl_enabled ? "True" : "False" %>
-cert=<%= @vncproxy_cert_file %>
-key=<%= @vncproxy_key_file %>
-<% else -%>
+
 # location of nova xvp vnc console proxy, in the form
 # "http://127.0.0.1:6081/console" (string value)
 xvpvncproxy_base_url=http://<%= @vncproxy_public_host %>:6081/console
-<% end -%>
-<% end -%>
 
 # IP address on which instance vncservers should listen
 # (string value)
