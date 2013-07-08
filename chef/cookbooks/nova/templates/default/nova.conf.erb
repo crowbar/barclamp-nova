@@ -1,59 +1,4 @@
-# NETWORK
-<% if node[:nova][:networking_backend] == "quantum" -%>
-# Network settings
-quantum_url=<%= @quantum_protocol %>://<%= @quantum_server_host %>:<%= @quantum_server_port %>
-quantum_api_insecure=<%= @quantum_insecure ? 'True' : 'False' %>
-quantum_auth_strategy=keystone
-quantum_admin_tenant_name=<%= @keystone_service_tenant %>
-quantum_admin_username=<%= @quantum_service_user %>
-quantum_admin_password=<%= @quantum_service_password %>
-quantum_admin_auth_url=<%= @keystone_protocol %>://<%= @keystone_host %>:<%= @keystone_admin_port %>/v2.0
-<% if @quantum_networking_plugin == "openvswitch" -%>
-libvirt_ovs_bridge=br-int
-libvirt_vif_driver=nova.virt.libvirt.vif.LibvirtHybridOVSBridgeDriver
-linuxnet_interface_driver=nova.network.linux_net.LinuxOVSInterfaceDriver
-<% elsif @quantum_networking_plugin == "linuxbridge" -%>
-libvirt_vif_driver=nova.virt.libvirt.vif.LibvirtBridgeDriver
-linuxnet_interface_driver=nova.network.linux_net.LinuxBridgeInterfaceDriver
-<% end -%>
-libvirt_vif_type=ethernet
-security_group_api=quantum
-<% else -%>
-fixed_range=<%= node[:nova][:network][:fixed_range] %>
-floating_range=<%= node[:nova][:network][:floating_range] %>
-network_size=<%= node[:nova][:network][:network_size] %>
-num_networks=<%= node[:nova][:network][:num_networks] %>
-
-<% if node[:nova][:network][:dhcp_enabled] -%>
-<% if node[:nova][:network][:tenant_vlans] -%>
-# DHCP Vlan Mode
-network_manager=nova.network.manager.VlanManager
-vlan_interface=<%= node[:nova][:network][:vlan_interface] %>
-vlan_start=<%= node[:nova][:network][:vlan_start] %>
-<% else -%>
-# DHCP Flat Mode
-network_manager=nova.network.manager.FlatDHCPManager
-flat_network_dns=<%= @dns_server_public_ip %>
-flat_network_dhcp_start=<%= node[:nova][:network][:flat_network_dhcp_start] %>
-flat_interface=<%= node[:nova][:network][:flat_interface] %>
-flat_network_bridge=<%= node[:nova][:network][:flat_network_bridge] %>
-<% end -%>
-<% else -%>
-# Flat Mode
-network_manager=nova.network.manager.FlatManager
-flat_interface=<%= node[:nova][:network][:flat_interface] %>
-flat_network_bridge=<%= node[:nova][:network][:flat_network_bridge] %>
-flat_network_dns=<%= @dns_server_public_ip %>
-flat_injected=True
-<% end -%>
-<% end -%>
-
-# GLANCE
-<% unless @glance_server_host.nil? -%>
-image_service=nova.image.glance.GlanceImageService
-glance_api_servers=<%= @glance_server_protocol %>://<%= @glance_server_host %>:<%= @glance_server_port %>
-glance_api_insecure=<%= @glance_server_insecure ? 'True' : 'False' %>
-<% end -%>
+[DEFAULT]
 
 #
 # Options defined in nova.availability_zones
@@ -300,7 +245,15 @@ compute_manager=nova.compute.manager.ComputeManager
 #cert_manager=nova.cert.manager.CertManager
 
 # full class name for the Manager for network (string value)
-#network_manager=nova.network.manager.VlanManager
+<% if node[:nova][:network][:dhcp_enabled] -%>
+<% if node[:nova][:network][:tenant_vlans] -%>
+network_manager=nova.network.manager.VlanManager
+<% else -%>
+network_manager=nova.network.manager.FlatDHCPManager
+<% end -%>
+<% else -%>
+network_manager=nova.network.manager.FlatManager
+<% end -%>
 
 # full class name for the Manager for scheduler (string value)
 #scheduler_manager=nova.scheduler.manager.SchedulerManager
@@ -460,7 +413,7 @@ ec2_scheme=<%= @ssl_enabled ? "https" : "http" %>
 
 # Set flag to indicate Quantum will proxy metadata requests
 # and resolve instance ids. (boolean value)
-<%= "service_quantum_metadata_proxy=True" if node[:nova][:networking_backend] == "quantum" -%>
+service_quantum_metadata_proxy=<%= node[:nova][:networking_backend] == "quantum" ? 'True' : 'False' %>
 
 # Shared secret to validate proxies Quantum metadata requests
 # (string value)
@@ -948,11 +901,11 @@ instance_usage_audit=True
 # A list of the glance api servers available to nova. Prefix
 # with https:// for ssl-based glance api servers.
 # ([hostname|ip]:port) (list value)
-<%= "glance_api_servers=#{@glance_server_ip}:#{@glance_server_port}" unless @glance_server_ip.nil? %>
+<%= "glance_api_servers=#{@glance_server_protocol}://#{@glance_server_host}:#{@glance_server_port}" unless @glance_server_ip.nil? %>
 
 # Allow to perform insecure SSL (https) requests to glance
 # (boolean value)
-#glance_api_insecure=false
+<%= "glance_api_insecure=#{@glance_server_insecure ? 'True' : 'False'}" unless @glance_server_ip.nil? %>
 
 # Number retries when downloading an image from glance
 # (integer value)
@@ -1128,14 +1081,226 @@ dhcpbridge=<%= @dhcpbridge %>
 #dnsmasq_config_file=
 
 # Driver used to create ethernet devices. (string value)
+<% if node[:nova][:networking_backend] == "quantum" -%>
+<% if @quantum_networking_plugin == "openvswitch" -%>
+linuxnet_interface_driver=nova.network.linux_net.LinuxOVSInterfaceDriver
+<% elsif @quantum_networking_plugin == "linuxbridge" -%>
+linuxnet_interface_driver=nova.network.linux_net.LinuxBridgeInterfaceDriver
+<% end -%>
+<% end -%>
 
 
+# Name of Open vSwitch bridge used with linuxnet (string
+# value)
+#linuxnet_ovs_integration_bridge=br-int
+
+# send gratuitous ARPs for HA setup (boolean value)
+#send_arp_for_ha=false
+
+# send this many gratuitous ARPs for HA setup (integer value)
+#send_arp_for_ha_count=3
+
+# Use single default gateway. Only first nic of vm will get
+# default gateway from dhcp server (boolean value)
+#use_single_default_gateway=false
+
+# An interface that bridges can forward to. If this is set to
+# all then all traffic will be forwarded. Can be specified
+# multiple times. (multi valued)
+#forward_bridge_interface=all
+
+# the ip for the metadata api server (string value)
+#metadata_host=$my_ip
+
+# the port for the metadata api port (integer value)
+#metadata_port=8775
+
+# Regular expression to match iptables rule that shouldalways
+# be on the top. (string value)
+#iptables_top_regex=
+
+# Regular expression to match iptables rule that shouldalways
+# be on the bottom. (string value)
+#iptables_bottom_regex=
 
 
+#
+# Options defined in nova.network.manager
+#
+
+# Bridge for simple network instances (string value)
+<%= "flat_network_bridge=#{node[:nova][:network][:flat_network_bridge]}" if !node[:nova][:network][:tenant_vlans] %>
+
+# Dns for simple network (string value)
+<%= "flat_network_dns=#{@dns_server_public_ip}" if !node[:nova][:network][:tenant_vlans] %>
+
+# Whether to attempt to inject network setup into guest
+# (boolean value)
+<%= "flat_injected=True" if !node[:nova][:network][:dhcp_enabled] && ! node[:nova][:network][:tenant_vlans] %>
+
+# FlatDhcp will bridge into this interface if set (string
+# value)
+<%= "flat_interface=#{node[:nova][:network][:flat_interface]}" if !node[:nova][:network][:tenant_vlans] %>
+
+# First VLAN for private networks (integer value)
+<%= "vlan_start=#{node[:nova][:network][:vlan_start]}" if node[:nova][:network][:tenant_vlans] %>
+
+# vlans will bridge into this interface if set (string value)
+<%= "vlan_interface=#{node[:nova][:network][:vlan_interface]}" if node[:nova][:network][:tenant_vlans] %>
+
+# Number of networks to support (integer value)
+num_networks=<%= node[:nova][:network][:num_networks] %>
+
+# Public IP for the cloudpipe VPN servers (string value)
+#vpn_ip=$my_ip
+
+# First Vpn port for private networks (integer value)
+#vpn_start=1000
+
+# Number of addresses in each private subnet (integer value)
+network_size=<%= node[:nova][:network][:network_size] %>
+
+# Fixed IP address block (string value)
+fixed_range=<%= node[:nova][:network][:fixed_range] %>
+
+# Fixed IPv6 address block (string value)
+#fixed_range_v6=fd00::/48
+
+# Default IPv4 gateway (string value)
+#gateway=<None>
+
+# Default IPv6 gateway (string value)
+#gateway_v6=<None>
+
+# Number of addresses reserved for vpn clients (integer value)
+#cnt_vpn_clients=0
+
+# Seconds after which a deallocated ip is disassociated
+# (integer value)
+#fixed_ip_disassociate_timeout=600
+
+# Number of attempts to create unique mac address (integer
+# value)
+#create_unique_mac_address_attempts=5
+
+# If passed, use fake network devices and addresses (boolean
+# value)
+#fake_network=false
+
+# If True, skip using the queue and make local calls (boolean
+# value)
+#fake_call=false
+
+# If True, unused gateway devices (VLAN and bridge) are
+# deleted in VLAN network mode with multi hosted networks
+# (boolean value)
+#teardown_unused_network_gateway=false
+
+# If True, send a dhcp release on instance termination
+# (boolean value)
+#force_dhcp_release=false
+
+# If True in multi_host mode, all compute hosts share the same
+# dhcp address. (boolean value)
+#share_dhcp_address=false
+
+# If True, when a DNS entry must be updated, it sends a fanout
+# cast to all network hosts to update their DNS entries in
+# multi host mode (boolean value)
+#update_dns_entries=false
+
+# Number of seconds to wait between runs of updates to DNS
+# entries. (integer value)
+#dns_update_periodic_interval=-1
+
+# domain to use for building the hostnames (string value)
+#dhcp_domain=novalocal
+
+# Indicates underlying L3 management library (string value)
+#l3_lib=nova.network.l3.LinuxNetL3
 
 
+#
+# Options defined in nova.network.quantumv2.api
+#
+
+# URL for connecting to quantum (string value)
+quantum_url=<%= @quantum_protocol %>://<%= @quantum_server_host %>:<%= @quantum_server_port %>
+
+# timeout value for connecting to quantum in seconds (integer
+# value)
+#quantum_url_timeout=30
+
+# username for connecting to quantum in admin context (string
+# value)
+quantum_admin_username=<%= @quantum_service_user %>
+
+# password for connecting to quantum in admin context (string
+# value)
+quantum_admin_password=<%= @quantum_service_password %>
+
+# tenant name for connecting to quantum in admin context
+# (string value)
+quantum_admin_tenant_name=<%= @keystone_service_tenant %>
+
+# region name for connecting to quantum in admin context
+# (string value)
+#quantum_region_name=<None>
+
+# auth url for connecting to quantum in admin context (string
+# value)
+quantum_admin_auth_url=<%= @keystone_protocol %>://<%= @keystone_host %>:<%= @keystone_admin_port %>/v2.0
+
+# if set, ignore any SSL validation issues (boolean value)
+quantum_api_insecure=<%= @quantum_insecure ? 'True' : 'False' %>
+
+# auth strategy for connecting to quantum in admin context
+# (string value)
+#quantum_auth_strategy=keystone
+
+# Name of Integration Bridge used by Open vSwitch (string
+# value)
+#quantum_ovs_bridge=br-int
+
+# Number of seconds before querying quantum for extensions
+# (integer value)
+#quantum_extension_sync_interval=600
 
 
+#
+# Options defined in nova.network.rpcapi
+#
+
+# the topic network nodes listen on (string value)
+#network_topic=network
+
+# Default value for multi_host in networks. Also, if set, some
+# rpc network calls will be sent directly to host. (boolean
+# value)
+#multi_host=false
+
+
+#
+# Options defined in nova.network.security_group.openstack_driver
+#
+
+# The full class name of the security API class (string value)
+<% if node[:nova][:networking_backend] == "quantum" %>security_group_api=quantum<% end %>
+
+# The full class name of the security group handler class
+# (string value)
+#security_group_handler=nova.network.sg.NullSecurityGroupHandler
+
+
+#
+# Options defined in bin.nova-clear-rabbit-queues
+#
+
+# Queues to delete (multi valued)
+#queues=
+
+# delete nova exchange too. (boolean value)
+#delete_exchange=false
 
 
 #
@@ -1443,9 +1608,7 @@ rabbit_host=<%= @rabbit_settings[:address] %>
 
 # The RabbitMQ broker port where a single node is used
 # (integer value)
-<% unless @rabbit_settings[:port].nil? -%>
-rabbit_port=<%= @rabbit_settings[:port] %>
-<% end -%>
+<%= "rabbit_port=#{@rabbit_settings[:port]}" unless @rabbit_settings[:port].nil? %>
 
 # RabbitMQ HA cluster host:port pairs (list value)
 #rabbit_hosts=$rabbit_host:$rabbit_port
@@ -1800,9 +1963,7 @@ compute_driver=libvirt.LibvirtDriver
 
 # Firewall driver (defaults to hypervisor specific iptables
 # driver) (string value)
-<% if node[:nova][:networking_backend] == "quantum" -%>
-firewall_driver=nova.virt.firewall.NoopFirewallDriver
-<% end -%>
+<%= "firewall_driver=nova.virt.firewall.NoopFirewallDriver" if node[:nova][:networking_backend] == "quantum" %>
 
 # Whether to allow network traffic from same network (boolean
 # value)
@@ -1919,8 +2080,13 @@ block_migration_flag=VIR_MIGRATE_UNDEFINE_SOURCE, VIR_MIGRATE_PEER2PEER, VIR_MIG
 #snapshot_image_format=<None>
 
 # The libvirt VIF driver to configure the VIFs. (string value)
-# TODO/FIXME: network
-#libvirt_vif_driver=nova.virt.libvirt.vif.LibvirtGenericVIFDriver
+<% if node[:nova][:networking_backend] == "quantum" -%>
+<% if @quantum_networking_plugin == "openvswitch" -%>
+libvirt_vif_driver=nova.virt.libvirt.vif.LibvirtHybridOVSBridgeDriver
+<% elsif @quantum_networking_plugin == "linuxbridge" -%>
+libvirt_vif_driver=nova.virt.libvirt.vif.LibvirtBridgeDriver
+<% end -%>
+<% end -%>
 
 # Libvirt handlers for remote volumes. (list value)
 #libvirt_volume_drivers=iscsi=nova.virt.libvirt.volume.LibvirtISCSIVolumeDriver,local=nova.virt.libvirt.volume.LibvirtVolumeDriver,fake=nova.virt.libvirt.volume.LibvirtFakeVolumeDriver,rbd=nova.virt.libvirt.volume.LibvirtNetVolumeDriver,sheepdog=nova.virt.libvirt.volume.LibvirtNetVolumeDriver,nfs=nova.virt.libvirt.volume.LibvirtNFSVolumeDriver,aoe=nova.virt.libvirt.volume.LibvirtAOEVolumeDriver,glusterfs=nova.virt.libvirt.volume.LibvirtGlusterfsVolumeDriver,fibre_channel=nova.virt.libvirt.volume.LibvirtFibreChannelVolumeDriver,scality=nova.virt.libvirt.volume.LibvirtScalityVolumeDriver
@@ -1928,9 +2094,7 @@ block_migration_flag=VIR_MIGRATE_UNDEFINE_SOURCE, VIR_MIGRATE_PEER2PEER, VIR_MIG
 # Override the default disk prefix for the devices attached to
 # a server, which is dependent on libvirt_type. (valid options
 # are: sd, xvd, uvd, vd) (string value)
-<% if @libvirt_type.eql?('xen') -%>
-libvirt_disk_prefix=xvd
-<% end -%>
+<%= "libvirt_disk_prefix=xvd" if @libvirt_type.eql?('xen') %>
 
 # Number of seconds to wait for instance to shut down after
 # soft reboot request is made. We fall back to hard reboot if
@@ -2042,7 +2206,7 @@ libvirt_cpu_mode=none
 
 # Name of Integration Bridge used by Open vSwitch (string
 # value)
-#libvirt_ovs_bridge=br-int
+libvirt_ovs_bridge=br-int
 
 # Use virtio for bridge interfaces with KVM/QEMU (boolean
 # value)
