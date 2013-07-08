@@ -82,7 +82,6 @@ default[:nova][:network][:flat_network_bridge] = "br100"
 default[:nova][:network][:flat_injected] = true
 default[:nova][:network][:flat_dns] = "8.8.4.4"
 default[:nova][:network][:flat_interface] = "eth0"
-default[:nova][:network][:flat_network_dhcp_start] = "10.0.0.2"
 default[:nova][:network][:vlan_interface] = "eth1"
 default[:nova][:network][:vlan_start] = 100
 
