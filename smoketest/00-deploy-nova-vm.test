@@ -522,7 +522,7 @@ bc=$(dpkg --list | grep "precision calculator language")
 [[ ! $bc ]] && apt-get -y install bc
 for ((i=1; i<=5; i++)); do
     echo -e "Checking Cinder version on server: $cinder_server_ip attempt #$i"
-    cinder_server_ip=$(knife_node_find 'roles:cinder-server' IP)
+    cinder_server_ip=$(knife_node_find 'roles:cinder-controller' IP)
     cinder_version=$(ssh $cinder_server_ip "cinder --version" 2>&1 | sed -e 's/[[:digit:]]*\.//' | sed -e 's/[[:alpha:]]//g' | sed -e 's/^0\.//' | sed 's/[\/|\-]//g' | tr -dc '$[:print:]\r\n\t\\^M')
     [[ "$cinder_version" ]] && break || sleep 20 && continue
 done
