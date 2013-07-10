@@ -57,9 +57,15 @@ class NovaService < ServiceObject
     nodes.delete_if { |n| n.admin? } if nodes.size > 1
     head = nodes.shift
     nodes = [ head ] if nodes.empty?
+
+    kvm = nodes.map { |n| n if n[:cpu]['0'][:flags].include?("vmx") or n[:cpu]['0'][:flags].include?("svm") }
+    kvm.delete_if { |n| n.nil? }
+    qemu = nodes - kvm
+
     base["deployment"]["nova"]["elements"] = {
       "nova-multi-controller" => [ head.name ],
-      "nova-multi-compute-qemu" => nodes.map { |x| x.name if x.virtual? }
+      "nova-multi-compute-kvm" => kvm.map { |x| x.name },
+      "nova-multi-compute-qemu" => qemu.map { |x| x.name }  
     }
 
     base["attributes"][@bc_name]["git_instance"] = ""
