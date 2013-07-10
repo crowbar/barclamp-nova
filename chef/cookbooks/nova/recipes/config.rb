@@ -84,6 +84,7 @@ if apis.length > 0 and !node[:nova][:network][:ha_enabled]
 else
   api = node
 end
+admin_api_ip = Chef::Recipe::Barclamp::Inventory.get_network_by_type(api, "admin").address
 admin_api_host = api[:fqdn]
 # For the public endpoint, we prefer the public name. If not set, then we
 # use the IP address except for SSL, where we always prefer a hostname
@@ -363,6 +364,7 @@ template "/etc/nova/nova.conf" do
             :glance_server_host => glance_server_host,
             :glance_server_port => glance_server_port,
             :glance_server_insecure => glance_server_insecure,
+            :metadata_bind_address => admin_api_ip,
             :vncproxy_public_host => vncproxy_public_host,
             :vncproxy_ssl_enabled => api[:nova][:novnc][:ssl][:enabled],
             :vncproxy_cert_file => api_novnc_ssl_certfile,
