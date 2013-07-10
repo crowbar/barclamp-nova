@@ -119,12 +119,12 @@ paste.filter_factory = nova.api.auth:NovaKeystoneContext.factory
 [filter:authtoken]
 paste.filter_factory = keystoneclient.middleware.auth_token:filter_factory
 service_protocol = <%= @keystone_protocol %>
-service_host = <%= @keystone_ip_address %>
+service_host = <%= @keystone_host %>
 service_port = <%= @keystone_service_port %>
-auth_host = <%= @keystone_ip_address %>
+auth_host = <%= @keystone_host %>
 auth_port = <%= @keystone_admin_port %>
 auth_protocol = <%= @keystone_protocol %>
-auth_uri = <%= @keystone_protocol %>://<%= @keystone_ip_address %>:<%= @keystone_service_port %>/
+auth_uri = <%= @keystone_protocol %>://<%= @keystone_host %>:<%= @keystone_service_port %>/
 admin_user = <%= @keystone_service_user %>
 admin_password = <%= @keystone_service_password %>
 admin_tenant_name = <%= @keystone_service_tenant %>
