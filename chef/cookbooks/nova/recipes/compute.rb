@@ -84,7 +84,7 @@ if node.platform == "suse"
 
       set_boot_kernel_and_trigger_reboot
     when "xen"
-      %w{kernel-xen xen xen-tools}.each do |pkg|
+      %w{kernel-xen xen xen-tools openvswitch-kmp-xen}.each do |pkg|
         package pkg do
           action :install
         end
