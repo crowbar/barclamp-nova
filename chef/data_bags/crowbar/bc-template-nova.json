@@ -9,6 +9,8 @@
       "glance_instance": "none",
       "cinder_instance": "none",
       "quantum_instance": "none",
+      "itxt_instance": "none",
+      "trusted_flavors": false,
       "libvirt_type": "kvm",
       "use_novnc": true,
       "verbose": false,
