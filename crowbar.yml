@@ -35,7 +35,7 @@ barclamp:
 
 # Nova needs a longer timeout to wait for test VMs.
 smoketest:
-  timeout: 600
+  timeout: 2400
 
 crowbar:
   layout: 1
