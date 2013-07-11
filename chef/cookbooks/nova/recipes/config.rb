@@ -33,6 +33,9 @@ unless node[:nova][:use_gitrepo]
     end
     action :install
   end
+
+  # nova.conf.erb has notification_driver=ceilometer.compute.nova_notifier, thus:
+  package "python-ceilometerclient"
 else
   pfs_and_install_deps "nova" do
     virtualenv venv_path
