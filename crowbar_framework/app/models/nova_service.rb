@@ -58,8 +58,7 @@ class NovaService < ServiceObject
     head = nodes.shift
     nodes = [ head ] if nodes.empty?
 
-    kvm = nodes.map { |n| n if n[:cpu]['0'][:flags].include?("vmx") or n[:cpu]['0'][:flags].include?("svm") }
-    kvm.delete_if { |n| n.nil? }
+    kvm = nodes.select { |n| n if n[:cpu]['0'][:flags].include?("vmx") or n[:cpu]['0'][:flags].include?("svm") }
     qemu = nodes - kvm
 
     base["deployment"]["nova"]["elements"] = {
