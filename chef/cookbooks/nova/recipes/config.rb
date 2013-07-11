@@ -277,7 +277,13 @@ keystone_service_user = node[:nova][:service_user]
 keystone_service_password = node[:nova][:service_password]
 Chef::Log.info("Keystone server found at #{keystone_host}")
 
-
+cinder_servers = search(:node, "roles:cinder-controller") || []
+if cinder_servers.length > 0
+  cinder_server = cinder_servers[0]
+  cinder_insecure = cinder_server[:cinder][:api][:protocol] == 'https' && cinder[:cinder][:ssl][:insecure]
+else
+  cinder_insecure = false
+end
 
 quantum_servers = search(:node, "roles:quantum-server") || []
 if quantum_servers.length > 0
@@ -380,6 +386,7 @@ template "/etc/nova/nova.conf" do
             :keystone_protocol => keystone_protocol,
             :keystone_host => keystone_host,
             :keystone_admin_port => keystone_admin_port,
+            :cinder_insecure => cinder_insecure,
             :ssl_enabled => api[:nova][:ssl][:enabled],
             :ssl_cert_file => api[:nova][:ssl][:certfile],
             :ssl_key_file => api[:nova][:ssl][:keyfile],
