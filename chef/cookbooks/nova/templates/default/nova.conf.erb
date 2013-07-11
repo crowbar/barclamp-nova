@@ -161,6 +161,7 @@ auth_strategy=keystone
 volume_api_class=nova.volume.cinder.API
 enabled_apis=ec2,osapi_compute,metadata
 cinder_catalog_info=volume:cinder:internalURL
+cinder_api_insecure=<%= @cinder_insecure ? 'True' : 'False' %>
 
 # a list of APIs with enabled SSL (list value)
 enabled_ssl_apis = <%= @ssl_enabled ? "ec2,osapi_compute" : "" %>
