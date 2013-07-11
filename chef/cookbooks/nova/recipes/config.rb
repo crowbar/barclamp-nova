@@ -114,6 +114,11 @@ end
 vncproxy_public_ip = Chef::Recipe::Barclamp::Inventory.get_network_by_type(vncproxy, "public").address
 Chef::Log.info("VNCProxy server at #{vncproxy_public_ip}")
 
+directory "/etc/nova" do
+   mode 0755
+   action :create
+end
+
 cookbook_file "/etc/default/nova-common" do
   source "nova-common"
   owner node[:nova][:user]
