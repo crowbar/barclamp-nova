@@ -177,6 +177,7 @@ end
 
 execute "set ksm value" do
   command "echo #{node[:nova][:kvm][:ksm_enabled] ? 1 : 0} > /sys/kernel/mm/ksm/run"
+  only_if "test -f /sys/kernel/mm/ksm/run"
 end
 
 execute "set tranparent huge page enabled support" do
@@ -184,11 +185,13 @@ execute "set tranparent huge page enabled support" do
   # redhat /sys/kernel/mm/redhat_transparent_hugepage/enabled
   # Below will work on both Ubuntu and SLES
   command "echo #{node[:nova][:hugepage][:tranparent_hugepage_enabled]} > /sys/kernel/mm/transparent_hugepage/enabled"
+  only_if "test -f /sys/kernel/mm/transparent_hugepage/enabled"
   # not_if 'grep -q \\[always\\] /sys/kernel/mm/transparent_hugepage/enabled'
 end
 
 execute "set tranparent huge page defrag support" do
   command "echo #{node[:nova][:hugepage][:tranparent_hugepage_defrag]} > /sys/kernel/mm/transparent_hugepage/defrag"
+  only_if "test -f /sys/kernel/mm/transparent_hugepage/defrag"
 end
 
 execute "set vhost_net module" do
