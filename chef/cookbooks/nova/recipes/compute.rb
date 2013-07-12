@@ -113,11 +113,11 @@ if node.platform == "suse"
       # make sure to only set qemu:kvm for kvm and qemu deployments, use
       # system defaults for xen
       if ['kvm','qemu'].include?(node[:nova][:libvirt_type])
-        rc.search_file_replace_line(/user.*=/, 'user = "qemu"')
-        rc.search_file_replace_line(/group.*=/, 'group = "kvm"')
+        rc.search_file_replace_line(/^[ #]*user *=/, 'user = "qemu"')
+        rc.search_file_replace_line(/^[ #]*group *=/, 'group = "kvm"')
       else
-        rc.search_file_replace_line(/user.*=/, '#user = "root"')
-        rc.search_file_replace_line(/group.*=/, '#group = "root"')
+        rc.search_file_replace_line(/^ *user *=/, '#user = "root"')
+        rc.search_file_replace_line(/^ *group *=/, '#group = "root"')
       end
 
       libvirt_restart_needed = true if rc.file_edited?
