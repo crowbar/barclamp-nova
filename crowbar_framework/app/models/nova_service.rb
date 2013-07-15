@@ -27,7 +27,7 @@ class NovaService < ServiceObject
 
   def proposal_dependencies(role)
     answer = []
-    answer << { "barclamp" => "database", "inst" => role.default_attributes["nova"]["db"]["database_instance"] }
+    answer << { "barclamp" => "database", "inst" => role.default_attributes["nova"]["database_instance"] }
     answer << { "barclamp" => "keystone", "inst" => role.default_attributes["nova"]["keystone_instance"] }
     answer << { "barclamp" => "glance", "inst" => role.default_attributes["nova"]["glance_instance"] }
     answer << { "barclamp" => "rabbitmq", "inst" => role.default_attributes["nova"]["rabbitmq_instance"] }
@@ -82,7 +82,7 @@ class NovaService < ServiceObject
       @logger.info("#{@bc_name} create_proposal: no git found")
     end
 
-    base["attributes"]["nova"]["db"]["database_instance"] = ""
+    base["attributes"]["nova"]["database_instance"] = ""
     begin
       databaseService = DatabaseService.new(@logger)
       dbs = databaseService.list_active[1]
@@ -93,13 +93,13 @@ class NovaService < ServiceObject
       if dbs.empty?
         @logger.info("Nova create_proposal: no database proposal found")
       else
-        base["attributes"]["nova"]["db"]["database_instance"] = dbs[0]
+        base["attributes"]["nova"]["database_instance"] = dbs[0]
       end
     rescue
       @logger.info("Nova create_proposal: no database found")
     end
 
-    if base["attributes"]["nova"]["db"]["database_instance"] == ""
+    if base["attributes"]["nova"]["database_instance"] == ""
       raise(I18n.t('model.service.dependency_missing', :name => @bc_name, :dependson => "database"))
     end
 

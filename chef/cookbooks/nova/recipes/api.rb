@@ -22,8 +22,7 @@ include_recipe "nova::config"
 nova_path = "/opt/nova"
 venv_path = node[:nova][:use_virtualenv] ? "#{nova_path}/.venv" : nil
 
-env_filter = " AND keystone_config_environment:keystone-config-#{node[:nova][:keystone_instance]}"
-keystones = search(:node, "recipes:keystone\\:\\:server#{env_filter}") || []
+keystones = search_env_filtered(:node, "recipes:keystone\\:\\:server")
 if keystones.length > 0
   keystone = keystones[0]
   keystone = node if keystone.name == node.name
@@ -72,7 +71,7 @@ template "/etc/nova/api-paste.ini" do
   notifies :restart, resources(:service => "nova-api"), :immediately
 end
 
-apis = search(:node, "recipes:nova\\:\\:api#{env_filter}") || []
+apis = search_env_filtered(:node, "recipes:nova\\:\\:api")
 if apis.length > 0 and !node[:nova][:network][:ha_enabled]
   api = apis[0]
   api = node if api.name == node.name

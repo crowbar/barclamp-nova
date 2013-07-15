@@ -44,8 +44,7 @@ execute "nova-manage floating create --ip_range=#{node[:nova][:network][:floatin
 end
 
 unless node[:nova][:network][:tenant_vlans]
-  env_filter = " AND database_config_environment:database-config-#{node[:nova][:db][:database_instance]}"
-  db_server = search(:node, "roles:database-server#{env_filter}")[0]
+  db_server = search_env_filtered(:node, "roles:database-server")[0]
   db_server = node if db_server.name == node.name
   backend_name = Chef::Recipe::Database::Util.get_backend_name(db_server)
 
@@ -93,8 +92,7 @@ end
 end
 
 # Setup administrator credentials file
-env_filter = " AND keystone_config_environment:keystone-config-#{node[:nova][:keystone_instance]}"
-keystones = search(:node, "recipes:keystone\\:\\:server#{env_filter}") || []
+keystones = search_env_filtered(:node, "recipes:keystone\\:\\:server")
 if keystones.length > 0
   keystone = keystones[0]
   keystone = node if keystone.name == node.name
@@ -121,7 +119,7 @@ default_tenant = keystone["keystone"]["default"]["tenant"] rescue nil
 keystone_service_port = keystone["keystone"]["api"]["service_port"] rescue nil
 Chef::Log.info("Keystone server found at #{public_keystone_host}")
 
-apis = search(:node, "recipes:nova\\:\\:api#{env_filter}") || []
+apis = search_env_filtered(:node, "recipes:nova\\:\\:api")
 if apis.length > 0 and !node[:nova][:network][:ha_enabled]
   api = apis[0]
   api = node if api.name == node.name

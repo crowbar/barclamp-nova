@@ -45,8 +45,7 @@ end
 
 include_recipe "database::client"
 
-env_filter = " AND database_config_environment:database-config-#{node[:nova][:db][:database_instance]}"
-sqls = search(:node, "roles:database-server#{env_filter}") || []
+sqls = search_env_filtered(:node, "roles:database-server")
 if sqls.length > 0
   sql = sqls[0]
   sql = node if sql.name == node.name
@@ -62,8 +61,7 @@ database_address = Chef::Recipe::Barclamp::Inventory.get_network_by_type(sql, "a
 Chef::Log.info("database server found at #{database_address}")
 database_connection = "#{backend_name}://#{node[:nova][:db][:user]}:#{node[:nova][:db][:password]}@#{database_address}/#{node[:nova][:db][:database]}"
 
-env_filter = " AND rabbitmq_config_environment:rabbitmq-config-#{node[:nova][:rabbitmq_instance]}"
-rabbits = search(:node, "roles:rabbitmq-server#{env_filter}") || []
+rabbits = search_env_filtered(:node, "roles:rabbitmq-server")
 if rabbits.length > 0
   rabbit = rabbits[0]
   rabbit = node if rabbit.name == node.name
@@ -80,7 +78,7 @@ rabbit_settings = {
   :vhost => rabbit[:rabbitmq][:vhost]
 }
 
-apis = search(:node, "recipes:nova\\:\\:api#{env_filter}") || []
+apis = search_env_filtered(:node, "recipes:nova\\:\\:api")
 if apis.length > 0 and !node[:nova][:network][:ha_enabled]
   api = apis[0]
   api = node if api.name == node.name
@@ -102,7 +100,7 @@ if public_api_host.nil? or public_api_host.empty?
 end
 Chef::Log.info("Api server found at #{admin_api_host} #{public_api_host}")
 
-dns_servers = search(:node, "roles:dns-server") || []
+dns_servers = search_env_filtered(:node, "roles:dns-server")
 if dns_servers.length > 0
   dns_server = dns_servers[0]
   dns_server = node if dns_server.name == node.name
@@ -112,8 +110,7 @@ end
 dns_server_public_ip = Chef::Recipe::Barclamp::Inventory.get_network_by_type(dns_server, "public").address
 Chef::Log.info("DNS server found at #{dns_server_public_ip}")
 
-env_filter = " AND glance_config_environment:glance-config-#{node[:nova][:glance_instance]}"
-glance_servers = search(:node, "roles:glance-server#{env_filter}") || []
+glance_servers = search_env_filtered(:node, "roles:glance-server")
 if glance_servers.length > 0
   glance_server = glance_servers[0]
   glance_server = node if glance_server.name == node.name
@@ -129,7 +126,7 @@ else
 end
 Chef::Log.info("Glance server at #{glance_server_host}")
 
-vncproxies = search(:node, "recipes:nova\\:\\:vncproxy#{env_filter}") || []
+vncproxies = search_env_filtered(:node, "recipes:nova\\:\\:vncproxy")
 if vncproxies.length > 0
   vncproxy = vncproxies[0]
   vncproxy = node if vncproxy.name == node.name
@@ -262,8 +259,7 @@ if node[:nova][:use_gitrepo]
   end
 end
 
-env_filter = " AND keystone_config_environment:keystone-config-#{node[:nova][:keystone_instance]}"
-keystones = search(:node, "recipes:keystone\\:\\:server#{env_filter}") || []
+keystones = search_env_filtered(:node, "recipes:keystone\\:\\:server")
 if keystones.length > 0
   keystone = keystones[0]
   keystone = node if keystone.name == node.name
@@ -289,7 +285,7 @@ else
   cinder_insecure = false
 end
 
-quantum_servers = search(:node, "roles:quantum-server") || []
+quantum_servers = search_env_filtered(:node, "roles:quantum-server")
 if quantum_servers.length > 0
   quantum_server = quantum_servers[0]
   quantum_server = node if quantum_server.name == node.name
