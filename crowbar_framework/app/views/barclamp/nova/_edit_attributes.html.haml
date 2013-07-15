@@ -23,9 +23,6 @@
       %label{ :for => :use_novnc }= t('.use_novnc')
       = select_tag :use_novnc, options_for_select([['true','true'], ['false', 'false']], @proposal.raw_data['attributes'][@proposal.barclamp]["use_novnc"].to_s), :onchange => "update_value('use_novnc', 'use_novnc', 'boolean')"
     = render 'barclamp/git/pfsdeps.html.haml'
-    %p
-      %label{ :for => :libvirt_type }= t('.libvirt_type')
-      = select_tag :libvirt_type, options_for_select([['kvm','kvm'], ['qemu', 'qemu']], @proposal.raw_data['attributes'][@proposal.barclamp]["libvirt_type"].to_s), :onchange => "update_value('libvirt_type', 'libvirt_type', 'string')"
     %label.h3{ :for => :scheduler }= t('.scheduler_header')
     %div.container{ :id => :scheduler }
       %p
@@ -83,13 +80,6 @@
           = text_field_tag :novnc_ssl_keyfile, @proposal.raw_data['attributes'][@proposal.barclamp]["novnc"]["ssl"]["keyfile"], :size => "80", :onchange => "update_value('novnc/ssl/keyfile', 'novnc_ssl_keyfile', 'string')"
 
 :javascript
-  function toggle_ksm() {
-    if ($('#libvirt_type option:selected').attr('value') == 'kvm') {
-      $('#kvm_div').show(); $('#kvm_div_label').show();
-    } else {
-      $('#kvm_div').hide(); $('#kvm_div_label').hide();
-    }
-  };
 
   function toggle_protocol() {
     if ($('#protocol option:selected').attr('value') == 'true') {
@@ -116,13 +106,11 @@
   };
 
   $(document).ready(function () {
-    toggle_ksm();
     toggle_protocol();
     toggle_ssl_cert_required();
     toggle_novnc_protocol();
   });
 
-  $('#libvirt_type').change(toggle_ksm);
   $('#protocol').change(toggle_protocol);
   $('#ssl_cert_required').change(toggle_ssl_cert_required);
   $('#novnc_protocol').change(toggle_novnc_protocol);

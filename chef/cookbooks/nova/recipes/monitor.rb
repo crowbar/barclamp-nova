@@ -42,7 +42,11 @@ if env_filter
     nova_scale[:apis] << n
   end
 
-  search(:node, "roles:nova-multi-compute #{env_filter}") do |n|
+  search(:node, "roles:nova-multi-compute-kvm #{env_filter}") do |n|
+    nova_scale[:computes] << n
+  end
+
+   search(:node, "roles:nova-multi-compute-qemu #{env_filter}") do |n|
     nova_scale[:computes] << n
   end
 
