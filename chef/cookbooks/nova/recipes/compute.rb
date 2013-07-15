@@ -181,32 +181,27 @@ template "/etc/default/qemu-kvm" do
   mode "0644"
 end if node.platform == "ubuntu"
 
-execute "set ksm value" do
-  command "echo #{node[:nova][:kvm][:ksm_enabled] ? 1 : 0} > /sys/kernel/mm/ksm/run"
-  only_if "test -f /sys/kernel/mm/ksm/run"
+template "/usr/sbin/crowbar-compute-set-sys-options" do
+  source "crowbar-compute-set-sys-options.erb"
+  variables({
+    :ksm_enabled => node[:nova][:kvm][:ksm_enabled] ? 1 : 0,
+    :tranparent_hugepage_enabled => node[:nova][:hugepage][:tranparent_hugepage_enabled],
+    :tranparent_hugepage_defrag => node[:nova][:hugepage][:tranparent_hugepage_defrag]
+  })
+  mode "0755"
 end
 
-execute "set tranparent huge page enabled support" do
-  # note path to setting is OS dependent
-  # redhat /sys/kernel/mm/redhat_transparent_hugepage/enabled
-  # Below will work on both Ubuntu and SLES
-  command "echo #{node[:nova][:hugepage][:tranparent_hugepage_enabled]} > /sys/kernel/mm/transparent_hugepage/enabled"
-  only_if "test -f /sys/kernel/mm/transparent_hugepage/enabled"
-  # not_if 'grep -q \\[always\\] /sys/kernel/mm/transparent_hugepage/enabled'
+cookbook_file "/etc/cron.d/crowbar-compute-set-sys-options-at-boot" do
+  source "crowbar-compute-set-sys-options-at-boot"
 end
 
-execute "set tranparent huge page defrag support" do
-  command "echo #{node[:nova][:hugepage][:tranparent_hugepage_defrag]} > /sys/kernel/mm/transparent_hugepage/defrag"
-  only_if "test -f /sys/kernel/mm/transparent_hugepage/defrag"
+execute "run crowbar-compute-set-sys-options" do
+  command "/usr/sbin/crowbar-compute-set-sys-options"
 end
 
 execute "set vhost_net module" do
   command "grep -q 'vhost_net' /etc/modules || echo 'vhost_net' >> /etc/modules"
 end
-
-execute "IO scheduler" do
-  command "find /sys/block -type l -name 'sd*' -exec sh -c 'echo deadline > {}/queue/scheduler' \\;"
-end  
 
 if node[:nova][:networking_backend]=="quantum" and node.platform != "suse"
   #since using native ovs we have to gain acess to lower networking functions
