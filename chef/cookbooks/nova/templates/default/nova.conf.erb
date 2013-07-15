@@ -889,10 +889,10 @@ instance_usage_audit=True
 #
 
 # default glance hostname or ip (string value)
-<%= "glance_host=#{@glance_server_ip}" unless @glance_server_ip.nil? %>
+<%= "glance_host=#{@glance_server_host}" unless @glance_server_host.nil? %>
 
 # default glance port (integer value)
-<%= "glance_port=#{@glance_server_port}" unless @glance_server_ip.nil? %>
+<%= "glance_port=#{@glance_server_port}" unless @glance_server_host.nil? %>
 
 # Default protocol to use when connecting to glance. Set to
 # https for SSL. (string value)
@@ -901,11 +901,11 @@ instance_usage_audit=True
 # A list of the glance api servers available to nova. Prefix
 # with https:// for ssl-based glance api servers.
 # ([hostname|ip]:port) (list value)
-<%= "glance_api_servers=#{@glance_server_protocol}://#{@glance_server_host}:#{@glance_server_port}" unless @glance_server_ip.nil? %>
+<%= "glance_api_servers=#{@glance_server_protocol}://#{@glance_server_host}:#{@glance_server_port}" unless @glance_server_host.nil? %>
 
 # Allow to perform insecure SSL (https) requests to glance
 # (boolean value)
-<%= "glance_api_insecure=#{@glance_server_insecure ? 'True' : 'False'}" unless @glance_server_ip.nil? %>
+<%= "glance_api_insecure=#{@glance_server_insecure ? 'True' : 'False'}" unless @glance_server_host.nil? %>
 
 # Number retries when downloading an image from glance
 # (integer value)
