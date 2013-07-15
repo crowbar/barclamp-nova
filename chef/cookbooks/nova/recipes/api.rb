@@ -32,7 +32,6 @@ else
 end
 
 unless node[:nova][:use_gitrepo]
-  package "python-keystone"
   package "python-novaclient"
 else
   pfs_and_install_deps "keystone" do
