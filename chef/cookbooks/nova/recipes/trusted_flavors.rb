@@ -48,7 +48,7 @@ if node[:nova][:trusted_flavors]
   nova_insecure=node[:nova][:ssl][:insecure]
   ssl_insecure = keystone_insecure || nova_insecure
 
-  novacmd = "nova --os-username #{keystone_service_user} --os-password #{keystone_service_password} --os-tenant-name #{keystone_service_tenant} --os-auth-url #{keystone_protocol}://#{keystone_address}:#{keystone_service_port}/v2.0"
+  novacmd = "nova --os-username #{keystone_service_user} --os-password #{keystone_service_password} --os-tenant-name #{keystone_service_tenant} --os-auth-url #{keystone_protocol}://#{keystone_address}:#{keystone_service_port}/v2.0 --endpoint-type internalURL"
   if ssl_insecure
     novacmd = "#{novacmd} --insecure"
   end
