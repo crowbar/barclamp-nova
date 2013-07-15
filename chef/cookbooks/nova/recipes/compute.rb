@@ -183,7 +183,7 @@ end
 env_filter = " AND nova_config_environment:#{node[:nova][:config][:environment]}"
 nova_controller = search(:node, "roles:nova-multi-controller#{env_filter}")
 
-if !nova_controller.nil? and nova_controller.length > 0
+if !nova_controller.nil? and nova_controller.length > 0 and nova_controller[0].name != node.name
 
   nova_controller_ip =  Chef::Recipe::Barclamp::Inventory.get_network_by_type(nova_controller[0], "admin").address
   mount node[:nova][:instances_path] do
