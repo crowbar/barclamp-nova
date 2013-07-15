@@ -173,7 +173,7 @@ template "/etc/default/qemu-kvm" do
     :kvm => node[:nova][:kvm]
   })
   mode "0644"
-end
+end if node.platform == "ubuntu"
 
 execute "set ksm value" do
   command "echo #{node[:nova][:kvm][:ksm_enabled] ? 1 : 0} > /sys/kernel/mm/ksm/run"
