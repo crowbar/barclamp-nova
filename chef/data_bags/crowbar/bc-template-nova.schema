@@ -51,7 +51,8 @@
                 "flat_network_bridge": { "type": "str" },
                 "flat_interface": { "type": "str" },
                 "flat_network_dhcp_start": { "type": "str" },
-                "vlan_start": { "type": "int" }
+                "vlan_start": { "type": "int" },
+                "quantum_metadata_proxy_shared_secret": { "type": "str" }
               }
             },
             "scheduler": {

@@ -72,6 +72,7 @@ default[:nova][:fixed_range] = "10.0.0.0/8"
 default[:nova][:floating_range] = "4.4.4.0/24"
 default[:nova][:num_networks] = 1
 default[:nova][:network_size] = 256
+default[:nova][:network][:quantum_metadata_proxy_shared_secret] = ""
 #
 default[:nova][:network][:flat_network_bridge] = "br100"
 default[:nova][:network][:flat_injected] = true

@@ -67,7 +67,7 @@ firewall_driver=nova.virt.firewall.NoopFirewallDriver
 service_quantum_metadata_proxy=True
 # Not really secret.  Quantum should be randomly generating this,
 # and we should be using whatever it generates.
-quantum_metadata_proxy_shared_secret=Secret
+quantum_metadata_proxy_shared_secret=<%= node[:nova][:network][:quantum_metadata_proxy_shared_secret] %>
 <% else -%>
 allow_same_net_traffic=<%= node[:nova][:network][:allow_same_net_traffic] ? "True" : "False" %>
 fixed_range=<%= node[:nova][:network][:fixed_range] %>
