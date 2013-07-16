@@ -56,7 +56,7 @@ def set_boot_kernel_and_trigger_reboot(flavor='default')
 
         default_boot += 1
       end
-      
+
     end
   end
 
@@ -73,6 +73,20 @@ def set_boot_kernel_and_trigger_reboot(flavor='default')
   end
 end
 
+package "libvirt"
+
+template "/etc/libvirt/libvirtd.conf" do
+  source "libvirtd.conf.erb"
+  group "root"
+  owner "root"
+  mode 0644
+  variables(
+    :libvirtd_listen_tcp => node[:nova]["use_migration"] ? 1 : 0,
+    :libvirtd_listen_addr => Chef::Recipe::Barclamp::Inventory.get_network_by_type(node, "admin").address,
+    :libvirtd_auth_tcp => node[:nova]["use_migration"] ? "none" : "sasl"
+  )
+  notifies :restart, "service[libvirtd]", :delayed
+end
 
 if node.platform == "suse"
   case node[:nova][:libvirt_type]
@@ -100,8 +114,6 @@ if node.platform == "suse"
         action [:enable, :start]
       end
   end
-
-  package "libvirt"
 
   libvirt_restart_needed = false
 
@@ -137,7 +149,7 @@ if node.platform == "suse"
 
   if libvirt_restart_needed
     service "libvirtd" do
-      action [:restart]
+      action [:restart], :delayed
     end
   end
 end
@@ -146,7 +158,7 @@ nova_package("compute")
 
 # ha_enabled activates Nova High Availability (HA) networking.
 # The nova "network" and "api" recipes need to be included on the compute nodes and
-# we must specify the --multi_host=T switch on "nova-manage network create".     
+# we must specify the --multi_host=T switch on "nova-manage network create".
 
 if node[:nova][:network][:ha_enabled] and node[:nova][:networking_backend]=='nova-network'
   include_recipe "nova::api"
@@ -167,6 +179,22 @@ execute "Destroy the libvirt default network" do
   only_if "virsh net-list |grep -q default"
 end
 
+
+env_filter = " AND nova_config_environment:#{node[:nova][:config][:environment]}"
+nova_controller = search(:node, "roles:nova-multi-controller#{env_filter}")
+
+if !nova_controller.nil? and nova_controller.length > 0 and nova_controller[0].name != node.name
+
+  nova_controller_ip =  Chef::Recipe::Barclamp::Inventory.get_network_by_type(nova_controller[0], "admin").address
+  mount node[:nova][:instances_path] do
+    action node[:nova]["use_shared_instance_storage"] ? [:mount, :enable] : [:umount, :disable]
+    fstype "nfs"
+    options "rw,auto"
+    device nova_controller_ip + ":" +  node[:nova][:instances_path]
+  end
+
+end
+
 link "/etc/libvirt/qemu/networks/autostart/default.xml" do
   action :delete
 end
@@ -175,7 +203,7 @@ end
 
 template "/etc/default/qemu-kvm" do
   source "qemu-kvm.erb"
-  variables({ 
+  variables({
     :kvm => node[:nova][:kvm]
   })
   mode "0644"

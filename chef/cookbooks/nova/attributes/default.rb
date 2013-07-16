@@ -28,10 +28,13 @@ default[:nova][:db][:password] = nil
 default[:nova][:db][:user] = "nova"
 default[:nova][:db][:database] = "nova"
 
+default[:nova][:use_migration] = false
+default[:nova][:use_shared_instance_storage] = false
+
 #
 # Hypervisor Settings
 #
-default[:nova][:libvirt_type] = "kvm"    
+default[:nova][:libvirt_type] = "kvm"
 
 #
 # KVM Settings
@@ -56,6 +59,7 @@ unless node[:platform] == 'suse'
 else
     default[:nova][:user] = "openstack-nova"
 end
+default[:nova][:instances_path] = '/var/lib/nova/instances'
 
 #
 # General network parameters
@@ -96,7 +100,7 @@ default[:nova][:novnc][:ssl][:certfile] = ""
 default[:nova][:novnc][:ssl][:keyfile] = ""
 
 #
-# Transparent Hugepage Settings                       
-# 
+# Transparent Hugepage Settings
+#
 default[:nova][:hugepage][:tranparent_hugepage_enabled] = "always"
 default[:nova][:hugepage][:tranparent_hugepage_defrag] = "always"

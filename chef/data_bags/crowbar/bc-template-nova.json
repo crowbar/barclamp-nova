@@ -14,6 +14,8 @@
       "libvirt_type": "kvm",
       "use_novnc": true,
       "verbose": false,
+      "use_shared_instance_storage": false,
+      "use_migration": false,
       "use_syslog": false,
       "gitrepo": "http://github.com/openstack/nova.git",
       "git_instance": "",
