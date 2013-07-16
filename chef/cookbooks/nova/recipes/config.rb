@@ -112,7 +112,8 @@ end
 dns_server_public_ip = Chef::Recipe::Barclamp::Inventory.get_network_by_type(dns_server, "public").address
 Chef::Log.info("DNS server found at #{dns_server_public_ip}")
 
-glance_servers = search(:node, "roles:glance-server") || []
+env_filter = " AND glance_config_environment:glance-config-#{node[:nova][:glance_instance]}"
+glance_servers = search(:node, "roles:glance-server#{env_filter}") || []
 if glance_servers.length > 0
   glance_server = glance_servers[0]
   glance_server = node if glance_server.name == node.name
