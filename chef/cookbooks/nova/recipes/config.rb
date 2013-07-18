@@ -70,7 +70,7 @@ if rabbits.length > 0
 else
   rabbit = node
 end
-rabbit_address = Chef::Recipe::Barclamp::Inventory.get_network_by_type(rabbit, "admin").address 
+rabbit_address = Chef::Recipe::Barclamp::Inventory.get_network_by_type(rabbit, "admin").address
 Chef::Log.info("Rabbit server found at #{rabbit_address}")
 rabbit_settings = {
   :address => rabbit_address,
@@ -217,7 +217,7 @@ end
 if node[:nova][:use_gitrepo]
   package("libvirt-bin")
   create_user_and_dirs "nova" do
-    opt_dirs ["/var/lib/nova/instances"]
+    opt_dirs [node[:nova][:instances_path]]
     user_gid "libvirtd"
   end
 
@@ -225,7 +225,7 @@ if node[:nova][:use_gitrepo]
     command "cp #{nova_path}/etc/nova/policy.json /etc/nova/"
     creates "/etc/nova/policy.json"
   end
-  
+
   template "/etc/sudoers.d/nova-rootwrap" do
     source "nova-rootwrap.erb"
     mode 0440
@@ -386,6 +386,8 @@ template "/etc/nova/nova.conf" do
             :libvirt_type => node[:nova][:libvirt_type],
             :ec2_host => admin_api_host,
             :ec2_dmz_host => public_api_host,
+            :libvirt_migration => node[:nova]["use_migration"],
+            :shared_instances => node[:nova]["use_shared_instance_storage"],
             :dns_server_public_ip => dns_server_public_ip,
             :glance_server_protocol => glance_server_protocol,
             :glance_server_host => glance_server_host,

@@ -10,7 +10,7 @@ lock_path=/var/lock/nova
 use_syslog=<%= node[:nova][:use_syslog] ? 'True' : 'False' %>
 rootwrap_config=/etc/nova/rootwrap.conf
 root_helper=sudo nova-rootwrap
-
+instances_path=<%= node[:nova][:instances_path] %>
 
 # RABBITMQ
 <% if @rabbit_settings -%>
@@ -123,6 +123,13 @@ libvirt_disk_prefix=xvd
 additional_compute_capabilities=pv,hvm
 <% elsif @libvirt_type.eql?('kvm') -%>
 libvirt_use_virtio_for_bridges=true
+  <% if @libvirt_migration -%>
+    <% if @shared_instances -%>
+live_migration_flag=VIR_MIGRATE_UNDEFINE_SOURCE,VIR_MIGRATE_PEER2PEER,VIR_MIGRATE_LIVE
+    <% else -%>
+block_migration_flag=VIR_MIGRATE_UNDEFINE_SOURCE, VIR_MIGRATE_PEER2PEER, VIR_MIGRATE_NON_SHARED_INC,VIR_MIGRATE_LIVE
+    <% end -%>
+  <% end -%>
 <% end -%>
 compute_driver=libvirt.LibvirtDriver
 compute_manager=nova.compute.manager.ComputeManager

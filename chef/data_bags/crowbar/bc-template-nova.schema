@@ -23,6 +23,8 @@
             "use_novnc": { "type": "bool", "required": true },
             "verbose": { "type": "bool", "required": true },
             "trusted_flavors": { "type": "bool", "required": true },
+            "use_migration": { "type": "bool", "required": true },
+            "use_shared_instance_storage": { "type": "bool", "required": true },
             "use_syslog": { "type": "bool", "required": true },
             "gitrepo": { "type": "str", "required": true },
             "git_instance": { "type": "str", "required": true },
