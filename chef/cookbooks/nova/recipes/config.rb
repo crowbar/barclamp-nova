@@ -60,7 +60,13 @@ include_recipe "#{backend_name}::python-client"
 
 database_address = Chef::Recipe::Barclamp::Inventory.get_network_by_type(sql, "admin").address if database_address.nil?
 Chef::Log.info("database server found at #{database_address}")
-database_connection = "#{backend_name}://#{node[:nova][:db][:user]}:#{node[:nova][:db][:password]}@#{database_address}/#{node[:nova][:db][:database]}"
+db_conn_scheme = backend_name
+if node[:platform] == "suse" && backend_name == "mysql"
+  # The C-extensions (python-mysql) can't be monkey-patched by eventlet. Therefore, when only one nova-conductor is present,
+  # all DB queries are serialized. By using the pure-Python driver by default, eventlet can do it's job:
+  db_conn_scheme = "mysql+pymysql"
+end
+database_connection = "#{db_conn_scheme}://#{node[:nova][:db][:user]}:#{node[:nova][:db][:password]}@#{database_address}/#{node[:nova][:db][:database]}"
 
 env_filter = " AND rabbitmq_config_environment:rabbitmq-config-#{node[:nova][:rabbitmq_instance]}"
 rabbits = search(:node, "roles:rabbitmq-server#{env_filter}") || []
