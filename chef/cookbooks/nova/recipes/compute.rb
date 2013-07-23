@@ -73,22 +73,22 @@ def set_boot_kernel_and_trigger_reboot(flavor='default')
   end
 end
 
-package "libvirt"
-
-template "/etc/libvirt/libvirtd.conf" do
-  source "libvirtd.conf.erb"
-  group "root"
-  owner "root"
-  mode 0644
-  variables(
-    :libvirtd_listen_tcp => node[:nova]["use_migration"] ? 1 : 0,
-    :libvirtd_listen_addr => Chef::Recipe::Barclamp::Inventory.get_network_by_type(node, "admin").address,
-    :libvirtd_auth_tcp => node[:nova]["use_migration"] ? "none" : "sasl"
-  )
-  notifies :restart, "service[libvirtd]", :delayed
-end
-
 if node.platform == "suse"
+  package "libvirt"
+
+  template "/etc/libvirt/libvirtd.conf" do
+    source "libvirtd.conf.erb"
+    group "root"
+    owner "root"
+    mode 0644
+    variables(
+      :libvirtd_listen_tcp => node[:nova]["use_migration"] ? 1 : 0,
+      :libvirtd_listen_addr => Chef::Recipe::Barclamp::Inventory.get_network_by_type(node, "admin").address,
+      :libvirtd_auth_tcp => node[:nova]["use_migration"] ? "none" : "sasl"
+    )
+    notifies :restart, "service[libvirtd]", :delayed
+  end
+
   case node[:nova][:libvirt_type]
     when "kvm"
       package "kvm"
