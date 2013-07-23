@@ -133,12 +133,8 @@ if node.platform == "suse"
       end
 
       if rc.file_edited?
-        # we compare the checksum to know if the file really changed because
-        # the regexp can update a line without changing it...
-        old_md5 = Digest::MD5.hexdigest(File.read('/etc/libvirt/qemu.conf'))
         rc.write_file
-        new_md5 = Digest::MD5.hexdigest(File.read('/etc/libvirt/qemu.conf'))
-        libvirt_restart_needed = (old_md5 != new_md5)
+        libvirt_restart_needed = true
       end
     end
   end
