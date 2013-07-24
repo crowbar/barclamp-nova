@@ -3,6 +3,7 @@
   "description": "installs and configures the Openstack Nova component. It relies upon the network and glance barclamps for normal operation.",
   "attributes": {
     "nova": {
+      "database_instance": "none",
       "rabbitmq_instance": "none",
       "keystone_instance": "none",
       "service_user": "nova",
@@ -109,7 +110,6 @@
 	"cpu_allocation_ratio": 16.0
       },
       "db": {
-        "database_instance": "none",
         "password": "",
         "user": "nova",
         "database": "nova"

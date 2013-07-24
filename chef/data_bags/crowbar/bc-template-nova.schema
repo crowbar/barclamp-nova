@@ -12,6 +12,7 @@
           "type": "map", 
           "required": true,
           "mapping": {
+            "database_instance": { "type": "str", "required": true },
             "rabbitmq_instance": { "type": "str", "required": true },
             "keystone_instance": { "type": "str", "required": true },
             "service_user": { "type": "str", "required": true },
@@ -67,7 +68,6 @@
               "type": "map",
               "required": true,
               "mapping": {
-                "database_instance": { "type": "str", "required": true },
                 "password": { "type": "str", "required": true },
                 "user": { "type": "str", "required": true },
                 "database": { "type": "str", "required": true }
