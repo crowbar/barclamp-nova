@@ -340,6 +340,54 @@ directory "/var/lock/nova" do
 end
 
 if api == node and api[:nova][:ssl][:enabled]
+  if api[:nova][:ssl][:generate_certs]
+    package "openssl"
+
+    require "fileutils"
+    [:certfile, :keyfile, :ca_certs].each do |k|
+      dir = File.dirname(api[:nova][:ssl][k])
+      if File.exists?(dir)
+        FileUtils.chown_R api[:nova][:user], api[:nova][:group], dir
+      else
+        FileUtils.mkdir_p(dir) {|d| File.chown api[:nova][:user], api[:nova][:group], d}
+      end
+    end
+
+    # Some more ownership fixes:
+    conf_dir = File.dirname api[:nova][:ssl][:ca_certs]
+    FileUtils.chown "root", api[:nova][:group], conf_dir
+    FileUtils.chown "root", api[:nova][:group], File.expand_path("#{conf_dir}/..")  # /etc/nova/ssl
+
+    # Generate private key
+    %x(openssl genrsa -out #{api[:nova][:ssl][:keyfile]} 4096)
+    if $?.exitstatus != 0
+      message = "SSL private key generation failed"
+      Chef::Log.fatal(message)
+      raise message
+    end
+    FileUtils.chown api[:nova][:user], api[:nova][:group], api[:nova][:ssl][:keyfile]
+
+    # Generate certificate signing requests (CSR)
+    ssl_csr_file = "#{conf_dir}/signing_key.csr"
+    ssl_subject = "\"/C=US/ST=Unset/L=Unset/O=Unset/CN=#{api[:fqdn]}\""
+    %x(openssl req -new -key #{api[:nova][:ssl][:keyfile]} -out #{ssl_csr_file} -subj #{ssl_subject})
+    if $?.exitstatus != 0
+      message = "SSL certificate signed requests generation failed"
+      Chef::Log.fatal(message)
+      raise message
+    end
+
+    # Generate self-signed certificate with above CSR
+    %x(openssl x509 -req -days 3650 -in #{ssl_csr_file} -signkey #{api[:nova][:ssl][:keyfile]} -out #{api[:nova][:ssl][:certfile]})
+    if $?.exitstatus != 0
+      message = "SSL self-signed certificate generation failed"
+      Chef::Log.fatal(message)
+      raise message
+    end
+
+    File.delete ssl_csr_file  # Nobody should even try to use this
+  end
+
   unless ::File.exists? api[:nova][:ssl][:certfile]
     message = "Certificate \"#{api[:nova][:ssl][:certfile]}\" is not present."
     Chef::Log.fatal(message)
