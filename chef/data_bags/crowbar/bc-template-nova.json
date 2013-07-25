@@ -119,9 +119,10 @@
       },
       "ssl": {
         "enabled": false,
-        "insecure": false,
         "certfile": "/etc/nova/ssl/certs/signing_cert.pem",
         "keyfile": "/etc/nova/ssl/private/signing_key.pem",
+        "generate_certs": false,
+        "insecure": false,
         "cert_required": false,
         "ca_certs": "/etc/nova/ssl/certs/ca.pem"
       },
