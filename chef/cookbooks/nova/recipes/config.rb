@@ -286,7 +286,7 @@ Chef::Log.info("Keystone server found at #{keystone_host}")
 cinder_servers = search(:node, "roles:cinder-controller") || []
 if cinder_servers.length > 0
   cinder_server = cinder_servers[0]
-  cinder_insecure = cinder_server[:cinder][:api][:protocol] == 'https' && cinder[:cinder][:ssl][:insecure]
+  cinder_insecure = cinder_server[:cinder][:api][:protocol] == 'https' && cinder_server[:cinder][:ssl][:insecure]
 else
   cinder_insecure = false
 end
