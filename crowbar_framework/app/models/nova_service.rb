@@ -58,13 +58,22 @@ class NovaService < ServiceObject
     head = nodes.shift
     nodes = [ head ] if nodes.empty?
 
-    kvm = nodes.select { |n| n if n[:cpu]['0'][:flags].include?("vmx") or n[:cpu]['0'][:flags].include?("svm") }
-    qemu = nodes - kvm
+    kvm = []
+    qemu = []
+    case base["attributes"][@bc_name][:libvirt_type]
+      when "qemu" then
+        qemu = nodes
+      when "kvm" then
+        kvm = nodes.select { |n| n if n[:cpu]['0'][:flags].include?("vmx") or n[:cpu]['0'][:flags].include?("svm") }
+      else
+        kvm = nodes.select { |n| n if n[:cpu]['0'][:flags].include?("vmx") or n[:cpu]['0'][:flags].include?("svm") }
+        qemu = nodes - kvm
+    end
 
     base["deployment"]["nova"]["elements"] = {
       "nova-multi-controller" => [ head.name ],
       "nova-multi-compute-kvm" => kvm.map { |x| x.name },
-      "nova-multi-compute-qemu" => qemu.map { |x| x.name }  
+      "nova-multi-compute-qemu" => qemu.map { |x| x.name }
     }
 
     base["attributes"][@bc_name]["git_instance"] = ""
