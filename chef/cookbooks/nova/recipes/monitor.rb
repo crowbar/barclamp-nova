@@ -27,26 +27,25 @@ nova_scale = {
   :apis => []
 }
 
-env_filter = " AND nova_config_environment:#{node[:nova][:config][:environment]}" rescue nil
-if env_filter
-  search(:node, "roles:nova-single-machine #{env_filter}") do |n|
-    nova_scale[:computes] << n
-    nova_scale[:networks] << n
-    nova_scale[:schedulers] << n
-    nova_scale[:apis] << n
-  end
+search_env_filtered(:node, "roles:nova-single-machine") do |n|
+  nova_scale[:computes] << n
+  nova_scale[:networks] << n
+  nova_scale[:schedulers] << n
+  nova_scale[:apis] << n
+end
 
-  search(:node, "roles:nova-multi-controller #{env_filter}") do |n|
-    nova_scale[:networks] << n
-    nova_scale[:schedulers] << n
-    nova_scale[:apis] << n
-  end
+search_env_filtered(:node, "roles:nova-multi-controller") do |n|
+  nova_scale[:networks] << n
+  nova_scale[:schedulers] << n
+  nova_scale[:apis] << n
+end
 
-  search(:node, "roles:nova-multi-compute #{env_filter}") do |n|
-    nova_scale[:computes] << n
-  end
+search_env_filtered(:node, "roles:nova-multi-compute-kvm") do |n|
+  nova_scale[:computes] << n
+end
 
-  # As other nova and swift roles come on-line we should add them here.
+search_env_filtered(:node, "roles:nova-multi-compute-qemu") do |n|
+  nova_scale[:computes] << n
 end
 
 if node["roles"].include?("nagios-client")    

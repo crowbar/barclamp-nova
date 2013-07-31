@@ -10,7 +10,7 @@ lock_path=/var/lock/nova
 use_syslog=<%= node[:nova][:use_syslog] ? 'True' : 'False' %>
 rootwrap_config=/etc/nova/rootwrap.conf
 root_helper=sudo nova-rootwrap
-
+instances_path=<%= node[:nova][:instances_path] %>
 
 # RABBITMQ
 <% if @rabbit_settings -%>
@@ -32,19 +32,27 @@ cpu_allocation_ratio=<%= node[:nova][:scheduler][:cpu_allocation_ratio] %>
 osapi_compute_extension=nova.api.openstack.compute.contrib.standard_extensions
 api_rate_limit = False
 
+# METADATA
+metadata_listen = <%= @metadata_bind_address %>
+
+# EC2
+ec2_scheme=<%= @ssl_enabled ? "https" : "http" %>
+ec2_host=<%= @ec2_host %>
+ec2_dmz_host=<%= @ec2_dmz_host %>
 
 # NETWORK
+my_ip=<%= node[:nova][:my_ip] %>
 <% if node[:nova][:networking_backend]=="quantum" -%>
 # Network settings
 default_floating_pool=floating
 network_api_class=nova.network.quantumv2.api.API
-quantum_url=<%= @quantum_protocol %>://<%= @quantum_server_ip %>:<%= @quantum_server_port %>
+quantum_url=<%= @quantum_protocol %>://<%= @quantum_server_host %>:<%= @quantum_server_port %>
 quantum_api_insecure=<%= @quantum_insecure ? 'True' : 'False' %>
 quantum_auth_strategy=keystone
 quantum_admin_tenant_name=<%= @keystone_service_tenant %>
 quantum_admin_username=<%= @quantum_service_user %>
 quantum_admin_password=<%= @quantum_service_password %>
-quantum_admin_auth_url=<%= @keystone_protocol %>://<%= @keystone_address %>:<%= @keystone_admin_port %>/v2.0
+quantum_admin_auth_url=<%= @keystone_protocol %>://<%= @keystone_host %>:<%= @keystone_admin_port %>/v2.0
 <% if @quantum_networking_plugin == "openvswitch" -%>
 libvirt_ovs_bridge=br-int
 libvirt_vif_driver=nova.virt.libvirt.vif.LibvirtHybridOVSBridgeDriver
@@ -59,14 +67,9 @@ firewall_driver=nova.virt.firewall.NoopFirewallDriver
 service_quantum_metadata_proxy=True
 # Not really secret.  Quantum should be randomly generating this,
 # and we should be using whatever it generates.
-quantum_metadata_proxy_shared_secret=Secret
+quantum_metadata_proxy_shared_secret=<%= node[:nova][:network][:quantum_metadata_proxy_shared_secret] %>
 <% else -%>
-my_ip=<%= node[:nova][:my_ip] %>
 allow_same_net_traffic=<%= node[:nova][:network][:allow_same_net_traffic] ? "True" : "False" %>
-ec2_scheme=<%= @ssl_enabled ? "https" : "http" %>
-ec2_host=<%= @ec2_host %>
-ec2_dmz_host=<%= @ec2_dmz_host %>
-osapi_host=<%= @ec2_host %>
 fixed_range=<%= node[:nova][:network][:fixed_range] %>
 floating_range=<%= node[:nova][:network][:floating_range] %>
 <% if node[:nova][:network][:public_interface] -%>
@@ -100,9 +103,10 @@ flat_injected=True
 <% end -%>
 
 # GLANCE
-<% unless @glance_server_ip.nil? -%>
+<% unless @glance_server_host.nil? -%>
 image_service=nova.image.glance.GlanceImageService
-glance_api_servers=<%= @glance_server_ip %>:<%= @glance_server_port %>
+glance_api_servers=<%= @glance_server_protocol %>://<%= @glance_server_host %>:<%= @glance_server_port %>
+glance_api_insecure=<%= @glance_server_insecure ? 'True' : 'False' %>
 <% end -%>
 
 # COMPUTE
@@ -119,11 +123,22 @@ libvirt_disk_prefix=xvd
 additional_compute_capabilities=pv,hvm
 <% elsif @libvirt_type.eql?('kvm') -%>
 libvirt_use_virtio_for_bridges=true
+  <% if @libvirt_migration -%>
+    <% if @shared_instances -%>
+live_migration_flag=VIR_MIGRATE_UNDEFINE_SOURCE,VIR_MIGRATE_PEER2PEER,VIR_MIGRATE_LIVE
+    <% else -%>
+block_migration_flag=VIR_MIGRATE_UNDEFINE_SOURCE, VIR_MIGRATE_PEER2PEER, VIR_MIGRATE_NON_SHARED_INC,VIR_MIGRATE_LIVE
+    <% end -%>
+  <% end -%>
 <% end -%>
 compute_driver=libvirt.LibvirtDriver
 compute_manager=nova.compute.manager.ComputeManager
 instance_name_template=instance-%08x
 compute_scheduler_driver=nova.scheduler.filter_scheduler.FilterScheduler
+<% if @has_itxt -%>
+scheduler_available_filters=nova.scheduler.filters.standard_filters
+scheduler_default_filters=RetryFilter,AvailabilityZoneFilter,RamFilter,ComputeFilter,ComputeCapabilitiesFilter,ImagePropertiesFilter,TrustedFilter
+<% end -%>
 # nova-compute configuration for ceilometer
 instance_usage_audit=True
 instance_usage_audit_period=hour
@@ -131,18 +146,18 @@ notification_driver=nova.openstack.common.notifier.rpc_notifier
 notification_driver=ceilometer.compute.nova_notifier
 
 # VNCPROXY
-<% unless @vncproxy_public_ip.nil? -%>
+<% unless @vncproxy_public_host.nil? -%>
 <% if node[:nova][:use_novnc] -%>
 <% if node[:roles].include?("nova-multi-controller") -%>
 novncproxy_host=0.0.0.0
 novncproxy_port=6080
 <% end -%>
-novncproxy_base_url=<%= @vncproxy_ssl_enabled ? "https" : "http" %>://<%= @vncproxy_public_ip %>:6080/vnc_auto.html
+novncproxy_base_url=<%= @vncproxy_ssl_enabled ? "https" : "http" %>://<%= @vncproxy_public_host %>:6080/vnc_auto.html
 ssl_only=<%= @vncproxy_ssl_enabled ? "True" : "False" %>
 cert=<%= @vncproxy_cert_file %>
 key=<%= @vncproxy_key_file %>
 <% else -%>
-xvpvncproxy_base_url=http://<%= @vncproxy_public_ip %>:6081/console
+xvpvncproxy_base_url=http://<%= @vncproxy_public_host %>:6081/console
 <% end -%>
 <% end -%>
 vncserver_listen=0.0.0.0
@@ -157,9 +172,10 @@ auth_strategy=keystone
 volume_api_class=nova.volume.cinder.API
 enabled_apis=ec2,osapi_compute,metadata
 cinder_catalog_info=volume:cinder:internalURL
+cinder_api_insecure=<%= @cinder_insecure ? 'True' : 'False' %>
 
 # a list of APIs with enabled SSL (list value)
-enabled_ssl_apis = <%= @ssl_enabled ? "ec2,osapi_compute,metadata" : "" %>
+enabled_ssl_apis = <%= @ssl_enabled ? "ec2,osapi_compute" : "" %>
 
 # SSL certificate of API server (string value)
 ssl_cert_file = <%= @ssl_cert_file %>
@@ -178,4 +194,16 @@ ssl_ca_file = <%= @ssl_ca_file %>
 # This needs to be conditionalized at some point, maybe.
 [conductor]
 use_local=false
+
+<% if @has_itxt -%>
+[trusted_computing]
+attestation_server=<%= @oat_appraiser_host %>
+attestation_port=<%= @oat_appraiser_port %>
+attestation_server_ca_file=/etc/nova/oat_certfile.cer
+# If using OAT v1.5, use this api_url:
+attestation_api_url=/AttestationService/resources
+# If using OAT pre-v1.5, use this api_url:
+#attestation_api_url=/OpenAttestationWebServices/V1.0
+#attestation_auth_blob=i-am-openstack
+<% end -%>
 

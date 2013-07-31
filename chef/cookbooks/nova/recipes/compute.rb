@@ -56,7 +56,7 @@ def set_boot_kernel_and_trigger_reboot(flavor='default')
 
         default_boot += 1
       end
-      
+
     end
   end
 
@@ -73,8 +73,22 @@ def set_boot_kernel_and_trigger_reboot(flavor='default')
   end
 end
 
-
 if node.platform == "suse"
+  package "libvirt"
+
+  template "/etc/libvirt/libvirtd.conf" do
+    source "libvirtd.conf.erb"
+    group "root"
+    owner "root"
+    mode 0644
+    variables(
+      :libvirtd_listen_tcp => node[:nova]["use_migration"] ? 1 : 0,
+      :libvirtd_listen_addr => Chef::Recipe::Barclamp::Inventory.get_network_by_type(node, "admin").address,
+      :libvirtd_auth_tcp => node[:nova]["use_migration"] ? "none" : "sasl"
+    )
+    notifies :restart, "service[libvirtd]", :delayed
+  end
+
   case node[:nova][:libvirt_type]
     when "kvm"
       package "kvm"
@@ -84,7 +98,7 @@ if node.platform == "suse"
 
       set_boot_kernel_and_trigger_reboot
     when "xen"
-      %w{kernel-xen xen xen-tools}.each do |pkg|
+      %w{kernel-xen xen xen-tools openvswitch-kmp-xen}.each do |pkg|
         package pkg do
           action :install
         end
@@ -101,8 +115,6 @@ if node.platform == "suse"
       end
   end
 
-  package "libvirt"
-
   libvirt_restart_needed = false
 
   # change libvirt to run qemu as user qemu
@@ -113,15 +125,17 @@ if node.platform == "suse"
       # make sure to only set qemu:kvm for kvm and qemu deployments, use
       # system defaults for xen
       if ['kvm','qemu'].include?(node[:nova][:libvirt_type])
-        rc.search_file_replace_line(/user.*=/, 'user = "qemu"')
-        rc.search_file_replace_line(/group.*=/, 'group = "kvm"')
+        rc.search_file_replace_line(/^[ #]*user *=/, 'user = "qemu"')
+        rc.search_file_replace_line(/^[ #]*group *=/, 'group = "kvm"')
       else
-        rc.search_file_replace_line(/user.*=/, '#user = "root"')
-        rc.search_file_replace_line(/group.*=/, '#group = "root"')
+        rc.search_file_replace_line(/^ *user *=/, '#user = "root"')
+        rc.search_file_replace_line(/^ *group *=/, '#group = "root"')
       end
 
-      libvirt_restart_needed = true if rc.file_edited?
-      rc.write_file
+      if rc.file_edited?
+        rc.write_file
+        libvirt_restart_needed = true
+      end
     end
   end
 
@@ -131,7 +145,7 @@ if node.platform == "suse"
 
   if libvirt_restart_needed
     service "libvirtd" do
-      action [:restart]
+      action [:restart], :delayed
     end
   end
 end
@@ -140,7 +154,7 @@ nova_package("compute")
 
 # ha_enabled activates Nova High Availability (HA) networking.
 # The nova "network" and "api" recipes need to be included on the compute nodes and
-# we must specify the --multi_host=T switch on "nova-manage network create".     
+# we must specify the --multi_host=T switch on "nova-manage network create".
 
 if node[:nova][:network][:ha_enabled] and node[:nova][:networking_backend]=='nova-network'
   include_recipe "nova::api"
@@ -161,6 +175,22 @@ execute "Destroy the libvirt default network" do
   only_if "virsh net-list |grep -q default"
 end
 
+
+env_filter = " AND nova_config_environment:#{node[:nova][:config][:environment]}"
+nova_controller = search(:node, "roles:nova-multi-controller#{env_filter}")
+
+if !nova_controller.nil? and nova_controller.length > 0 and nova_controller[0].name != node.name
+
+  nova_controller_ip =  Chef::Recipe::Barclamp::Inventory.get_network_by_type(nova_controller[0], "admin").address
+  mount node[:nova][:instances_path] do
+    action node[:nova]["use_shared_instance_storage"] ? [:mount, :enable] : [:umount, :disable]
+    fstype "nfs"
+    options "rw,auto"
+    device nova_controller_ip + ":" +  node[:nova][:instances_path]
+  end
+
+end
+
 link "/etc/libvirt/qemu/networks/autostart/default.xml" do
   action :delete
 end
@@ -169,35 +199,33 @@ end
 
 template "/etc/default/qemu-kvm" do
   source "qemu-kvm.erb"
-  variables({ 
+  variables({
     :kvm => node[:nova][:kvm]
   })
   mode "0644"
+end if node.platform == "ubuntu"
+
+template "/usr/sbin/crowbar-compute-set-sys-options" do
+  source "crowbar-compute-set-sys-options.erb"
+  variables({
+    :ksm_enabled => node[:nova][:kvm][:ksm_enabled] ? 1 : 0,
+    :tranparent_hugepage_enabled => node[:nova][:hugepage][:tranparent_hugepage_enabled],
+    :tranparent_hugepage_defrag => node[:nova][:hugepage][:tranparent_hugepage_defrag]
+  })
+  mode "0755"
 end
 
-execute "set ksm value" do
-  command "echo #{node[:nova][:kvm][:ksm_enabled] ? 1 : 0} > /sys/kernel/mm/ksm/run"
+cookbook_file "/etc/cron.d/crowbar-compute-set-sys-options-at-boot" do
+  source "crowbar-compute-set-sys-options-at-boot"
 end
 
-execute "set tranparent huge page enabled support" do
-  # note path to setting is OS dependent
-  # redhat /sys/kernel/mm/redhat_transparent_hugepage/enabled
-  # Below will work on both Ubuntu and SLES
-  command "echo #{node[:nova][:hugepage][:tranparent_hugepage_enabled]} > /sys/kernel/mm/transparent_hugepage/enabled"
-  # not_if 'grep -q \\[always\\] /sys/kernel/mm/transparent_hugepage/enabled'
-end
-
-execute "set tranparent huge page defrag support" do
-  command "echo #{node[:nova][:hugepage][:tranparent_hugepage_defrag]} > /sys/kernel/mm/transparent_hugepage/defrag"
+execute "run crowbar-compute-set-sys-options" do
+  command "/usr/sbin/crowbar-compute-set-sys-options"
 end
 
 execute "set vhost_net module" do
   command "grep -q 'vhost_net' /etc/modules || echo 'vhost_net' >> /etc/modules"
 end
-
-execute "IO scheduler" do
-  command "find /sys/block -type l -name 'sd*' -exec sh -c 'echo deadline > {}/queue/scheduler' \\;"
-end  
 
 if node[:nova][:networking_backend]=="quantum" and node.platform != "suse"
   #since using native ovs we have to gain acess to lower networking functions

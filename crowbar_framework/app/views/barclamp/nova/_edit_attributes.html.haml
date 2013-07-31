@@ -1,25 +1,35 @@
 
+
 %input#proposal_attributes{:type => "hidden", :name => "proposal_attributes", :value => @proposal.raw_data['attributes'][@proposal.barclamp].to_json}
 %p
   %label{:for => "proposal_attributes"}= t('.attributes')
   = link_to t('raw'), proposal_barclamp_path(:id => @proposal.name, :controller => @proposal.barclamp, :dep_raw => @dep_raw, :attr_raw => true), :style => "float: right;"
   %div.container
-    = render_instance_selector("database", :database_instance, t('.database_instance'), "db/database_instance", @proposal)
+    = render_instance_selector("database", :database_instance, t('.database_instance'), "database_instance", @proposal)
     = render_instance_selector("rabbitmq", :rabbitmq_instance, t('.rabbitmq_instance'), "rabbitmq_instance", @proposal)
     = render_instance_selector("keystone", :keystone_instance, t('.keystone_instance'), "keystone_instance", @proposal)
     = render_instance_selector("glance", :glance_instance, t('.glance_instance'), "glance_instance", @proposal)
     = render_instance_selector("cinder", :cinder_instance, t('.cinder_instance'), "cinder_instance", @proposal)
     = render_instance_selector("quantum", :quantum_instance, t('.quantum_instance'), "quantum_instance", @proposal)
+    - if defined? InteltxtService
+      = render_instance_selector("inteltxt", :itxt_instance, t('.itxt_instance'), "itxt_instance", @proposal)
     %p
       %label{ :for => :verbose }= t('.verbose')
       = select_tag :verbose, options_for_select([['true','true'], ['false', 'false']], @proposal.raw_data['attributes'][@proposal.barclamp]["verbose"].to_s), :onchange => "update_value('verbose', 'verbose', 'boolean')"
+    - if defined? InteltxtService
+      %p
+        %label{ :for => :trusted_flavors }= t('.trusted_flavors')
+        = select_tag :trusted_flavors, options_for_select([['true','true'], ['false', 'false']], @proposal.raw_data['attributes'][@proposal.barclamp]["trusted_flavors"].to_s), :onchange => "update_value('trusted_flavors', 'trusted_flavors', 'boolean')"
     %p
       %label{ :for => :use_novnc }= t('.use_novnc')
       = select_tag :use_novnc, options_for_select([['true','true'], ['false', 'false']], @proposal.raw_data['attributes'][@proposal.barclamp]["use_novnc"].to_s), :onchange => "update_value('use_novnc', 'use_novnc', 'boolean')"
     = render 'barclamp/git/pfsdeps.html.haml'
     %p
-      %label{ :for => :libvirt_type }= t('.libvirt_type')
-      = select_tag :libvirt_type, options_for_select([['kvm','kvm'], ['qemu', 'qemu']], @proposal.raw_data['attributes'][@proposal.barclamp]["libvirt_type"].to_s), :onchange => "update_value('libvirt_type', 'libvirt_type', 'string')"
+      %label{ :for => :shared_instance_storage }= t('.shared_instance_storage')
+      = select_tag :shared_instance_storage, options_for_select([['true','true'], ['false', 'false']], @proposal.raw_data['attributes'][@proposal.barclamp]["use_shared_instance_storage"].to_s), :onchange => "update_value('use_shared_instance_storage', 'shared_instance_storage', 'boolean')"
+    %p
+      %label{ :for => :enable_libvirt_migration }= t('.enable_libvirt_migration')
+      = select_tag :enable_libvirt_migration, options_for_select([['true','true'], ['false', 'false']], @proposal.raw_data['attributes'][@proposal.barclamp]["use_migration"].to_s), :onchange => "update_value('use_migration', 'enable_libvirt_migration', 'boolean')"
     %label.h3{ :for => :scheduler }= t('.scheduler_header')
     %div.container{ :id => :scheduler }
       %p
@@ -51,6 +61,9 @@
             %label{ :for => :ssl_keyfile }= t('.ssl_keyfile')
             = text_field_tag :ssl_keyfile, @proposal.raw_data['attributes'][@proposal.barclamp]["ssl"]["keyfile"], :size => 80, :onchange => "update_value('ssl/keyfile', 'ssl_keyfile', 'string')"
           %p
+            %label{ :for => :ssl_generate_certs }= t('.ssl_generate_certs')
+            = select_tag :ssl_generate_certs, options_for_select([['true','true'], ['false', 'false']], @proposal.raw_data['attributes'][@proposal.barclamp]["ssl"]["generate_certs"].to_s), :onchange => "update_value('ssl/generate_certs', 'ssl_generate_certs', 'boolean')"
+          %p
             %label{ :for => :ssl_insecure }= t('.ssl_insecure')
             = select_tag :ssl_insecure, options_for_select([['true','true'], ['false', 'false']], @proposal.raw_data['attributes'][@proposal.barclamp]["ssl"]["insecure"].to_s), :onchange => "update_value('ssl/insecure', 'ssl_insecure', 'boolean')"
           %p
@@ -77,13 +90,6 @@
           = text_field_tag :novnc_ssl_keyfile, @proposal.raw_data['attributes'][@proposal.barclamp]["novnc"]["ssl"]["keyfile"], :size => "80", :onchange => "update_value('novnc/ssl/keyfile', 'novnc_ssl_keyfile', 'string')"
 
 :javascript
-  function toggle_ksm() {
-    if ($('#libvirt_type option:selected').attr('value') == 'kvm') {
-      $('#kvm_div').show(); $('#kvm_div_label').show();
-    } else {
-      $('#kvm_div').hide(); $('#kvm_div_label').hide();
-    }
-  };
 
   function toggle_protocol() {
     if ($('#protocol option:selected').attr('value') == 'true') {
@@ -101,6 +107,13 @@
     }
   };
 
+  function toggle_ssl_generate_certs() {
+    if ($('#ssl_generate_certs option:selected').attr('value') == 'true') {
+      $('#ssl_insecure').attr('value', 'true');
+      $('#ssl_cert_required').attr('value', 'false');
+    }
+  };
+
   function toggle_novnc_protocol() {
     if ($('#novnc_protocol option:selected').attr('value') == 'true') {
       $('#novnc_ssl_div').show();
@@ -110,13 +123,13 @@
   };
 
   $(document).ready(function () {
-    toggle_ksm();
     toggle_protocol();
     toggle_ssl_cert_required();
+    toggle_ssl_generate_certs();
     toggle_novnc_protocol();
   });
 
-  $('#libvirt_type').change(toggle_ksm);
   $('#protocol').change(toggle_protocol);
   $('#ssl_cert_required').change(toggle_ssl_cert_required);
   $('#novnc_protocol').change(toggle_novnc_protocol);
+  $('#ssl_generate_certs').change(toggle_ssl_generate_certs);

@@ -52,8 +52,12 @@ locale_additions:
           database_instance: Database Instance
           rabbitmq_instance: RabbitMQ
           keystone_instance: Keystone
+          itxt_instance: Intel TXT
+          trusted_flavors: Create Trusted Flavors
           glance_instance: Glance
           verbose: Verbose
+          shared_instance_storage: Set up Shared Storage on Nova-multi-controller for Nova instances
+          enable_libvirt_migration: Enable Libvirt Migration
           use_novnc: Use NoVNC (otherwise VPN-VNC)
           libvirt_type: Hypervisor
           quantum_instance: Quantum
@@ -68,6 +72,7 @@ locale_additions:
           ssl_insecure: SSL Certificate is insecure (for instance, auto-signed)
           ssl_certfile: SSL Certificate File
           ssl_keyfile: SSL (Private) Key File
+          ssl_generate_certs: Generate (self-signed) certificates (implies insecure)
           ssl_cert_required: Require Client Certificate
           ssl_ca_certs: SSL CA Certificates File
           novnc_ssl_header: SSL Support for noVNC

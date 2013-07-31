@@ -27,7 +27,7 @@ class NovaService < ServiceObject
 
   def proposal_dependencies(role)
     answer = []
-    answer << { "barclamp" => "database", "inst" => role.default_attributes["nova"]["db"]["database_instance"] }
+    answer << { "barclamp" => "database", "inst" => role.default_attributes["nova"]["database_instance"] }
     answer << { "barclamp" => "keystone", "inst" => role.default_attributes["nova"]["keystone_instance"] }
     answer << { "barclamp" => "glance", "inst" => role.default_attributes["nova"]["glance_instance"] }
     answer << { "barclamp" => "rabbitmq", "inst" => role.default_attributes["nova"]["rabbitmq_instance"] }
@@ -57,17 +57,15 @@ class NovaService < ServiceObject
     nodes.delete_if { |n| n.admin? } if nodes.size > 1
     head = nodes.shift
     nodes = [ head ] if nodes.empty?
+
+    kvm = nodes.select { |n| n if n[:cpu]['0'][:flags].include?("vmx") or n[:cpu]['0'][:flags].include?("svm") }
+    qemu = nodes - kvm
+
     base["deployment"]["nova"]["elements"] = {
       "nova-multi-controller" => [ head.name ],
-      "nova-multi-compute" => nodes.map { |x| x.name }
+      "nova-multi-compute-kvm" => kvm.map { |x| x.name },
+      "nova-multi-compute-qemu" => qemu.map { |x| x.name }  
     }
-    # automatically swap to qemu if using VMs for testing (relies on node.virtual to detect VMs)
-    nodes.each do |n|
-      if n.virtual?
-        base["attributes"]["nova"]["libvirt_type"] = "qemu"
-        break
-      end
-    end
 
     base["attributes"][@bc_name]["git_instance"] = ""
     begin
@@ -84,7 +82,7 @@ class NovaService < ServiceObject
       @logger.info("#{@bc_name} create_proposal: no git found")
     end
 
-    base["attributes"]["nova"]["db"]["database_instance"] = ""
+    base["attributes"]["nova"]["database_instance"] = ""
     begin
       databaseService = DatabaseService.new(@logger)
       dbs = databaseService.list_active[1]
@@ -95,13 +93,13 @@ class NovaService < ServiceObject
       if dbs.empty?
         @logger.info("Nova create_proposal: no database proposal found")
       else
-        base["attributes"]["nova"]["db"]["database_instance"] = dbs[0]
+        base["attributes"]["nova"]["database_instance"] = dbs[0]
       end
     rescue
       @logger.info("Nova create_proposal: no database found")
     end
 
-    if base["attributes"]["nova"]["db"]["database_instance"] == ""
+    if base["attributes"]["nova"]["database_instance"] == ""
       raise(I18n.t('model.service.dependency_missing', :name => @bc_name, :dependson => "database"))
     end
 
@@ -140,6 +138,22 @@ class NovaService < ServiceObject
     end
 
     base["attributes"]["nova"]["service_password"] = '%012d' % rand(1e12)
+
+    base["attributes"][@bc_name]["itxt_instance"] = ""
+    begin
+      itxtService = InteltxtService.new(@logger)
+      itxts = itxtService.list_active[1]
+      if itxts.empty?
+        # No actives, look for proposals
+        #itxts = itxtService.proposals[1]
+        itxts = [ "None" ]
+      end
+      unless itxts.empty?
+        base["attributes"][@bc_name]["itxt_instance"] = itxts[0]
+      end
+    rescue
+      @logger.info("#{@bc_name} create_proposal: no itxt found")
+    end
 
     base["attributes"]["nova"]["glance_instance"] = ""
     begin
@@ -193,6 +207,7 @@ class NovaService < ServiceObject
     end
 
     base["attributes"]["nova"]["db"]["password"] = random_password
+    base["attributes"]["nova"]["network"]["quantum_metadata_proxy_shared_secret"] = random_password
 
     @logger.debug("Nova create_proposal: exiting")
     base
@@ -242,5 +257,30 @@ class NovaService < ServiceObject
     @logger.debug("Nova apply_role_pre_chef_call: leaving")
   end
 
-end
+  def validate_proposal_after_save proposal
+    super
 
+    errors = []
+    elements = proposal["deployment"]["nova"]["elements"]
+    nodes = Hash.new(0)
+
+    elements["nova-multi-compute-kvm"].each do |n|
+        nodes[n] += 1
+    end unless elements["nova-multi-compute-kvm"].nil?
+    elements["nova-multi-compute-qemu"].each do |n|
+        nodes[n] += 1
+    end unless elements["nova-multi-compute-qemu"].nil?
+
+    nodes.each do |key,value|
+        if value > 1
+            errors << "Node #{key} has been already assigned to nova-multi-compute role twice"
+        end
+    end unless nodes.nil?
+
+    if errors.length > 0
+      raise Chef::Exceptions::ValidationFailed.new(errors.join("\n"))
+    end
+
+  end
+
+end

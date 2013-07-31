@@ -24,8 +24,7 @@
 include_recipe "database::client"
 
 # find sql server
-env_filter = " AND database_config_environment:database-config-#{node[:nova][:db][:database_instance]}"
-sqls = search(:node, "roles:database-server#{env_filter}")
+sqls = search_env_filtered(:node, "roles:database-server")
 # if we found ourself, then use us.
 if sqls.length > 0
     sql = sqls[0]

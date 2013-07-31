@@ -3,15 +3,20 @@
   "description": "installs and configures the Openstack Nova component. It relies upon the network and glance barclamps for normal operation.",
   "attributes": {
     "nova": {
+      "database_instance": "none",
       "rabbitmq_instance": "none",
       "keystone_instance": "none",
       "service_user": "nova",
       "glance_instance": "none",
       "cinder_instance": "none",
       "quantum_instance": "none",
+      "itxt_instance": "none",
+      "trusted_flavors": false,
       "libvirt_type": "kvm",
       "use_novnc": true,
       "verbose": false,
+      "use_shared_instance_storage": false,
+      "use_migration": false,
       "use_syslog": false,
       "gitrepo": "http://github.com/openstack/nova.git",
       "git_instance": "",
@@ -81,6 +86,7 @@
         "pip://python-quantumclient>=2.1",
         "pip://python-glanceclient>=0.5.0,<2",
         "pip://python-novaclient",
+        "pip://python-ceilometerclient",
         "pip://python-cinderclient",
         "pip://python-keystoneclient>=0.2.0",
         "pip://prettytable>=0.6,<0.8",
@@ -104,7 +110,6 @@
 	"cpu_allocation_ratio": 16.0
       },
       "db": {
-        "database_instance": "none",
         "password": "",
         "user": "nova",
         "database": "nova"
@@ -114,9 +119,10 @@
       },
       "ssl": {
         "enabled": false,
-        "insecure": false,
         "certfile": "/etc/nova/ssl/certs/signing_cert.pem",
         "keyfile": "/etc/nova/ssl/private/signing_key.pem",
+        "generate_certs": false,
+        "insecure": false,
         "cert_required": false,
         "ca_certs": "/etc/nova/ssl/certs/ca.pem"
       },
@@ -134,16 +140,19 @@
       "crowbar-revision": 0,
       "element_states": {
         "nova-multi-controller": [ "readying", "ready", "applying" ],
-        "nova-multi-compute": [ "readying", "ready", "applying" ]
+        "nova-multi-compute-kvm": [ "readying", "ready", "applying" ],
+        "nova-multi-compute-qemu": [ "readying", "ready", "applying" ]
       },
       "elements": {},
       "element_order": [
         [ "nova-multi-controller" ],
-        [ "nova-multi-compute" ]
+        [ "nova-multi-compute-kvm" ],
+        [ "nova-multi-compute-qemu" ]
       ],
       "element_run_list_order": {
         "nova-multi-controller": 95,
-        "nova-multi-compute": 97
+        "nova-multi-compute-kvm": 97,
+        "nova-multi-compute-qemu": 97
       },
       "config": {
         "environment": "nova-config-base",

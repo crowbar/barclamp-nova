@@ -12,6 +12,7 @@
           "type": "map", 
           "required": true,
           "mapping": {
+            "database_instance": { "type": "str", "required": true },
             "rabbitmq_instance": { "type": "str", "required": true },
             "keystone_instance": { "type": "str", "required": true },
             "service_user": { "type": "str", "required": true },
@@ -22,9 +23,13 @@
             "libvirt_type": { "type": "str", "required": true },
             "use_novnc": { "type": "bool", "required": true },
             "verbose": { "type": "bool", "required": true },
+            "trusted_flavors": { "type": "bool", "required": true },
+            "use_migration": { "type": "bool", "required": true },
+            "use_shared_instance_storage": { "type": "bool", "required": true },
             "use_syslog": { "type": "bool", "required": true },
             "gitrepo": { "type": "str", "required": true },
             "git_instance": { "type": "str", "required": true },
+            "itxt_instance": { "type": "str", "required": true },
             "git_refspec": { "type": "str", "required": true },
             "networking_backend": { "type": "str", "required": true },
             "use_gitrepo": { "type": "bool", "required": true },
@@ -49,7 +54,8 @@
                 "flat_network_bridge": { "type": "str" },
                 "flat_interface": { "type": "str" },
                 "flat_network_dhcp_start": { "type": "str" },
-                "vlan_start": { "type": "int" }
+                "vlan_start": { "type": "int" },
+                "quantum_metadata_proxy_shared_secret": { "type": "str" }
               }
             },
             "scheduler": {
@@ -63,7 +69,6 @@
               "type": "map",
               "required": true,
               "mapping": {
-                "database_instance": { "type": "str", "required": true },
                 "password": { "type": "str", "required": true },
                 "user": { "type": "str", "required": true },
                 "database": { "type": "str", "required": true }
@@ -77,9 +82,10 @@
             "ssl": {
               "type": "map", "required": true, "mapping": {
                 "enabled": { "type" : "bool", "required" : true },
-                "insecure": { "type" : "bool", "required" : true },
                 "certfile": { "type" : "str", "required" : true },
                 "keyfile": { "type" : "str", "required" : true },
+                "generate_certs": { "type" : "bool", "required" : true },
+                "insecure": { "type" : "bool", "required" : true },
                 "cert_required": { "type" : "bool", "required" : true },
                 "ca_certs": { "type" : "str", "required" : true }
               }

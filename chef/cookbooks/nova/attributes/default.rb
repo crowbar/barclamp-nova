@@ -28,10 +28,13 @@ default[:nova][:db][:password] = nil
 default[:nova][:db][:user] = "nova"
 default[:nova][:db][:database] = "nova"
 
+default[:nova][:use_migration] = false
+default[:nova][:use_shared_instance_storage] = false
+
 #
 # Hypervisor Settings
 #
-default[:nova][:libvirt_type] = "kvm"    
+default[:nova][:libvirt_type] = "kvm"
 
 #
 # KVM Settings
@@ -56,6 +59,7 @@ unless node[:platform] == 'suse'
 else
     default[:nova][:user] = "openstack-nova"
 end
+default[:nova][:instances_path] = '/var/lib/nova/instances'
 
 #
 # General network parameters
@@ -72,6 +76,7 @@ default[:nova][:fixed_range] = "10.0.0.0/8"
 default[:nova][:floating_range] = "4.4.4.0/24"
 default[:nova][:num_networks] = 1
 default[:nova][:network_size] = 256
+default[:nova][:network][:quantum_metadata_proxy_shared_secret] = ""
 #
 default[:nova][:network][:flat_network_bridge] = "br100"
 default[:nova][:network][:flat_injected] = true
@@ -85,9 +90,10 @@ default[:nova][:service_user] = "nova"
 default[:nova][:service_password] = "nova"
 
 default[:nova][:ssl][:enabled] = false
-default[:nova][:ssl][:insecure] = false
 default[:nova][:ssl][:certfile] = "/etc/nova/ssl/certs/signing_cert.pem"
 default[:nova][:ssl][:keyfile] = "/etc/nova/ssl/private/signing_key.pem"
+default[:nova][:ssl][:generate_certs] = false
+default[:nova][:ssl][:insecure] = false
 default[:nova][:ssl][:cert_required] = false
 default[:nova][:ssl][:ca_certs] = "/etc/nova/ssl/certs/ca.pem"
 
@@ -96,7 +102,7 @@ default[:nova][:novnc][:ssl][:certfile] = ""
 default[:nova][:novnc][:ssl][:keyfile] = ""
 
 #
-# Transparent Hugepage Settings                       
-# 
+# Transparent Hugepage Settings
+#
 default[:nova][:hugepage][:tranparent_hugepage_enabled] = "always"
 default[:nova][:hugepage][:tranparent_hugepage_defrag] = "always"

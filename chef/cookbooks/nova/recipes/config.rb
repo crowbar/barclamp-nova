@@ -33,6 +33,9 @@ unless node[:nova][:use_gitrepo]
     end
     action :install
   end
+
+  # nova.conf.erb has notification_driver=ceilometer.compute.nova_notifier, thus:
+  package "python-ceilometerclient"
 else
   pfs_and_install_deps "nova" do
     virtualenv venv_path
@@ -42,8 +45,7 @@ end
 
 include_recipe "database::client"
 
-env_filter = " AND database_config_environment:database-config-#{node[:nova][:db][:database_instance]}"
-sqls = search(:node, "roles:database-server#{env_filter}") || []
+sqls = search_env_filtered(:node, "roles:database-server")
 if sqls.length > 0
   sql = sqls[0]
   sql = node if sql.name == node.name
@@ -57,17 +59,22 @@ include_recipe "#{backend_name}::python-client"
 
 database_address = Chef::Recipe::Barclamp::Inventory.get_network_by_type(sql, "admin").address if database_address.nil?
 Chef::Log.info("database server found at #{database_address}")
-database_connection = "#{backend_name}://#{node[:nova][:db][:user]}:#{node[:nova][:db][:password]}@#{database_address}/#{node[:nova][:db][:database]}"
+db_conn_scheme = backend_name
+if node[:platform] == "suse" && backend_name == "mysql"
+  # The C-extensions (python-mysql) can't be monkey-patched by eventlet. Therefore, when only one nova-conductor is present,
+  # all DB queries are serialized. By using the pure-Python driver by default, eventlet can do it's job:
+  db_conn_scheme = "mysql+pymysql"
+end
+database_connection = "#{db_conn_scheme}://#{node[:nova][:db][:user]}:#{node[:nova][:db][:password]}@#{database_address}/#{node[:nova][:db][:database]}"
 
-env_filter = " AND rabbitmq_config_environment:rabbitmq-config-#{node[:nova][:rabbitmq_instance]}"
-rabbits = search(:node, "roles:rabbitmq-server#{env_filter}") || []
+rabbits = search_env_filtered(:node, "roles:rabbitmq-server")
 if rabbits.length > 0
   rabbit = rabbits[0]
   rabbit = node if rabbit.name == node.name
 else
   rabbit = node
 end
-rabbit_address = Chef::Recipe::Barclamp::Inventory.get_network_by_type(rabbit, "admin").address 
+rabbit_address = Chef::Recipe::Barclamp::Inventory.get_network_by_type(rabbit, "admin").address
 Chef::Log.info("Rabbit server found at #{rabbit_address}")
 rabbit_settings = {
   :address => rabbit_address,
@@ -77,18 +84,29 @@ rabbit_settings = {
   :vhost => rabbit[:rabbitmq][:vhost]
 }
 
-apis = search(:node, "recipes:nova\\:\\:api#{env_filter}") || []
+apis = search_env_filtered(:node, "recipes:nova\\:\\:api")
 if apis.length > 0 and !node[:nova][:network][:ha_enabled]
   api = apis[0]
   api = node if api.name == node.name
 else
   api = node
 end
-public_api_ip = api_ip = Chef::Recipe::Barclamp::Inventory.get_network_by_type(api, "public").address
-admin_api_ip = api_ip = Chef::Recipe::Barclamp::Inventory.get_network_by_type(api, "admin").address
-Chef::Log.info("Api server found at #{public_api_ip} #{admin_api_ip}")
+admin_api_ip = Chef::Recipe::Barclamp::Inventory.get_network_by_type(api, "admin").address
+admin_api_host = api[:fqdn]
+# For the public endpoint, we prefer the public name. If not set, then we
+# use the IP address except for SSL, where we always prefer a hostname
+# (for certificate validation).
+public_api_host = api[:crowbar][:public_name]
+if public_api_host.nil? or public_api_host.empty?
+  unless api[:nova][:ssl][:enabled]
+    public_api_host = Chef::Recipe::Barclamp::Inventory.get_network_by_type(api, "public").address
+  else
+    public_api_host = 'public.'+api[:fqdn]
+  end
+end
+Chef::Log.info("Api server found at #{admin_api_host} #{public_api_host}")
 
-dns_servers = search(:node, "roles:dns-server") || []
+dns_servers = search_env_filtered(:node, "roles:dns-server")
 if dns_servers.length > 0
   dns_server = dns_servers[0]
   dns_server = node if dns_server.name == node.name
@@ -98,27 +116,41 @@ end
 dns_server_public_ip = Chef::Recipe::Barclamp::Inventory.get_network_by_type(dns_server, "public").address
 Chef::Log.info("DNS server found at #{dns_server_public_ip}")
 
-glance_servers = search(:node, "roles:glance-server") || []
+glance_servers = search_env_filtered(:node, "roles:glance-server")
 if glance_servers.length > 0
   glance_server = glance_servers[0]
   glance_server = node if glance_server.name == node.name
-  glance_server_ip = Chef::Recipe::Barclamp::Inventory.get_network_by_type(glance_server, "admin").address
+  glance_server_host = glance_server[:fqdn]
   glance_server_port = glance_server[:glance][:api][:bind_port]
+  glance_server_protocol = glance_server[:glance][:api][:protocol]
+  glance_server_insecure = glance_server_protocol == 'https' && glance_server[:glance][:ssl][:insecure]
 else
-  glance_server_ip = nil
+  glance_server_host = nil
   glance_server_port = nil
+  glance_server_protocol = nil
+  glance_server_insecure = nil
 end
-Chef::Log.info("Glance server at #{glance_server_ip}")
+Chef::Log.info("Glance server at #{glance_server_host}")
 
-vncproxies = search(:node, "recipes:nova\\:\\:vncproxy#{env_filter}") || []
+vncproxies = search_env_filtered(:node, "recipes:nova\\:\\:vncproxy")
 if vncproxies.length > 0
   vncproxy = vncproxies[0]
   vncproxy = node if vncproxy.name == node.name
 else
   vncproxy = node
 end
-vncproxy_public_ip = Chef::Recipe::Barclamp::Inventory.get_network_by_type(vncproxy, "public").address
-Chef::Log.info("VNCProxy server at #{vncproxy_public_ip}")
+# For the public endpoint, we prefer the public name. If not set, then we
+# use the IP address except for SSL, where we always prefer a hostname
+# (for certificate validation).
+vncproxy_public_host = vncproxy[:crowbar][:public_name]
+if vncproxy_public_host.nil? or vncproxy_public_host.empty?
+  unless vncproxy[:nova][:novnc][:ssl][:enabled]
+    vncproxy_public_host = Chef::Recipe::Barclamp::Inventory.get_network_by_type(vncproxy, "public").address
+  else
+    vncproxy_public_host = 'public.'+vncproxy[:fqdn]
+  end
+end
+Chef::Log.info("VNCProxy server at #{vncproxy_public_host}")
 
 cookbook_file "/etc/default/nova-common" do
   source "nova-common"
@@ -188,7 +220,7 @@ end
 if node[:nova][:use_gitrepo]
   package("libvirt-bin")
   create_user_and_dirs "nova" do
-    opt_dirs ["/var/lib/nova/instances"]
+    opt_dirs [node[:nova][:instances_path]]
     user_gid "libvirtd"
   end
 
@@ -196,7 +228,7 @@ if node[:nova][:use_gitrepo]
     command "cp #{nova_path}/etc/nova/policy.json /etc/nova/"
     creates "/etc/nova/policy.json"
   end
-  
+
   template "/etc/sudoers.d/nova-rootwrap" do
     source "nova-rootwrap.erb"
     mode 0440
@@ -233,8 +265,7 @@ if node[:nova][:use_gitrepo]
   end
 end
 
-env_filter = " AND keystone_config_environment:keystone-config-#{node[:nova][:keystone_instance]}"
-keystones = search(:node, "recipes:keystone\\:\\:server#{env_filter}") || []
+keystones = search_env_filtered(:node, "recipes:keystone\\:\\:server")
 if keystones.length > 0
   keystone = keystones[0]
   keystone = node if keystone.name == node.name
@@ -242,7 +273,7 @@ else
   keystone = node
 end
 
-keystone_address = Chef::Recipe::Barclamp::Inventory.get_network_by_type(keystone, "admin").address if keystone_address.nil?
+keystone_host = keystone[:fqdn]
 keystone_protocol = keystone["keystone"]["api"]["protocol"]
 keystone_token = keystone["keystone"]["service"]["token"]
 keystone_service_port = keystone["keystone"]["api"]["service_port"]
@@ -250,16 +281,22 @@ keystone_admin_port = keystone["keystone"]["api"]["admin_port"]
 keystone_service_tenant = keystone["keystone"]["service"]["tenant"]
 keystone_service_user = node[:nova][:service_user]
 keystone_service_password = node[:nova][:service_password]
-Chef::Log.info("Keystone server found at #{keystone_address}")
+Chef::Log.info("Keystone server found at #{keystone_host}")
 
+cinder_servers = search(:node, "roles:cinder-controller") || []
+if cinder_servers.length > 0
+  cinder_server = cinder_servers[0]
+  cinder_insecure = cinder_server[:cinder][:api][:protocol] == 'https' && cinder_server[:cinder][:ssl][:insecure]
+else
+  cinder_insecure = false
+end
 
-
-quantum_servers = search(:node, "roles:quantum-server") || []
+quantum_servers = search_env_filtered(:node, "roles:quantum-server")
 if quantum_servers.length > 0
   quantum_server = quantum_servers[0]
   quantum_server = node if quantum_server.name == node.name
   quantum_protocol = quantum_server[:quantum][:api][:protocol]
-  quantum_server_ip = Chef::Recipe::Barclamp::Inventory.get_network_by_type(quantum_server, "admin").address
+  quantum_server_host = quantum_server[:fqdn]
   quantum_server_port = quantum_server[:quantum][:api][:service_port]
   quantum_insecure = quantum_protocol == 'https' && quantum_server[:quantum][:ssl][:insecure]
   quantum_service_user = quantum_server[:quantum][:service_user]
@@ -272,12 +309,29 @@ if quantum_servers.length > 0
   quantum_networking_plugin = quantum_server[:quantum][:networking_plugin]
   quantum_networking_mode = quantum_server[:quantum][:networking_mode]
 else
-  quantum_server_ip = nil
+  quantum_server_host = nil
   quantum_server_port = nil
   quantum_service_user = nil
   quantum_service_password = nil
 end
-Chef::Log.info("Quantum server at #{quantum_server_ip}")
+Chef::Log.info("Quantum server at #{quantum_server_host}")
+
+env_filter = " AND inteltxt_config_environment:inteltxt-config-#{node[:nova][:itxt_instance]}"
+oat_servers = search(:node, "roles:oat-server#{env_filter}") || []
+if oat_servers.length > 0
+  has_itxt = true
+  oat_server = oat_servers[0]
+  execute "fill_cert" do
+    command <<-EOF
+      echo | openssl s_client -connect "#{oat_server[:hostname]}:8443" -cipher DHE-RSA-AES256-SHA > /etc/nova/oat_certfile.cer || rm -fv /etc/nova/oat_certfile.cer
+    EOF
+    not_if { File.exists? "/etc/nova/oat_certfile.cer" }
+  end
+else
+  has_itxt = false
+  oat_server = node
+end
+
 
 directory "/var/lock/nova" do
   action :create
@@ -286,6 +340,54 @@ directory "/var/lock/nova" do
 end
 
 if api == node and api[:nova][:ssl][:enabled]
+  if api[:nova][:ssl][:generate_certs]
+    package "openssl"
+
+    require "fileutils"
+    [:certfile, :keyfile, :ca_certs].each do |k|
+      dir = File.dirname(api[:nova][:ssl][k])
+      if File.exists?(dir)
+        FileUtils.chown_R api[:nova][:user], api[:nova][:group], dir
+      else
+        FileUtils.mkdir_p(dir) {|d| File.chown api[:nova][:user], api[:nova][:group], d}
+      end
+    end
+
+    # Some more ownership fixes:
+    conf_dir = File.dirname api[:nova][:ssl][:ca_certs]
+    FileUtils.chown "root", api[:nova][:group], conf_dir
+    FileUtils.chown "root", api[:nova][:group], File.expand_path("#{conf_dir}/..")  # /etc/nova/ssl
+
+    # Generate private key
+    %x(openssl genrsa -out #{api[:nova][:ssl][:keyfile]} 4096)
+    if $?.exitstatus != 0
+      message = "SSL private key generation failed"
+      Chef::Log.fatal(message)
+      raise message
+    end
+    FileUtils.chown api[:nova][:user], api[:nova][:group], api[:nova][:ssl][:keyfile]
+
+    # Generate certificate signing requests (CSR)
+    ssl_csr_file = "#{conf_dir}/signing_key.csr"
+    ssl_subject = "\"/C=US/ST=Unset/L=Unset/O=Unset/CN=#{api[:fqdn]}\""
+    %x(openssl req -new -key #{api[:nova][:ssl][:keyfile]} -out #{ssl_csr_file} -subj #{ssl_subject})
+    if $?.exitstatus != 0
+      message = "SSL certificate signed requests generation failed"
+      Chef::Log.fatal(message)
+      raise message
+    end
+
+    # Generate self-signed certificate with above CSR
+    %x(openssl x509 -req -days 3650 -in #{ssl_csr_file} -signkey #{api[:nova][:ssl][:keyfile]} -out #{api[:nova][:ssl][:certfile]})
+    if $?.exitstatus != 0
+      message = "SSL self-signed certificate generation failed"
+      Chef::Log.fatal(message)
+      raise message
+    end
+
+    File.delete ssl_csr_file  # Nobody should even try to use this
+  end
+
   unless ::File.exists? api[:nova][:ssl][:certfile]
     message = "Certificate \"#{api[:nova][:ssl][:certfile]}\" is not present."
     Chef::Log.fatal(message)
@@ -332,17 +434,22 @@ template "/etc/nova/nova.conf" do
             :database_connection => database_connection,
             :rabbit_settings => rabbit_settings,
             :libvirt_type => node[:nova][:libvirt_type],
-            :ec2_host => admin_api_ip,
-            :ec2_dmz_host => public_api_ip,
+            :ec2_host => admin_api_host,
+            :ec2_dmz_host => public_api_host,
+            :libvirt_migration => node[:nova]["use_migration"],
+            :shared_instances => node[:nova]["use_shared_instance_storage"],
             :dns_server_public_ip => dns_server_public_ip,
-            :glance_server_ip => glance_server_ip,
+            :glance_server_protocol => glance_server_protocol,
+            :glance_server_host => glance_server_host,
             :glance_server_port => glance_server_port,
-            :vncproxy_public_ip => vncproxy_public_ip,
+            :glance_server_insecure => glance_server_insecure,
+            :metadata_bind_address => admin_api_ip,
+            :vncproxy_public_host => vncproxy_public_host,
             :vncproxy_ssl_enabled => api[:nova][:novnc][:ssl][:enabled],
             :vncproxy_cert_file => api_novnc_ssl_certfile,
             :vncproxy_key_file => api_novnc_ssl_keyfile,
             :quantum_protocol => quantum_protocol,
-            :quantum_server_ip => quantum_server_ip,
+            :quantum_server_host => quantum_server_host,
             :quantum_server_port => quantum_server_port,
             :quantum_insecure => quantum_insecure,
             :quantum_service_user => quantum_service_user,
@@ -350,13 +457,17 @@ template "/etc/nova/nova.conf" do
             :quantum_networking_plugin => quantum_networking_plugin,
             :keystone_service_tenant => keystone_service_tenant,
             :keystone_protocol => keystone_protocol,
-            :keystone_address => keystone_address,
+            :keystone_host => keystone_host,
             :keystone_admin_port => keystone_admin_port,
+            :cinder_insecure => cinder_insecure,
             :ssl_enabled => api[:nova][:ssl][:enabled],
             :ssl_cert_file => api[:nova][:ssl][:certfile],
             :ssl_key_file => api[:nova][:ssl][:keyfile],
             :ssl_cert_required => api[:nova][:ssl][:cert_required],
-            :ssl_ca_file => api[:nova][:ssl][:ca_certs]
+            :ssl_ca_file => api[:nova][:ssl][:ca_certs],
+            :oat_appraiser_host => oat_server[:hostname],
+            :oat_appraiser_port => "8443",
+            :has_itxt => has_itxt
             )
 end
 
