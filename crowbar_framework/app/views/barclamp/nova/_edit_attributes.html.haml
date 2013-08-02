@@ -1,10 +1,9 @@
 
-
 %input#proposal_attributes{:type => "hidden", :name => "proposal_attributes", :value => @proposal.raw_data['attributes'][@proposal.barclamp].to_json}
-%p
-  %label{:for => "proposal_attributes"}= t('.attributes')
-  = link_to t('raw'), proposal_barclamp_path(:id => @proposal.name, :controller => @proposal.barclamp, :dep_raw => @dep_raw, :attr_raw => true), :style => "float: right;"
-  %div.container
+%h3.page-header
+  = t('.attributes')
+  = link_to t('raw'), proposal_barclamp_path(:id => @proposal.name, :controller => @proposal.barclamp, :dep_raw => @dep_raw, :attr_raw => true), :class => "pull-right"
+  %div
     = render_instance_selector("database", :database_instance, t('.database_instance'), "database_instance", @proposal)
     = render_instance_selector("rabbitmq", :rabbitmq_instance, t('.rabbitmq_instance'), "rabbitmq_instance", @proposal)
     = render_instance_selector("keystone", :keystone_instance, t('.keystone_instance'), "keystone_instance", @proposal)
@@ -31,7 +30,7 @@
       %label{ :for => :enable_libvirt_migration }= t('.enable_libvirt_migration')
       = select_tag :enable_libvirt_migration, options_for_select([['true','true'], ['false', 'false']], @proposal.raw_data['attributes'][@proposal.barclamp]["use_migration"].to_s), :onchange => "update_value('use_migration', 'enable_libvirt_migration', 'boolean')"
     %label.h3{ :for => :scheduler }= t('.scheduler_header')
-    %div.container{ :id => :scheduler }
+    %div{ :id => :scheduler }
       %p
         %label{ :for => :ram_allocation_ratio }= t('.ram_allocation_ratio')
         %input#ram_allocation_ratio{:type => "text", :name => "ram_allocation_ratio", :'data-default' => @proposal.raw_data['attributes'][@proposal.barclamp]["scheduler"]["ram_allocation_ratio"], :onchange => "update_value('scheduler/ram_allocation_ratio','ram_allocation_ratio', 'float')"}
@@ -41,14 +40,14 @@
 
 
     %label.h3{ :for => :kvm_div, :id => :kvm_div_label }=  t('.kvm')
-    %div.container{ :id => :kvm_div }
+    %div{ :id => :kvm_div }
       %p
         %label{ :for => :kvm_ksm }= t('.kvm_ksm')
         = select_tag :kvm_ksm, options_for_select([['true','true'], ['false', 'false']], @proposal.raw_data['attributes'][@proposal.barclamp]["kvm"]["ksm_enabled"].to_s), :onchange => "update_value('kvm/ksm_enabled', 'kvm_ksm', 'boolean')"
 
     %p
       %label.h3= t('.ssl_header')
-      %div.container
+      %div
         %p
           %label{ :for => :protocol }= t('.protocol')
           = select_tag :protocol, options_for_select([['HTTP','false'], ['HTTPS', 'true']], @proposal.raw_data['attributes'][@proposal.barclamp]["ssl"]["enabled"].to_s), :onchange => "update_value('ssl/enabled', 'protocol', 'boolean')"
@@ -75,7 +74,7 @@
 
     %p
       %label.h3= t('.novnc_ssl_header')
-    %div.container
+    %div
       %p
         %label{ :for => :novnc_protocol }= t('.protocol')
         = select_tag :novnc_protocol, options_for_select([['HTTP','false'], ['HTTPS', 'true']], @proposal.raw_data['attributes'][@proposal.barclamp]["novnc"]["ssl"]["enabled"].to_s), :onchange => "update_value('novnc/ssl/enabled', 'novnc_protocol', 'boolean')"
