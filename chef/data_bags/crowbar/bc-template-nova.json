@@ -12,7 +12,7 @@
       "quantum_instance": "none",
       "itxt_instance": "none",
       "trusted_flavors": false,
-      "libvirt_type": "kvm",
+      "libvirt_type": "",
       "use_novnc": true,
       "verbose": false,
       "use_shared_instance_storage": false,
