@@ -207,7 +207,7 @@ class NovaService < ServiceObject
     end
 
     base["attributes"]["nova"]["db"]["password"] = random_password
-    base["attributes"]["nova"]["network"]["quantum_metadata_proxy_shared_secret"] = random_password
+    base["attributes"]["nova"]["quantum_metadata_proxy_shared_secret"] = random_password
 
     @logger.debug("Nova create_proposal: exiting")
     base
