@@ -210,7 +210,6 @@ if !node[:nova][:network][:dhcp_enabled]
   node.set[:nova][:network][:flat_interface] = fixed_interface
 elsif !node[:nova][:network][:tenant_vlans]
   node.set[:nova][:network][:flat_network_bridge] = flat_network_bridge
-  node.set[:nova][:network][:flat_network_dhcp_start] = fixed_net["ranges"]["dhcp"]["start"]
   node.set[:nova][:network][:flat_interface] = fixed_interface
 else
   node.set[:nova][:network][:vlan_interface] = fip.interface rescue nil
