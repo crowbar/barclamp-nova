@@ -76,13 +76,12 @@ default[:nova][:fixed_range] = "10.0.0.0/8"
 default[:nova][:floating_range] = "4.4.4.0/24"
 default[:nova][:num_networks] = 1
 default[:nova][:network_size] = 256
-default[:nova][:network][:quantum_metadata_proxy_shared_secret] = ""
+default[:nova][:quantum_metadata_proxy_shared_secret] = ""
 #
 default[:nova][:network][:flat_network_bridge] = "br100"
 default[:nova][:network][:flat_injected] = true
 default[:nova][:network][:flat_dns] = "8.8.4.4"
 default[:nova][:network][:flat_interface] = "eth0"
-default[:nova][:network][:flat_network_dhcp_start] = "10.0.0.2"
 default[:nova][:network][:vlan_interface] = "eth1"
 default[:nova][:network][:vlan_start] = 100
 
