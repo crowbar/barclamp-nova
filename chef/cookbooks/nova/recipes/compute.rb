@@ -73,7 +73,7 @@ def set_boot_kernel_and_trigger_reboot(flavor='default')
   end
 end
 
-if node.platform == "suse"
+if %w(redhat centos suse).include?(node.platform)
   package "libvirt"
 
   template "/etc/libvirt/libvirtd.conf" do
@@ -227,7 +227,7 @@ execute "set vhost_net module" do
   command "grep -q 'vhost_net' /etc/modules || echo 'vhost_net' >> /etc/modules"
 end
 
-if node[:nova][:networking_backend]=="quantum" and node.platform != "suse"
+if node[:nova][:networking_backend]=="quantum" and %w(redhat centos suse).include?(node.platform)
   #since using native ovs we have to gain acess to lower networking functions
   service "libvirt-bin" do
     action :nothing

@@ -26,7 +26,7 @@ venv_prefix_path = node[:nova][:use_virtualenv] ? ". #{venv_path}/bin/activate &
 
 unless node[:nova][:use_gitrepo]
   package "nova-common" do
-    if node.platform == "suse"
+    if %w(redhat centos suse).include?(node.platform)
       package_name "openstack-nova"
     else
       options "--force-yes -o Dpkg::Options::=\"--force-confdef\""

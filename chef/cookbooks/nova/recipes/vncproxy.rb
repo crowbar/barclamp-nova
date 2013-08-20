@@ -20,7 +20,7 @@
 
 include_recipe "nova::config"
 
-if node.platform != "suse"
+unless %w(redhat centos suse).include?(node.platform)
   pkgs=%w[python-numpy nova-console nova-consoleauth]
   pkgs=%w[python-numpy] if node[:nova][:use_gitrepo]
   pkgs.each do |pkg|
@@ -34,7 +34,7 @@ end
 # forcing novnc is deliberate on suse
 unless node[:nova][:use_gitrepo]
   if node[:nova][:use_novnc]
-    if node.platform == "suse"
+    if %w(redhat centos suse).include?(node.platform)
       package "openstack-nova-novncproxy" do
         action :install
       end
@@ -52,14 +52,14 @@ unless node[:nova][:use_gitrepo]
       end
     end
     service "nova-novncproxy" do
-      service_name "openstack-nova-novncproxy" if node.platform == "suse"
+      service_name "openstack-nova-novncproxy" if %w(redhat centos suse).include?(node.platform)
       supports :status => true, :restart => true
       action [:enable, :start]
       subscribes :restart, resources(:template => "/etc/nova/nova.conf"), :delayed
     end
   end
   service "nova-consoleauth" do
-    service_name "openstack-nova-consoleauth" if node.platform == "suse"
+    service_name "openstack-nova-consoleauth" if %w(redhat centos suse).include?(node.platform)
     supports :status => true, :restart => true
     action [:enable, :start]
     subscribes :restart, resources(:template => "/etc/nova/nova.conf"), :delayed

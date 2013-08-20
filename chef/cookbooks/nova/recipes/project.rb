@@ -29,7 +29,7 @@ if node[:nova][:networking_backend]=="nova-network"
 cmd = "nova-manage network create --fixed_range_v4=#{node[:nova][:network][:fixed_range]} --num_networks=#{node[:nova][:network][:num_networks]} --network_size=#{node[:nova][:network][:network_size]} --label private" 
 cmd << " --multi_host=T" if node[:nova][:network][:ha_enabled]
 execute cmd do
-  user node[:nova][:user] if node.platform != "suse" and not node[:nova][:use_gitrepo]
+  user node[:nova][:user] if %w(redhat centos suse).include?(node.platform) and not node[:nova][:use_gitrepo]
   not_if "nova-manage network list | grep '#{node[:nova][:network][:fixed_range].split("/")[0]}'"
 end
 
@@ -144,7 +144,7 @@ if not node[:nova][:use_gitrepo]
   # install python-glanceclient on controller, to be able to upload images
   # from here
   glance_client = "python-glance"
-  glance_client = "python-glanceclient" if node.platform == "suse"
+  glance_client = "python-glanceclient" if %w(redhat centos suse).include?(node.platform)
   package glance_client do
     action :install
   end
