@@ -60,14 +60,13 @@ class NovaService < ServiceObject
 
     kvm = []
     qemu = []
-    case base["attributes"][@bc_name][:libvirt_type]
-      when "qemu" then
-        qemu = nodes
-      when "kvm" then
-        kvm = nodes.select { |n| n if n[:cpu]['0'][:flags].include?("vmx") or n[:cpu]['0'][:flags].include?("svm") }
+
+    nodes.each do |n|
+      if (n[:virtualization][:role] != "guest") and (n[:cpu]['0'][:flags].include?("vmx") or n[:cpu]['0'][:flags].include?("svm"))
+        kvm << n
       else
-        kvm = nodes.select { |n| n if n[:cpu]['0'][:flags].include?("vmx") or n[:cpu]['0'][:flags].include?("svm") }
-        qemu = nodes - kvm
+        qemu << n
+      end
     end
 
     base["deployment"]["nova"]["elements"] = {
