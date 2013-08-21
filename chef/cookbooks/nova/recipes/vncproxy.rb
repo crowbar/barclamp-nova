@@ -38,8 +38,10 @@ unless node[:nova][:use_gitrepo]
       package "openstack-nova-novncproxy" do
         action :install
       end
-      package "openstack-nova-consoleauth" do
-        action :install
+      unless %w(redhat centos).include?(node.platform)
+        package "openstack-nova-consoleauth" do
+          action :install
+        end
       end
     else
       package "nova-novncproxy" do

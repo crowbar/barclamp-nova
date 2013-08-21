@@ -118,24 +118,47 @@ if %w(redhat centos suse).include?(node.platform)
   libvirt_restart_needed = false
 
   # change libvirt to run qemu as user qemu
-  ruby_block "edit qemu config" do
-    block do
-      rc = Chef::Util::FileEdit.new("/etc/libvirt/qemu.conf")
+  unless %w(redhat centos).include?(node.platform)
+    ruby_block "edit qemu config" do
+      block do
+        rc = Chef::Util::FileEdit.new("/etc/libvirt/qemu.conf")
 
-      # make sure to only set qemu:kvm for kvm and qemu deployments, use
-      # system defaults for xen
-      if ['kvm','qemu'].include?(node[:nova][:libvirt_type])
-        rc.search_file_replace_line(/^[ #]*user *=/, 'user = "qemu"')
-        rc.search_file_replace_line(/^[ #]*group *=/, 'group = "kvm"')
-      else
-        rc.search_file_replace_line(/^ *user *=/, '#user = "root"')
-        rc.search_file_replace_line(/^ *group *=/, '#group = "root"')
-      end
+        # make sure to only set qemu:kvm for kvm and qemu deployments, use
+        # system defaults for xen
+        if ['kvm','qemu'].include?(node[:nova][:libvirt_type])
+          rc.search_file_replace_line(/^[ #]*user *=/, 'user = "qemu"')
+          rc.search_file_replace_line(/^[ #]*group *=/, 'group = "kvm"')
+        else
+          rc.search_file_replace_line(/^ *user *=/, '#user = "root"')
+          rc.search_file_replace_line(/^ *group *=/, '#group = "root"')
+        end
 
-      if rc.file_edited?
-        rc.write_file
-        libvirt_restart_needed = true
+        if rc.file_edited?
+          rc.write_file
+          libvirt_restart_needed = true
+        end
       end
+    end
+  else
+    if ['kvm','qemu'].include?(node[:nova][:libvirt_type])
+      libvirt_user = "qemu"
+      libvirt_group = "kvm"
+    else
+      libvirt_user = "root"
+      libvirt_group = "root"
+    end
+
+    service "libvirtd" do
+      action [:enable, :start]
+    end
+
+    bash "edit qemu config" do
+      only_if "cat /etc/libvirt/qemu.conf | grep 'user =' | grep -q -v '#{libvirt_user}' || cat /etc/libvirt/qemu.conf | grep 'group =' | grep -q -v '#{libvirt_group}'"
+      code <<-EOH
+       sed -i 's|user *=.*|user = "#{libvirt_user}"|g' /etc/libvirt/qemu.conf
+       sed -i 's|group *=.*|group = "#{libvirt_group}"|g' /etc/libvirt/qemu.conf
+      EOH
+      notifies :restart, "service[libvirtd]"
     end
   end
 
@@ -227,14 +250,15 @@ execute "set vhost_net module" do
   command "grep -q 'vhost_net' /etc/modules || echo 'vhost_net' >> /etc/modules"
 end
 
-if node[:nova][:networking_backend]=="quantum" and %w(redhat centos suse).include?(node.platform)
+if node[:nova][:networking_backend]=="quantum" and not %w(redhat centos suse).include?(node.platform)
+  puts "platform=#{node.platform} ; include=#{%w(redhat centos suse).include?(node.platform)} ; full=#{node[:nova][:networking_backend]=="quantum" and %w(redhat centos suse).include?(node.platform)}"
   #since using native ovs we have to gain acess to lower networking functions
   service "libvirt-bin" do
     action :nothing
     supports :status => true, :start => true, :stop => true, :restart => true
   end
   cookbook_file "/etc/libvirt/qemu.conf" do
-    user "root"
+    owner "root"
     group "root"
     mode "0644"
     source "qemu.conf"

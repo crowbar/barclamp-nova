@@ -54,7 +54,7 @@ default[:nova][:scheduler][:cpu_allocation_ratio] = 16.0
 #
 default[:nova][:hostname] = "nova"
 default[:nova][:my_ip] = ipaddress
-unless %w(redhat centos suse).include?(node.platform)
+unless %w(suse).include?(node.platform)
     default[:nova][:user] = "nova"
 else
     default[:nova][:user] = "openstack-nova"
