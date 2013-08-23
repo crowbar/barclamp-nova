@@ -58,6 +58,9 @@ class NovaService < ServiceObject
     head = nodes.shift
     nodes = [ head ] if nodes.empty?
 
+    qemu = []
+    kvm = []
+
     nodes.each do |n|
       if (n[:virtualization][:role] != "guest") and (n[:cpu]['0'][:flags].include?("vmx") or n[:cpu]['0'][:flags].include?("svm"))
         kvm << n
