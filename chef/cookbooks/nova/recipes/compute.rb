@@ -104,6 +104,26 @@ if node.platform == "suse"
         end
       end
 
+      service "xend" do
+        action :nothing
+        supports :status => true, :start => true, :stop => true, :restart => true
+      end
+
+      template "/etc/xen/xend-config.sxp" do
+        source "xend-config.sxp.erb"
+        group "root"
+        owner "root"
+        mode 0644
+        variables(
+          :node_platform => node[:platform],
+          :libvirt_migration => node[:nova]["use_migration"],
+          :shared_instances => node[:nova]["use_shared_instance_storage"],
+          :libvirtd_listen_tcp => node[:nova]["use_migration"] ? 1 : 0,
+          :libvirtd_listen_addr => Chef::Recipe::Barclamp::Inventory.get_network_by_type(node, "admin").address
+        )
+        notifies :restart, "service[xend]", :delayed
+      end
+
       set_boot_kernel_and_trigger_reboot('xen')
     when "qemu"
       package "kvm"
