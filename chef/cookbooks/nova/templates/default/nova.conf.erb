@@ -2061,15 +2061,29 @@ libvirt_inject_key=false
 # value)
 #use_usb_tablet=true
 
+<% if @libvirt_type.eql?('xen') -%>
+<% if @libvirt_migration and @shared_instances -%>
+# Migration flags to be set for live migration (string value)
+live_migration_flag=VIR_MIGRATE_UNDEFINE_SOURCE,VIR_MIGRATE_LIVE
+
+# Migration target URI (any included "%s" is replaced with the
+# migration target hostname) (string value)
+live_migration_uri=xenmigr://%s/system
+<% end %>
+<% elsif @libvirt_type.eql?('kvm') -%>
+    <% if @libvirt_migration -%>
+      <% if @shared_instances -%>
+# Migration flags to be set for live migration (string value)
+live_migration_flag=VIR_MIGRATE_UNDEFINE_SOURCE,VIR_MIGRATE_PEER2PEER,VIR_MIGRATE_LIVE
+      <% else -%>
+# Migration flags to be set for block migration (string value)
+block_migration_flag=VIR_MIGRATE_UNDEFINE_SOURCE, VIR_MIGRATE_PEER2PEER, VIR_MIGRATE_NON_SHARED_INC,VIR_MIGRATE_LIVE
+      <% end -%>
+  <% end -%>
 # Migration target URI (any included "%s" is replaced with the
 # migration target hostname) (string value)
 #live_migration_uri=qemu+tcp://%s/system
-
-# Migration flags to be set for live migration (string value)
-live_migration_flag=VIR_MIGRATE_UNDEFINE_SOURCE,VIR_MIGRATE_PEER2PEER,VIR_MIGRATE_LIVE
-
-# Migration flags to be set for block migration (string value)
-block_migration_flag=VIR_MIGRATE_UNDEFINE_SOURCE, VIR_MIGRATE_PEER2PEER, VIR_MIGRATE_NON_SHARED_INC,VIR_MIGRATE_LIVE
+<% end -%>
 
 # Maximum bandwidth to be used during migration, in Mbps
 # (integer value)
