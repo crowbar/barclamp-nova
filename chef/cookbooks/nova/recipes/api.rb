@@ -42,6 +42,7 @@ else
 end
 
 nova_package("api")
+nova_package("objectstore")
 
 keystone_host = keystone[:fqdn]
 keystone_protocol = keystone["keystone"]["api"]["protocol"]
