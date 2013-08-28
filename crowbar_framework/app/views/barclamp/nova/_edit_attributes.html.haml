@@ -13,25 +13,17 @@
     = render_instance_selector("quantum", :quantum_instance, t('.quantum_instance'), "quantum_instance", @proposal)
     - if defined? InteltxtService
       = render_instance_selector("inteltxt", :itxt_instance, t('.itxt_instance'), "itxt_instance", @proposal)
-    %p
-      %label{ :for => :verbose }= t('.verbose')
-      = select_tag :verbose, options_for_select([['true','true'], ['false', 'false']], @proposal.raw_data['attributes'][@proposal.barclamp]["verbose"].to_s), :onchange => "update_value('verbose', 'verbose', 'boolean')"
-    - if defined? InteltxtService
       %p
         %label{ :for => :trusted_flavors }= t('.trusted_flavors')
         = select_tag :trusted_flavors, options_for_select([['true','true'], ['false', 'false']], @proposal.raw_data['attributes'][@proposal.barclamp]["trusted_flavors"].to_s), :onchange => "update_value('trusted_flavors', 'trusted_flavors', 'boolean')"
+
     %p
       %label{ :for => :use_novnc }= t('.use_novnc')
       = select_tag :use_novnc, options_for_select([['true','true'], ['false', 'false']], @proposal.raw_data['attributes'][@proposal.barclamp]["use_novnc"].to_s), :onchange => "update_value('use_novnc', 'use_novnc', 'boolean')"
     = render 'barclamp/git/pfsdeps.html.haml'
-    %p
-      %label{ :for => :shared_instance_storage }= t('.shared_instance_storage')
-      = select_tag :shared_instance_storage, options_for_select([['true','true'], ['false', 'false']], @proposal.raw_data['attributes'][@proposal.barclamp]["use_shared_instance_storage"].to_s), :onchange => "update_value('use_shared_instance_storage', 'shared_instance_storage', 'boolean')"
-    %p
-      %label{ :for => :enable_libvirt_migration }= t('.enable_libvirt_migration')
-      = select_tag :enable_libvirt_migration, options_for_select([['true','true'], ['false', 'false']], @proposal.raw_data['attributes'][@proposal.barclamp]["use_migration"].to_s), :onchange => "update_value('use_migration', 'enable_libvirt_migration', 'boolean')"
-    %label.h3{ :for => :scheduler }= t('.scheduler_header')
-    %div.container{ :id => :scheduler }
+
+    %label.section-header{ :for => :scheduler_div }= t('.scheduler_header')
+    %div.section{ :id => :scheduler_div }
       %p
         %label{ :for => :ram_allocation_ratio }= t('.ram_allocation_ratio')
         %input#ram_allocation_ratio{:type => "text", :name => "ram_allocation_ratio", :'data-default' => @proposal.raw_data['attributes'][@proposal.barclamp]["scheduler"]["ram_allocation_ratio"], :onchange => "update_value('scheduler/ram_allocation_ratio','ram_allocation_ratio', 'float')"}
@@ -39,43 +31,49 @@
         %label{ :for => :cpu_allocation_ratio }= t('.cpu_allocation_ratio')
         %input#cpu_allocation_ratio{:type => "text", :name => "cpu_allocation_ratio", :'data-default' => (@proposal.raw_data['attributes'][@proposal.barclamp]["scheduler"].nil? ? "16.0" : @proposal.raw_data['attributes'][@proposal.barclamp]["scheduler"]["cpu_allocation_ratio"]), :onchange => "update_value('scheduler/cpu_allocation_ratio','cpu_allocation_ratio', 'float')"}
 
+    %label.section-header{ :for => :live_migration_div }= t('.live_migration')
+    %div.section{ :id => :live_migration_div }
+      %p
+        %label{ :for => :shared_instance_storage }= t('.shared_instance_storage')
+        = select_tag :shared_instance_storage, options_for_select([['true','true'], ['false', 'false']], @proposal.raw_data['attributes'][@proposal.barclamp]["use_shared_instance_storage"].to_s), :onchange => "update_value('use_shared_instance_storage', 'shared_instance_storage', 'boolean')"
+      %p
+        %label{ :for => :enable_libvirt_migration }= t('.enable_libvirt_migration')
+        = select_tag :enable_libvirt_migration, options_for_select([['true','true'], ['false', 'false']], @proposal.raw_data['attributes'][@proposal.barclamp]["use_migration"].to_s), :onchange => "update_value('use_migration', 'enable_libvirt_migration', 'boolean')"
 
-    %label.h3{ :for => :kvm_div, :id => :kvm_div_label }=  t('.kvm')
-    %div.container{ :id => :kvm_div }
+    %label.section-header{ :for => :kvm_div }= t('.kvm')
+    %div.section{ :id => :kvm_div }
       %p
         %label{ :for => :kvm_ksm }= t('.kvm_ksm')
         = select_tag :kvm_ksm, options_for_select([['true','true'], ['false', 'false']], @proposal.raw_data['attributes'][@proposal.barclamp]["kvm"]["ksm_enabled"].to_s), :onchange => "update_value('kvm/ksm_enabled', 'kvm_ksm', 'boolean')"
 
-    %p
-      %label.h3= t('.ssl_header')
-      %div.container
+    %label.section-header{ :for => :protocol_div }= t('.ssl_header')
+    %div.section{ :id => :protocol_div }
+      %p
+        %label{ :for => :protocol }= t('.protocol')
+        = select_tag :protocol, options_for_select([['HTTP','false'], ['HTTPS', 'true']], @proposal.raw_data['attributes'][@proposal.barclamp]["ssl"]["enabled"].to_s), :onchange => "update_value('ssl/enabled', 'protocol', 'boolean')"
+
+      %div{ :id => :ssl_div }
         %p
-          %label{ :for => :protocol }= t('.protocol')
-          = select_tag :protocol, options_for_select([['HTTP','false'], ['HTTPS', 'true']], @proposal.raw_data['attributes'][@proposal.barclamp]["ssl"]["enabled"].to_s), :onchange => "update_value('ssl/enabled', 'protocol', 'boolean')"
+          %label{ :for => :ssl_certfile }= t('.ssl_certfile')
+          = text_field_tag :ssl_certfile, @proposal.raw_data['attributes'][@proposal.barclamp]["ssl"]["certfile"], :size => 80, :onchange => "update_value('ssl/certfile', 'ssl_certfile', 'string')"
+        %p
+          %label{ :for => :ssl_keyfile }= t('.ssl_keyfile')
+          = text_field_tag :ssl_keyfile, @proposal.raw_data['attributes'][@proposal.barclamp]["ssl"]["keyfile"], :size => 80, :onchange => "update_value('ssl/keyfile', 'ssl_keyfile', 'string')"
+        %p
+          %label{ :for => :ssl_generate_certs }= t('.ssl_generate_certs')
+          = select_tag :ssl_generate_certs, options_for_select([['true','true'], ['false', 'false']], @proposal.raw_data['attributes'][@proposal.barclamp]["ssl"]["generate_certs"].to_s), :onchange => "update_value('ssl/generate_certs', 'ssl_generate_certs', 'boolean')"
+        %p
+          %label{ :for => :ssl_insecure }= t('.ssl_insecure')
+          = select_tag :ssl_insecure, options_for_select([['true','true'], ['false', 'false']], @proposal.raw_data['attributes'][@proposal.barclamp]["ssl"]["insecure"].to_s), :onchange => "update_value('ssl/insecure', 'ssl_insecure', 'boolean')"
+        %p
+          %label{ :for => :ssl_cert_required }= t('.ssl_cert_required')
+          = select_tag :ssl_cert_required, options_for_select([['true','true'], ['false', 'false']], @proposal.raw_data['attributes'][@proposal.barclamp]["ssl"]["cert_required"].to_s), :onchange => "update_value('ssl/cert_required', 'ssl_cert_required', 'boolean')"
+        %p
+          %label{ :for => :ssl_ca_certs }= t('.ssl_ca_certs')
+          = text_field_tag :ssl_ca_certs, @proposal.raw_data['attributes'][@proposal.barclamp]["ssl"]["ca_certs"], :size => 80, :onchange => "update_value('ssl/ca_certs', 'ssl_ca_certs', 'string')"
 
-        %div{ :id => :ssl_div }
-          %p
-            %label{ :for => :ssl_certfile }= t('.ssl_certfile')
-            = text_field_tag :ssl_certfile, @proposal.raw_data['attributes'][@proposal.barclamp]["ssl"]["certfile"], :size => 80, :onchange => "update_value('ssl/certfile', 'ssl_certfile', 'string')"
-          %p
-            %label{ :for => :ssl_keyfile }= t('.ssl_keyfile')
-            = text_field_tag :ssl_keyfile, @proposal.raw_data['attributes'][@proposal.barclamp]["ssl"]["keyfile"], :size => 80, :onchange => "update_value('ssl/keyfile', 'ssl_keyfile', 'string')"
-          %p
-            %label{ :for => :ssl_generate_certs }= t('.ssl_generate_certs')
-            = select_tag :ssl_generate_certs, options_for_select([['true','true'], ['false', 'false']], @proposal.raw_data['attributes'][@proposal.barclamp]["ssl"]["generate_certs"].to_s), :onchange => "update_value('ssl/generate_certs', 'ssl_generate_certs', 'boolean')"
-          %p
-            %label{ :for => :ssl_insecure }= t('.ssl_insecure')
-            = select_tag :ssl_insecure, options_for_select([['true','true'], ['false', 'false']], @proposal.raw_data['attributes'][@proposal.barclamp]["ssl"]["insecure"].to_s), :onchange => "update_value('ssl/insecure', 'ssl_insecure', 'boolean')"
-          %p
-            %label{ :for => :ssl_cert_required }= t('.ssl_cert_required')
-            = select_tag :ssl_cert_required, options_for_select([['true','true'], ['false', 'false']], @proposal.raw_data['attributes'][@proposal.barclamp]["ssl"]["cert_required"].to_s), :onchange => "update_value('ssl/cert_required', 'ssl_cert_required', 'boolean')"
-          %p
-            %label{ :for => :ssl_ca_certs }= t('.ssl_ca_certs')
-            = text_field_tag :ssl_ca_certs, @proposal.raw_data['attributes'][@proposal.barclamp]["ssl"]["ca_certs"], :size => 80, :onchange => "update_value('ssl/ca_certs', 'ssl_ca_certs', 'string')"
-
-    %p
-      %label.h3= t('.novnc_ssl_header')
-    %div.container
+    %label.section-header{ :for => :novnc_protocol_div }= t('.novnc_ssl_header')
+    %div.section{ :id => :novnc_protocol_div }
       %p
         %label{ :for => :novnc_protocol }= t('.protocol')
         = select_tag :novnc_protocol, options_for_select([['HTTP','false'], ['HTTPS', 'true']], @proposal.raw_data['attributes'][@proposal.barclamp]["novnc"]["ssl"]["enabled"].to_s), :onchange => "update_value('novnc/ssl/enabled', 'novnc_protocol', 'boolean')"
@@ -88,6 +86,13 @@
         %p
           %label{ :for => :novnc_ssl_keyfile }= t('.ssl_keyfile')
           = text_field_tag :novnc_ssl_keyfile, @proposal.raw_data['attributes'][@proposal.barclamp]["novnc"]["ssl"]["keyfile"], :size => "80", :onchange => "update_value('novnc/ssl/keyfile', 'novnc_ssl_keyfile', 'string')"
+
+    %label.section-header{ :for => :logging_div }= t('.logging_header')
+    %div.section{ :id => :logging_div }
+      %p
+        %label{ :for => :verbose }= t('.verbose')
+        = select_tag :verbose, options_for_select([['true','true'], ['false', 'false']], @proposal.raw_data['attributes'][@proposal.barclamp]["verbose"].to_s), :onchange => "update_value('verbose', 'verbose', 'boolean')"
+
 
 :javascript
 

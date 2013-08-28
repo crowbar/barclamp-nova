@@ -66,6 +66,7 @@ locale_additions:
           scheduler_header: Scheduler Options
           ram_allocation_ratio: Virtual RAM to Physical RAM allocation ratio
           cpu_allocation_ratio: Virtual CPU to Physical CPU allocation ratio
+          live_migration: Live Migration
           kvm: KVM Options
           kvm_ksm: Enable Kernel Samepage Merging
           ssl_header: SSL Support
@@ -78,6 +79,7 @@ locale_additions:
           ssl_ca_certs: SSL CA Certificates File
           novnc_ssl_header: SSL Support for noVNC
           novnc_ssl_hint: If no specific files are configured, the SSL certificate and key will be taken from the global Nova SSL configuration.
+          logging_header: Logging
         edit_deployment: 
           deployment: Deployment
 
