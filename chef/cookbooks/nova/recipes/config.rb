@@ -337,23 +337,16 @@ directory "/var/lock/nova" do
 end
 
 if api == node and api[:nova][:ssl][:enabled]
-  if api[:nova][:ssl][:generate_certs]
+  if !(::File.exists? api[:nova][:ssl][:certfile] and ::File.exists? api[:nova][:ssl][:keyfile]) and api[:nova][:ssl][:generate_certs]
     package "openssl"
-
     require "fileutils"
-    [:certfile, :keyfile, :ca_certs].each do |k|
-      dir = File.dirname(api[:nova][:ssl][k])
-      if File.exists?(dir)
-        FileUtils.chown_R api[:nova][:user], api[:nova][:group], dir
-      else
-        FileUtils.mkdir_p(dir) {|d| File.chown api[:nova][:user], api[:nova][:group], d}
-      end
-    end
 
-    # Some more ownership fixes:
-    conf_dir = File.dirname api[:nova][:ssl][:ca_certs]
-    FileUtils.chown "root", api[:nova][:group], conf_dir
-    FileUtils.chown "root", api[:nova][:group], File.expand_path("#{conf_dir}/..")  # /etc/nova/ssl
+    Chef::Log.info("Generating SSL certificate for nova...")
+
+    [:certfile, :keyfile].each do |k|
+      dir = File.dirname(api[:nova][:ssl][k])
+      FileUtils.mkdir_p(dir) unless File.exists?(dir)
+    end
 
     # Generate private key
     %x(openssl genrsa -out #{api[:nova][:ssl][:keyfile]} 4096)
@@ -362,9 +355,11 @@ if api == node and api[:nova][:ssl][:enabled]
       Chef::Log.fatal(message)
       raise message
     end
-    FileUtils.chown api[:nova][:user], api[:nova][:group], api[:nova][:ssl][:keyfile]
+    FileUtils.chown "root", api[:nova][:group], api[:nova][:ssl][:keyfile]
+    FileUtils.chmod 0640, api[:nova][:ssl][:keyfile]
 
     # Generate certificate signing requests (CSR)
+    conf_dir = File.dirname api[:nova][:ssl][:certfile]
     ssl_csr_file = "#{conf_dir}/signing_key.csr"
     ssl_subject = "\"/C=US/ST=Unset/L=Unset/O=Unset/CN=#{api[:fqdn]}\""
     %x(openssl req -new -key #{api[:nova][:ssl][:keyfile]} -out #{ssl_csr_file} -subj #{ssl_subject})
