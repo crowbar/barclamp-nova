@@ -56,8 +56,10 @@ default[:nova][:hostname] = "nova"
 default[:nova][:my_ip] = ipaddress
 unless node[:platform] == 'suse'
     default[:nova][:user] = "nova"
+    default[:nova][:group] = "nova"
 else
     default[:nova][:user] = "openstack-nova"
+    default[:nova][:group] = "openstack-nova"
 end
 default[:nova][:instances_path] = '/var/lib/nova/instances'
 
