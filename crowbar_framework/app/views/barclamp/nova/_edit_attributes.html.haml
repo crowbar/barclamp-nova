@@ -58,10 +58,10 @@
           = select_tag :ssl_generate_certs, options_for_select([['true','true'], ['false', 'false']], @proposal.raw_data['attributes'][@proposal.barclamp]["ssl"]["generate_certs"].to_s), :onchange => "update_value('ssl/generate_certs', 'ssl_generate_certs', 'boolean')"
         %p
           %label{ :for => :ssl_certfile }= t('.ssl_certfile')
-          = text_field_tag :ssl_certfile, @proposal.raw_data['attributes'][@proposal.barclamp]["ssl"]["certfile"], :size => 80, :onchange => "update_value('ssl/certfile', 'ssl_certfile', 'string')"
+          = text_field_tag :ssl_certfile, @proposal.raw_data['attributes'][@proposal.barclamp]["ssl"]["certfile"], :class=> "input-xxlarge", :size => 80, :onchange => "update_value('ssl/certfile', 'ssl_certfile', 'string')"
         %p
           %label{ :for => :ssl_keyfile }= t('.ssl_keyfile')
-          = text_field_tag :ssl_keyfile, @proposal.raw_data['attributes'][@proposal.barclamp]["ssl"]["keyfile"], :size => 80, :onchange => "update_value('ssl/keyfile', 'ssl_keyfile', 'string')"
+          = text_field_tag :ssl_keyfile, @proposal.raw_data['attributes'][@proposal.barclamp]["ssl"]["keyfile"], :class=> "input-xxlarge", :size => 80, :onchange => "update_value('ssl/keyfile', 'ssl_keyfile', 'string')"
         %p
           %label{ :for => :ssl_insecure }= t('.ssl_insecure')
           = select_tag :ssl_insecure, options_for_select([['true','true'], ['false', 'false']], @proposal.raw_data['attributes'][@proposal.barclamp]["ssl"]["insecure"].to_s), :onchange => "update_value('ssl/insecure', 'ssl_insecure', 'boolean')"
@@ -70,7 +70,7 @@
           = select_tag :ssl_cert_required, options_for_select([['true','true'], ['false', 'false']], @proposal.raw_data['attributes'][@proposal.barclamp]["ssl"]["cert_required"].to_s), :onchange => "update_value('ssl/cert_required', 'ssl_cert_required', 'boolean')"
         %p
           %label{ :for => :ssl_ca_certs }= t('.ssl_ca_certs')
-          = text_field_tag :ssl_ca_certs, @proposal.raw_data['attributes'][@proposal.barclamp]["ssl"]["ca_certs"], :size => 80, :onchange => "update_value('ssl/ca_certs', 'ssl_ca_certs', 'string')"
+          = text_field_tag :ssl_ca_certs, @proposal.raw_data['attributes'][@proposal.barclamp]["ssl"]["ca_certs"], :class=> "input-xxlarge", :size => 80, :onchange => "update_value('ssl/ca_certs', 'ssl_ca_certs', 'string')"
 
     %label.section-header{ :for => :novnc_protocol_div }= t('.novnc_ssl_header')
     %div.section{ :id => :novnc_protocol_div }
@@ -82,10 +82,10 @@
           %em= t('.novnc_ssl_hint')
         %p
           %label{ :for => :novnc_ssl_certfile }= t('.ssl_certfile')
-          = text_field_tag :novnc_ssl_certfile, @proposal.raw_data['attributes'][@proposal.barclamp]["novnc"]["ssl"]["certfile"], :size => "80", :onchange => "update_value('novnc/ssl/certfile', 'novnc_ssl_certfile', 'string')"
+          = text_field_tag :novnc_ssl_certfile, @proposal.raw_data['attributes'][@proposal.barclamp]["novnc"]["ssl"]["certfile"], :class=> "input-xxlarge", :size => "80", :onchange => "update_value('novnc/ssl/certfile', 'novnc_ssl_certfile', 'string')"
         %p
           %label{ :for => :novnc_ssl_keyfile }= t('.ssl_keyfile')
-          = text_field_tag :novnc_ssl_keyfile, @proposal.raw_data['attributes'][@proposal.barclamp]["novnc"]["ssl"]["keyfile"], :size => "80", :onchange => "update_value('novnc/ssl/keyfile', 'novnc_ssl_keyfile', 'string')"
+          = text_field_tag :novnc_ssl_keyfile, @proposal.raw_data['attributes'][@proposal.barclamp]["novnc"]["ssl"]["keyfile"], :class=> "input-xxlarge", :size => "80", :onchange => "update_value('novnc/ssl/keyfile', 'novnc_ssl_keyfile', 'string')"
 
     %label.section-header{ :for => :logging_div }= t('.logging_header')
     %div.section{ :id => :logging_div }
