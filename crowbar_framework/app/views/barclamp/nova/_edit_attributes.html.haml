@@ -54,14 +54,14 @@
 
       %div{ :id => :ssl_div }
         %p
+          %label{ :for => :ssl_generate_certs }= t('.ssl_generate_certs')
+          = select_tag :ssl_generate_certs, options_for_select([['true','true'], ['false', 'false']], @proposal.raw_data['attributes'][@proposal.barclamp]["ssl"]["generate_certs"].to_s), :onchange => "update_value('ssl/generate_certs', 'ssl_generate_certs', 'boolean')"
+        %p
           %label{ :for => :ssl_certfile }= t('.ssl_certfile')
           = text_field_tag :ssl_certfile, @proposal.raw_data['attributes'][@proposal.barclamp]["ssl"]["certfile"], :size => 80, :onchange => "update_value('ssl/certfile', 'ssl_certfile', 'string')"
         %p
           %label{ :for => :ssl_keyfile }= t('.ssl_keyfile')
           = text_field_tag :ssl_keyfile, @proposal.raw_data['attributes'][@proposal.barclamp]["ssl"]["keyfile"], :size => 80, :onchange => "update_value('ssl/keyfile', 'ssl_keyfile', 'string')"
-        %p
-          %label{ :for => :ssl_generate_certs }= t('.ssl_generate_certs')
-          = select_tag :ssl_generate_certs, options_for_select([['true','true'], ['false', 'false']], @proposal.raw_data['attributes'][@proposal.barclamp]["ssl"]["generate_certs"].to_s), :onchange => "update_value('ssl/generate_certs', 'ssl_generate_certs', 'boolean')"
         %p
           %label{ :for => :ssl_insecure }= t('.ssl_insecure')
           = select_tag :ssl_insecure, options_for_select([['true','true'], ['false', 'false']], @proposal.raw_data['attributes'][@proposal.barclamp]["ssl"]["insecure"].to_s), :onchange => "update_value('ssl/insecure', 'ssl_insecure', 'boolean')"
@@ -112,11 +112,37 @@
     }
   };
 
-  function toggle_ssl_generate_certs() {
+  function toggle_ssl_generate_certs_full(init) {
     if ($('#ssl_generate_certs option:selected').attr('value') == 'true') {
+      $('#ssl_certfile').attr('disabled', 'disabled');
+      $('#ssl_keyfile').attr('disabled', 'disabled');
+      $('#ssl_insecure').attr('disabled', 'disabled');
+
+      var value = '/etc/nova/ssl/certs/signing_cert.pem'
+      $('#ssl_certfile').attr('value', value);
+      update_value_direct('ssl/certfile', value, 'string');
+      value = '/etc/nova/ssl/private/signing_key.pem'
+      $('#ssl_keyfile').attr('value', value);
+      update_value_direct('ssl/keyfile', value, 'string');
       $('#ssl_insecure').attr('value', 'true');
-      $('#ssl_cert_required').attr('value', 'false');
+      update_value_direct('ssl/insecure', 'true', 'boolean');
+    } else {
+      $('#ssl_certfile').removeAttr('disabled');
+      $('#ssl_keyfile').removeAttr('disabled');
+      $('#ssl_insecure').removeAttr('disabled');
+
+      // No need to change the certfile/keyfile values
+      if (!init) {
+        // Reset insecure to false, to not leave it as true by accident.
+        // We do not change insecure on page loading, though!
+        $('#ssl_insecure').attr('value', 'false');
+        update_value_direct('ssl/insecure', 'false', 'boolean');
+      }
     }
+  };
+
+  function toggle_ssl_generate_certs() {
+    toggle_ssl_generate_certs_full(false);
   };
 
   function toggle_novnc_protocol() {
@@ -130,7 +156,7 @@
   $(document).ready(function () {
     toggle_protocol();
     toggle_ssl_cert_required();
-    toggle_ssl_generate_certs();
+    toggle_ssl_generate_certs_full(true);
     toggle_novnc_protocol();
   });
 
