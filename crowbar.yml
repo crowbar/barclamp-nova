@@ -71,7 +71,7 @@ locale_additions:
           kvm_ksm: Enable Kernel Samepage Merging
           ssl_header: SSL Support
           protocol: Protocol
-          ssl_insecure: SSL Certificate is insecure (for instance, auto-signed)
+          ssl_insecure: SSL Certificate is insecure (for instance, self-signed)
           ssl_certfile: SSL Certificate File
           ssl_keyfile: SSL (Private) Key File
           ssl_generate_certs: Generate (self-signed) certificates (implies insecure)
