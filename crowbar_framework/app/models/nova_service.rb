@@ -58,8 +58,16 @@ class NovaService < ServiceObject
     head = nodes.shift
     nodes = [ head ] if nodes.empty?
 
-    kvm = nodes.select { |n| n if n[:cpu]['0'][:flags].include?("vmx") or n[:cpu]['0'][:flags].include?("svm") }
-    qemu = nodes - kvm
+    qemu = []
+    kvm = []
+
+    nodes.each do |n|
+      if (n[:virtualization][:role] != "guest") and (n[:cpu]['0'][:flags].include?("vmx") or n[:cpu]['0'][:flags].include?("svm"))
+        kvm << n
+      else
+        qemu << n
+      end
+    end
 
     base["deployment"]["nova"]["elements"] = {
       "nova-multi-controller" => [ head.name ],
