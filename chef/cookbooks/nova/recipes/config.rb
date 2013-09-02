@@ -337,56 +337,63 @@ directory "/var/lock/nova" do
 end
 
 if api == node and api[:nova][:ssl][:enabled]
-  if !(::File.exists? api[:nova][:ssl][:certfile] and ::File.exists? api[:nova][:ssl][:keyfile]) and api[:nova][:ssl][:generate_certs]
+  if api[:nova][:ssl][:generate_certs]
     package "openssl"
-    require "fileutils"
+    ruby_block "generate_certs for nova" do
+      block do
+        unless ::File.exists? api[:nova][:ssl][:certfile] and ::File.exists? api[:nova][:ssl][:keyfile]
+          require "fileutils"
 
-    Chef::Log.info("Generating SSL certificate for nova...")
+          Chef::Log.info("Generating SSL certificate for nova...")
 
-    [:certfile, :keyfile].each do |k|
-      dir = File.dirname(api[:nova][:ssl][k])
-      FileUtils.mkdir_p(dir) unless File.exists?(dir)
-    end
+          [:certfile, :keyfile].each do |k|
+            dir = File.dirname(api[:nova][:ssl][k])
+            FileUtils.mkdir_p(dir) unless File.exists?(dir)
+          end
 
-    # Generate private key
-    %x(openssl genrsa -out #{api[:nova][:ssl][:keyfile]} 4096)
-    if $?.exitstatus != 0
-      message = "SSL private key generation failed"
+          # Generate private key
+          %x(openssl genrsa -out #{api[:nova][:ssl][:keyfile]} 4096)
+          if $?.exitstatus != 0
+            message = "SSL private key generation failed"
+            Chef::Log.fatal(message)
+            raise message
+          end
+          FileUtils.chown "root", api[:nova][:group], api[:nova][:ssl][:keyfile]
+          FileUtils.chmod 0640, api[:nova][:ssl][:keyfile]
+
+          # Generate certificate signing requests (CSR)
+          conf_dir = File.dirname api[:nova][:ssl][:certfile]
+          ssl_csr_file = "#{conf_dir}/signing_key.csr"
+          ssl_subject = "\"/C=US/ST=Unset/L=Unset/O=Unset/CN=#{api[:fqdn]}\""
+          %x(openssl req -new -key #{api[:nova][:ssl][:keyfile]} -out #{ssl_csr_file} -subj #{ssl_subject})
+          if $?.exitstatus != 0
+            message = "SSL certificate signed requests generation failed"
+            Chef::Log.fatal(message)
+            raise message
+          end
+
+          # Generate self-signed certificate with above CSR
+          %x(openssl x509 -req -days 3650 -in #{ssl_csr_file} -signkey #{api[:nova][:ssl][:keyfile]} -out #{api[:nova][:ssl][:certfile]})
+          if $?.exitstatus != 0
+            message = "SSL self-signed certificate generation failed"
+            Chef::Log.fatal(message)
+            raise message
+          end
+
+          File.delete ssl_csr_file  # Nobody should even try to use this
+        end # unless files exist
+      end # block
+    end # ruby_block
+  else # if generate_certs
+    unless ::File.exists? api[:nova][:ssl][:certfile]
+      message = "Certificate \"#{api[:nova][:ssl][:certfile]}\" is not present."
       Chef::Log.fatal(message)
       raise message
     end
-    FileUtils.chown "root", api[:nova][:group], api[:nova][:ssl][:keyfile]
-    FileUtils.chmod 0640, api[:nova][:ssl][:keyfile]
+    # we do not check for existence of keyfile, as the private key is allowed
+    # to be in the certfile
+  end # if generate_certs
 
-    # Generate certificate signing requests (CSR)
-    conf_dir = File.dirname api[:nova][:ssl][:certfile]
-    ssl_csr_file = "#{conf_dir}/signing_key.csr"
-    ssl_subject = "\"/C=US/ST=Unset/L=Unset/O=Unset/CN=#{api[:fqdn]}\""
-    %x(openssl req -new -key #{api[:nova][:ssl][:keyfile]} -out #{ssl_csr_file} -subj #{ssl_subject})
-    if $?.exitstatus != 0
-      message = "SSL certificate signed requests generation failed"
-      Chef::Log.fatal(message)
-      raise message
-    end
-
-    # Generate self-signed certificate with above CSR
-    %x(openssl x509 -req -days 3650 -in #{ssl_csr_file} -signkey #{api[:nova][:ssl][:keyfile]} -out #{api[:nova][:ssl][:certfile]})
-    if $?.exitstatus != 0
-      message = "SSL self-signed certificate generation failed"
-      Chef::Log.fatal(message)
-      raise message
-    end
-
-    File.delete ssl_csr_file  # Nobody should even try to use this
-  end
-
-  unless ::File.exists? api[:nova][:ssl][:certfile]
-    message = "Certificate \"#{api[:nova][:ssl][:certfile]}\" is not present."
-    Chef::Log.fatal(message)
-    raise message
-  end
-  # we do not check for existence of keyfile, as the private key is allowed to
-  # be in the certfile
   if api[:nova][:ssl][:cert_required] and !::File.exists? api[:nova][:ssl][:ca_certs]
     message = "Certificate CA \"#{api[:nova][:ssl][:ca_certs]}\" is not present."
     Chef::Log.fatal(message)
@@ -409,7 +416,8 @@ else
 end
 
 if api == node and api[:nova][:novnc][:ssl][:enabled]
-  unless ::File.exists? api_novnc_ssl_certfile
+  # No check if we're using certificate info from nova-api
+  unless ::File.exists? api_novnc_ssl_certfile or api[:nova][:novnc][:ssl][:certfile].empty?
     message = "Certificate \"#{api_novnc_ssl_certfile}\" is not present."
     Chef::Log.fatal(message)
     raise message
