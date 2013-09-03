@@ -42,6 +42,16 @@ default[:nova][:libvirt_type] = "kvm"
 
 default[:nova][:kvm][:ksm_enabled] = false
 
+#
+# VMWare Settings
+#
+
+default[:nova][:esxi][:host] = "127.0.0.1"
+default[:nova][:esxi][:login] = "root"
+default[:nova][:esxi][:password] = ""
+default[:nova][:esxi][:cluster] = "Cluster"
+default[:nova][:esxi][:datastore] = "datastore1"
+default[:nova][:esxi][:interface] = "vmnic0"
 
 #
 # Scheduler Settings

@@ -46,6 +46,27 @@
         %label{ :for => :kvm_ksm }= t('.kvm_ksm')
         = select_tag :kvm_ksm, options_for_select([['true','true'], ['false', 'false']], @proposal.raw_data['attributes'][@proposal.barclamp]["kvm"]["ksm_enabled"].to_s), :onchange => "update_value('kvm/ksm_enabled', 'kvm_ksm', 'boolean')"
 
+    %label.section-header{ :for => :esxi_div }= t('.esxi_header')
+    %div.section{ :id => :esxi_div }
+      %p
+        %label{ :for => :esxi_host }= t('.esxi_host')
+        %input#esxi_host{:type => "text", :name => "esxi_host", :'data-default' => @proposal.raw_data['attributes'][@proposal.barclamp]["esxi"]["host"], :onchange => "update_value('esxi/host', 'esxi_host', 'string')"}
+      %p
+        %label{ :for => :esxi_login }= t('.esxi_login')
+        %input#esxi_login{:type => "text", :name => "esxi_login", :'data-default' => @proposal.raw_data['attributes'][@proposal.barclamp]["esxi"]["login"], :onchange => "update_value('esxi/login', 'esxi_login', 'string')"}
+      %p
+        %label{ :for => :esxi_password }= t('.esxi_password')
+        %input#esxi_password{:type => "password", :name => "esxi_password", :'data-default' => @proposal.raw_data['attributes'][@proposal.barclamp]["esxi"]["password"], :onchange => "update_value('esxi/password', 'esxi_password', 'string')"}
+      %p
+        %label{ :for => :esxi_cluster }= t('.esxi_cluster')
+        %input#esxi_cluster{:type => "text", :name => "esxi_cluster", :'data-default' => @proposal.raw_data['attributes'][@proposal.barclamp]["esxi"]["cluster"], :onchange => "update_value('esxi/cluster', 'esxi_cluster', 'string')"}
+      %p
+        %label{ :for => :esxi_datastore }= t('.esxi_datastore')
+        %input#esxi_datastore{:type => "text", :name => "esxi_datastore", :'data-default' => @proposal.raw_data['attributes'][@proposal.barclamp]["esxi"]["datastore"], :onchange => "update_value('esxi/datastore', 'esxi_datastore', 'string')"}
+      %p
+        %label{ :for => :esxi_interface }= t('.esxi_interface')
+        %input#esxi_datastore{:type => "text", :name => "esxi_interface", :'data-default' => @proposal.raw_data['attributes'][@proposal.barclamp]["esxi"]["interface"], :onchange => "update_value('esxi/interface', 'esxi_interface', 'string')"}
+
     %label.section-header{ :for => :protocol_div }= t('.ssl_header')
     %div.section{ :id => :protocol_div }
       %p

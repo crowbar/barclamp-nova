@@ -1941,7 +1941,11 @@ compute_scheduler_driver=nova.scheduler.filter_scheduler.FilterScheduler
 # include: libvirt.LibvirtDriver, xenapi.XenAPIDriver,
 # fake.FakeDriver, baremetal.BareMetalDriver,
 # vmwareapi.VMWareESXDriver (string value)
+<% if @libvirt_type.eql?('esxi') -%>
+compute_driver=vmwareapi.VMwareVCDriver
+<% else -%>
 compute_driver=libvirt.LibvirtDriver
+<% end -%>
 
 # The default format an ephemeral_volume will be formatted
 # with on creation. (string value)
@@ -2036,6 +2040,7 @@ allow_same_net_traffic=<%= node[:nova][:network][:allow_same_net_traffic] ? "Tru
 # Rescue ari image (string value)
 #rescue_ramdisk_id=<None>
 
+<% if !@libvirt_type.eql?('esxi') -%>
 # Libvirt domain type (valid options are: kvm, lxc, qemu, uml,
 # xen) (string value)
 libvirt_type=<%= @libvirt_type %>
@@ -2059,6 +2064,7 @@ libvirt_inject_key=false
 # Sync virtual and real mouse cursors in Windows VMs (boolean
 # value)
 #use_usb_tablet=true
+<% end -%>
 
 <% if @libvirt_type.eql?('xen') -%>
 <% if @libvirt_migration and @shared_instances -%>
@@ -2294,7 +2300,6 @@ libvirt_ovs_bridge=br-int
 # path can fit your biggest image in glance (string value)
 #powervm_img_local_path=/tmp
 
-
 #
 # Options defined in nova.virt.vmwareapi.driver
 #
@@ -2302,21 +2307,25 @@ libvirt_ovs_bridge=br-int
 # URL for connection to VMware ESX/VC host. Required if
 # compute_driver is vmwareapi.VMwareESXDriver or
 # vmwareapi.VMwareVCDriver. (string value)
-#vmwareapi_host_ip=<None>
+<%= "vmwareapi_host_ip=#{node[:nova][:esxi][:host]}" if @libvirt_type.eql?('esxi') %>
 
 # Username for connection to VMware ESX/VC host. Used only if
 # compute_driver is vmwareapi.VMwareESXDriver or
 # vmwareapi.VMwareVCDriver. (string value)
-#vmwareapi_host_username=<None>
+<%= "vmwareapi_host_username=#{node[:nova][:esxi][:login]}" if @libvirt_type.eql?('esxi') %>
 
 # Password for connection to VMware ESX/VC host. Used only if
 # compute_driver is vmwareapi.VMwareESXDriver or
 # vmwareapi.VMwareVCDriver. (string value)
-#vmwareapi_host_password=<None>
+<%= "vmwareapi_host_password=#{node[:nova][:esxi][:password]}" if @libvirt_type.eql?('esxi') %>
 
 # Name of a VMware Cluster ComputeResource. Used only if
 # compute_driver is vmwareapi.VMwareVCDriver. (string value)
-#vmwareapi_cluster_name=<None>
+<%= "vmwareapi_cluster_name=#{node[:nova][:esxi][:cluster]}" if @libvirt_type.eql?('esxi') %>
+
+# Regex to match the name of a datastore. Used only if
+# compute_driver is vmwareapi.VMwareVCDriver. (string value)
+<%= "datastore_regex=#{node[:nova][:esxi][:datastore]}" if @libvirt_type.eql?('esxi') %>
 
 # The interval used for polling of remote tasks. Used only if
 # compute_driver is vmwareapi.VMwareESXDriver or
@@ -2348,7 +2357,7 @@ libvirt_ovs_bridge=br-int
 
 # Physical ethernet adapter name for vlan networking (string
 # value)
-#vmwareapi_vlan_interface=vmnic0
+vmwareapi_vlan_interface=<%= node[:nova][:esxi][:interface] %>
 
 
 #
@@ -2360,7 +2369,6 @@ libvirt_ovs_bridge=br-int
 # 4.1 default wsdl. Refer readme-vmware to setup (string
 # value)
 #vmwareapi_wsdl_loc=<None>
-
 
 #
 # Options defined in nova.virt.xenapi.agent

@@ -52,6 +52,10 @@ search_env_filtered(:node, "roles:nova-multi-compute-qemu") do |n|
   nova_scale[:computes] << n
 end
 
+search_env_filtered(:node, "roles:nova-multi-compute-esxi") do |n|
+  nova_scale[:computes] << n
+end
+
 if node["roles"].include?("nagios-client")    
   include_recipe "nagios::common"
 
