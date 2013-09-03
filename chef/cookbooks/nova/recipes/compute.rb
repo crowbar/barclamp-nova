@@ -251,7 +251,6 @@ execute "set vhost_net module" do
 end
 
 if node[:nova][:networking_backend]=="quantum" and not %w(redhat centos suse).include?(node.platform)
-  puts "platform=#{node.platform} ; include=#{%w(redhat centos suse).include?(node.platform)} ; full=#{node[:nova][:networking_backend]=="quantum" and %w(redhat centos suse).include?(node.platform)}"
   #since using native ovs we have to gain acess to lower networking functions
   service "libvirt-bin" do
     action :nothing
