@@ -40,6 +40,10 @@ search_env_filtered(:node, "roles:nova-multi-controller") do |n|
   nova_scale[:apis] << n
 end
 
+search_env_filtered(:node, "roles:nova-multi-compute-hyperv") do |n|
+  nova_scale[:computes] << n
+end
+
 search_env_filtered(:node, "roles:nova-multi-compute-kvm") do |n|
   nova_scale[:computes] << n
 end
