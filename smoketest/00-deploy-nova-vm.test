@@ -541,9 +541,9 @@ if (($(bc <<< "$cinder_version>$cinder_broken_ver"))); then
         make_b=$(nova volume-create --display_name $b_device  --image-id $test_image 2 | grep  ' id' | awk {'print $4'})
         vl_id=$make_b && sleep 3
         b_device_id=$(nova volume-list | grep "$vl_id" | awk {'print $2'})
-        b_device_status=$(nova volume-list | grep $b_device_id | awk {'print $4'})
 
         for ((i=1; i<=5; i++)); do
+            b_device_status=$(nova volume-list | grep $b_device_id | awk {'print $4'})
             echo -e "Quering volume  volume_name: volume-from-image  volume_id: $b_device_id status attempt #$i"
             echo -e "Block device actual status: $b_device_status"
             printf '.'
