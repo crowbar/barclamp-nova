@@ -1522,7 +1522,7 @@ use_syslog=<%= node[:nova][:use_syslog] ? 'True' : 'False' %>
 # Driver or drivers to handle sending notifications (multi
 # valued)
 notification_driver=nova.openstack.common.notifier.rpc_notifier
-notification_driver=ceilometer.compute.nova_notifier
+<%= "notification_driver=ceilometer.compute.nova_notifier" if node.roles.include?("ceilometer-agent") %>
 
 # Default notification level for outgoing notifications
 # (string value)
