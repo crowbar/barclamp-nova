@@ -138,6 +138,29 @@ debs:
     - mysql-client
     - socat
     - python-mox
+rpms:
+  centos-6.4:
+    repos:
+      - rpm http://repos.fedorapeople.org/repos/openstack/openstack-grizzly/epel-6
+  redhat-6.4:
+    repos:
+      - rpm http://repos.fedorapeople.org/repos/openstack/openstack-grizzly/epel-6
+  pkgs:
+    - openstack-nova
+    - openstack-nova-compute
+    - python-glanceclient
+    - python-novaclient
+    - openstack-nova-novncproxy
+    - openstack-nova-api
+    - openstack-nova-common
+    - openstack-nova-console
+    - openstack-nova-network
+    - openstack-nova-scheduler
+    - openstack-nova-conductor
+    - libvirt
+    - python-ceilometerclient
+    - kvm
+    - lxc
 
 git_repo:
   - nova https://github.com/openstack/nova.git stable/grizzly
