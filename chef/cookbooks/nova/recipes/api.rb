@@ -32,13 +32,6 @@ end
 
 unless node[:nova][:use_gitrepo]
   package "python-novaclient"
-else
-  pfs_and_install_deps "keystone" do
-    cookbook "keystone"
-    cnode keystone
-    path File.join(nova_path,"keystone")
-    virtualenv venv_path
-  end
 end
 
 nova_package("api")

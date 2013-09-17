@@ -88,7 +88,7 @@
         "pip://python-novaclient",
         "pip://python-ceilometerclient",
         "pip://python-cinderclient",
-        "pip://python-keystoneclient>=0.2.0",
+        "pip://python-keystoneclient>=0.3.0",
         "pip://prettytable>=0.6,<0.8",
         "pip://websockify<0.4",
         "pip://stevedore>=0.7",
