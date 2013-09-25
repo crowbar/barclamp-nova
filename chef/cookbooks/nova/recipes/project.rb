@@ -144,7 +144,7 @@ if not node[:nova][:use_gitrepo]
   # install python-glanceclient on controller, to be able to upload images
   # from here
   glance_client = "python-glance"
-  glance_client = "python-glanceclient" if node.platform == "suse"
+  glance_client = "python-glanceclient" if %w(redhat centos suse).include?(node.platform)
   package glance_client do
     action :install
   end
