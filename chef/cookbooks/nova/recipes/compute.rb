@@ -118,7 +118,7 @@ if %w(redhat centos suse).include?(node.platform)
   libvirt_restart_needed = false
 
   # change libvirt to run qemu as user qemu
-  unless %w(redhat centos).include?(node.platform)
+  if %w(suse).include?(node.platform)
     ruby_block "edit qemu config" do
       block do
         rc = Chef::Util::FileEdit.new("/etc/libvirt/qemu.conf")
