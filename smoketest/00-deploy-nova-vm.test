@@ -279,8 +279,7 @@ if [ $usable = true ]; then
        disk_probe=$(ssh -i $sshkey -l ubuntu ${floating_ips[$a_instance_name]} "sudo cat /proc/partitions | grep 'vd'")
        echo -e "Quering  volume_id: $a_volume  device: $v_device  instnace_id: $used_instance_id  status attempt #$i"
        echo -e "Volume_status: $disk_probe"
-       [[ $disk_probe = *vda* && $disk_probe != *$v_device* ]] && detached=true && break || continue
-       sleep 20
+       [[ $disk_probe = *vda* && $disk_probe != *$v_device* ]] && detached=true && break || sleep 20 && continue
     done
 else
     echo -e "\n\nERROR: Volume tests stage - accessibility test:    Target instance_id: $instance_id attached_volume_id: $volume_id  device: $v_device instance_ip: ${floating_ips[$used_instance_name]} used sshkey: $sshkey failed\n\n"
@@ -396,8 +395,7 @@ if [[ $s_attached = true ]];  then
        disk_probe=$(ssh -i $sshkey -l ubuntu ${floating_ips[$a_instance_name]} "sudo cat /proc/partitions | grep 'vdb'")
        echo -e "Quering  volume_id: $a_volume  device: $v_device  instnace_id: $used_instance_id  status attempt #$i"
        echo -e "Volume_status: $disk_probe"
-       [[ $disk_probe = *$v_device* ]] && s_usable=true && break || continue
-       sleep 20
+       [[ $disk_probe = *$v_device* ]] && s_usable=true && break || sleep 20 && continue
     done
 else
     echo -e "\n\nERROR: Volume attach status for instance: $used_instance_id and volume_id: $sv_id device: $v_device failed\n\n"
@@ -456,8 +454,7 @@ if [[ $s_volume_deleted = true ]];  then
     nova image-create $used_instance_id $used_instance_name-image --poll && sleep 20
     for ((i=1; i<=5; i++)); do
        echo -e "Quering  image status: instnace_id: $used_instance_id  image_name: $used_instance_name-image attempt #$i"
-       [[ $(nova image-list | grep "$used_instance_name-image" | awk {'print $6'}) = "ACTIVE" ]] && img_ready=true && break || continue
-       sleep 10
+       [[ $(nova image-list | grep "$used_instance_name-image" | awk {'print $6'}) = "ACTIVE" ]] && img_ready=true && break || sleep 10 && continue
     done
 else
     echo -e "\n\nERROR: Volume delete status for instance: $used_instance_id and volume_id: $sv_id  failed\n\n"
