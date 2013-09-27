@@ -58,11 +58,14 @@ class NovaService < ServiceObject
     head = nodes.shift
     nodes = [ head ] if nodes.empty?
 
-    kvm = nodes.select { |n| n if n[:cpu]['0'][:flags].include?("vmx") or n[:cpu]['0'][:flags].include?("svm") }
-    qemu = nodes - kvm
+    hyperv = nodes.select { |n| n if n[:target_platform] =~ /^(windows-|hyperv-)/ }
+    non_hyperv = nodes - hyperv
+    kvm = non_hyperv.select { |n| n if n[:cpu]['0'][:flags].include?("vmx") or n[:cpu]['0'][:flags].include?("svm") }
+    qemu = non_hyperv - kvm
 
     base["deployment"]["nova"]["elements"] = {
       "nova-multi-controller" => [ head.name ],
+      "nova-multi-compute-hyperv" => hyperv.map { |x| x.name },
       "nova-multi-compute-kvm" => kvm.map { |x| x.name },
       "nova-multi-compute-qemu" => qemu.map { |x| x.name }  
     }
@@ -217,6 +220,10 @@ class NovaService < ServiceObject
     @logger.debug("Nova apply_role_pre_chef_call: entering #{all_nodes.inspect}")
     return if all_nodes.empty?
 
+    unless hyperv_available?
+      role.override_attributes["nova"]["elements"]["nova-multi-compute-hyperv"] = []
+    end
+
     # Handle addressing
     #
     # Make sure that the front-end pieces have public ip addreses.
@@ -264,6 +271,13 @@ class NovaService < ServiceObject
     elements = proposal["deployment"]["nova"]["elements"]
     nodes = Hash.new(0)
 
+    unless elements["nova-multi-compute-hyperv"].empty? || hyperv_available?
+      errors << "Hyper-V support is not available."
+    end
+
+    elements["nova-multi-compute-hyperv"].each do |n|
+        nodes[n] += 1
+    end unless elements["nova-multi-compute-hyperv"].nil?
     elements["nova-multi-compute-kvm"].each do |n|
         nodes[n] += 1
     end unless elements["nova-multi-compute-kvm"].nil?
@@ -281,6 +295,12 @@ class NovaService < ServiceObject
       raise Chef::Exceptions::ValidationFailed.new(errors.join("\n"))
     end
 
+  end
+
+  private
+
+  def hyperv_available?
+    return File.exist?('/opt/dell/chef/cookbooks/hyperv')
   end
 
 end
