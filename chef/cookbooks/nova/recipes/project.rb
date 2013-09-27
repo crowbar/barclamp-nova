@@ -24,9 +24,9 @@ include_recipe "nova::config"
 
 # ha_enabled activates Nova High Availability (HA) networking.
 # The nova "network" and "api" recipes need to be included on the compute nodes and
-# we must specify the --multi_host=T switch on "nova-manage network create". 
+# we must specify the --multi_host=T switch on "nova-manage network create".
 if node[:nova][:networking_backend]=="nova-network"
-cmd = "nova-manage network create --fixed_range_v4=#{node[:nova][:network][:fixed_range]} --num_networks=#{node[:nova][:network][:num_networks]} --network_size=#{node[:nova][:network][:network_size]} --label private" 
+cmd = "nova-manage network create --fixed_range_v4=#{node[:nova][:network][:fixed_range]} --num_networks=#{node[:nova][:network][:num_networks]} --network_size=#{node[:nova][:network][:network_size]} --label private"
 cmd << " --multi_host=T" if node[:nova][:network][:ha_enabled]
 execute cmd do
   user node[:nova][:user] if node.platform != "suse" and not node[:nova][:use_gitrepo]
@@ -103,15 +103,15 @@ end
 # For the public endpoint, we prefer the public name. If not set, then we
 # use the IP address except for SSL, where we always prefer a hostname
 # (for certificate validation).
+keystone_protocol = keystone["keystone"]["api"]["protocol"]
 public_keystone_host = keystone[:crowbar][:public_name]
 if public_keystone_host.nil? or public_keystone_host.empty?
-  unless keystone[:nova][:ssl][:enabled]
+  unless keystone_protocol == "https"
     public_keystone_host = Chef::Recipe::Barclamp::Inventory.get_network_by_type(keystone, "public").address
   else
     public_keystone_host = 'public.'+keystone[:fqdn]
   end
 end
-keystone_protocol = keystone["keystone"]["api"]["protocol"]
 keystone_token = keystone["keystone"]["admin"]["token"] rescue nil
 admin_username = keystone["keystone"]["admin"]["username"] rescue nil
 admin_password = keystone["keystone"]["admin"]["password"] rescue nil
@@ -132,7 +132,7 @@ api_protocol = api[:nova][:ssl][:enabled] ? 'https' : 'http'
 # (for certificate validation).
 public_api_host = api[:crowbar][:public_name]
 if public_api_host.nil? or public_api_host.empty?
-  unless api[:nova][:ssl][:enabled]
+  unless api_protocol == 'https'
     public_api_host = Chef::Recipe::Barclamp::Inventory.get_network_by_type(api, "public").address
   else
     public_api_host = 'public.'+api[:fqdn]
