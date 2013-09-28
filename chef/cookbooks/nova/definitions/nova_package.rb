@@ -28,7 +28,7 @@ define :nova_package, :enable => true do
   else
     package nova_name do
       package_name "openstack-#{nova_name}" if %w(redhat centos suse).include?(node.platform)
-      options "--force-yes -o Dpkg::Options::=\"--force-confdef\"" unless %w(redhat centos suse).include?(node.platform)
+      options "--force-yes -o Dpkg::Options::=\"--force-confdef\"" if %w(debian ubuntu).include?(node.platform)
       action :install
     end
   end
