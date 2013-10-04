@@ -1521,7 +1521,7 @@ use_syslog=<%= node[:nova][:use_syslog] ? 'True' : 'False' %>
 # Driver or drivers to handle sending notifications (multi
 # valued)
 notification_driver=nova.openstack.common.notifier.rpc_notifier
-notification_driver=ceilometer.compute.nova_notifier
+<%= "notification_driver=ceilometer.compute.nova_notifier" if node.roles.include?("ceilometer-agent") %>
 
 # Default notification level for outgoing notifications
 # (string value)
@@ -2094,7 +2094,7 @@ block_migration_flag=VIR_MIGRATE_UNDEFINE_SOURCE, VIR_MIGRATE_PEER2PEER, VIR_MIG
 
 # The libvirt VIF driver to configure the VIFs. (string value)
 <% if node[:nova][:networking_backend] == "quantum" -%>
-<%   if @quantum_networking_plugin == "openvswitch" -%>
+<%   if @quantum_networking_plugin == "openvswitch" or @quantum_networking_plugin == "cisco" -%>
 libvirt_vif_driver=nova.virt.libvirt.vif.LibvirtHybridOVSBridgeDriver
 <%   elsif @quantum_networking_plugin == "linuxbridge" -%>
 libvirt_vif_driver=nova.virt.libvirt.vif.LibvirtGenericVIFDriver
