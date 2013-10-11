@@ -278,6 +278,14 @@ class NovaService < ServiceObject
   def validate_proposal_after_save proposal
     super
 
+    if proposal["attributes"][@bc_name]["use_gitrepo"]
+      gitService = GitService.new(@logger)
+      gits = gitService.list_active[1].to_a
+      if not gits.include?proposal["attributes"][@bc_name]["git_instance"]
+        raise(I18n.t('model.service.dependency_missing', :name => @bc_name, :dependson => "git"))
+      end
+    end
+
     errors = []
     elements = proposal["deployment"]["nova"]["elements"]
     nodes = Hash.new(0)

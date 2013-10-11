@@ -22,9 +22,9 @@
       "git_instance": "",
       "git_refspec": "stable/grizzly",
       "use_gitrepo": false,
-      "use_gitbarclamp": false,
-      "use_pip_cache": false,
-      "use_virtualenv": false,
+      "use_gitbarclamp": true,
+      "use_pip_cache": true,
+      "use_virtualenv": true,
       "networking_backend": "quantum",
       "pfs_deps": [
         "dnsmasq-base",
