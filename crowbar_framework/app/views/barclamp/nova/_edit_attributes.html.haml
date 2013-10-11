@@ -20,7 +20,6 @@
     %p
       %label{ :for => :use_novnc }= t('.use_novnc')
       = select_tag :use_novnc, options_for_select([['true','true'], ['false', 'false']], @proposal.raw_data['attributes'][@proposal.barclamp]["use_novnc"].to_s), :onchange => "update_value('use_novnc', 'use_novnc', 'boolean')"
-    = render 'barclamp/git/pfsdeps.html.haml'
 
     %label.section-header{ :for => :scheduler_div }= t('.scheduler_header')
     %div.section{ :id => :scheduler_div }
@@ -92,7 +91,7 @@
       %p
         %label{ :for => :verbose }= t('.verbose')
         = select_tag :verbose, options_for_select([['true','true'], ['false', 'false']], @proposal.raw_data['attributes'][@proposal.barclamp]["verbose"].to_s), :onchange => "update_value('verbose', 'verbose', 'boolean')"
-
+    = render 'barclamp/git/pfsdeps.html.haml'
 
 :javascript
 
