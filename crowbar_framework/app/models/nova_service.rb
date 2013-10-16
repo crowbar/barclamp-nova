@@ -206,7 +206,7 @@ class NovaService < ServiceObject
     end
 
     if base["attributes"]["nova"]["quantum_instance"] == ""
-      raise(I18n.t('model.service.dependency_missing', :name => @bc_name, :dependson => "quantum"))
+      raise(I18n.t('model.service.dependency_missing', :name => @bc_name, :dependson => "neutron"))
     end
 
     base["attributes"]["nova"]["db"]["password"] = random_password
