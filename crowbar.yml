@@ -86,8 +86,8 @@ locale_additions:
 debs:
   ubuntu-12.04:
     repos:
-      - deb http://ubuntu-cloud.archive.canonical.com/ubuntu precise-updates/grizzly main
-      - deb http://ubuntu-cloud.archive.canonical.com/ubuntu precise-proposed/grizzly main
+      - deb http://ubuntu-cloud.archive.canonical.com/ubuntu precise-updates/havana main
+      - deb http://ubuntu-cloud.archive.canonical.com/ubuntu precise-proposed/havana main
     pkgs:
       - tgt
       - novnc
@@ -141,10 +141,10 @@ debs:
 rpms:
   centos-6.4:
     repos:
-      - rpm http://repos.fedorapeople.org/repos/openstack/openstack-grizzly/epel-6
+      - rpm http://repos.fedorapeople.org/repos/openstack/openstack-havana/epel-6
   redhat-6.4:
     repos:
-      - rpm http://repos.fedorapeople.org/repos/openstack/openstack-grizzly/epel-6
+      - rpm http://repos.fedorapeople.org/repos/openstack/openstack-havana/epel-6
   pkgs:
     - openstack-nova
     - openstack-nova-compute
@@ -163,5 +163,6 @@ rpms:
     - lxc
 
 git_repo:
-  - nova https://github.com/openstack/nova.git stable/grizzly
-  - novnc https://github.com/kanaka/noVNC.git master
+  - nova https://github.com/openstack/nova.git milestone-proposed
+  # - nova https://github.com/openstack/nova.git stable/havana
+  # - novnc https://github.com/kanaka/noVNC.git master
