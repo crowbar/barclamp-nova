@@ -36,6 +36,7 @@ cleanup() {
         nova keypair-delete smoketest
         ssh-agent -k
         neutron security-group-delete smoketest
+        nova flavor-delete smoketest
     fi
 }
 
@@ -139,6 +140,12 @@ neutron security-group-rule-create --protocol udp --port-range-min 1 \
     --port-range-max 65535 --direction ingress smoketest
 fixed_net=$(neutron net-list --quote none -F id --format csv -- --name fixed |tail -1 |tr -d '\r')
 
+
+echo "Adding smoke flavor"
+flavor_rnd=$(( 100 + $RANDOM % 100))
+nova flavor-create smoketest $rnd 512 2 1 || die 1 "Unable to create flavor"
+
+
 sshkey="$LOGDIR/nova-smoketest.pem"
 
 # Create a keypair, and let us use it.
@@ -159,7 +166,7 @@ for ((idx=0; idx <= 2; idx++)); do
 
     echo "Launching $instance_name with $test_image"
     (
-        nova boot --poll --image "$test_image" --flavor 1 \
+        nova boot --poll --image "$test_image" --flavor ${flavor_rnd} \
             --nic net-id=$fixed_net \
             --security-groups smoketest \
             --key-name smoketest \
@@ -466,7 +473,7 @@ if [[ $img_ready = true ]];  then
     image_id=$(nova image-list | grep "$used_instance_name-image" | awk {'print $2'})
     isc_name="image-test"
     (
-           nova boot --poll --image "$image_id" --flavor 1 \
+           nova boot --poll --image "$image_id" --flavor ${flavor_rnd} \
                --nic net-id=$fixed_net \
                --security-groups smoketest \
                --key-name smoketest \
@@ -572,7 +579,7 @@ if (($(bc <<< "$cinder_version>$cinder_broken_ver"))); then
 
 #        b_device_id=$(nova volume-list | grep "$ivol_id" | awk {'print $2'})
         (
-               nova boot --poll --image "$test_image" --flavor 1 \
+               nova boot --poll --image "$test_image" --flavor ${flavor_rnd} \
                    --nic net-id=$fixed_net \
                    --security-groups smoketest \
                    --key-name smoketest \
