@@ -36,8 +36,8 @@ class NovaService < ServiceObject
       answer << { "barclamp" => "git", "inst" => role.default_attributes[@bc_name]["git_instance"] }
     end
 
-    if role.default_attributes[@bc_name]["networking_backend"] == "quantum"
-      answer << { "barclamp" => "quantum", "inst" => role.default_attributes[@bc_name]["quantum_instance"] }
+    if role.default_attributes[@bc_name]["networking_backend"] == "neutron"
+      answer << { "barclamp" => "neutron", "inst" => role.default_attributes[@bc_name]["neutron_instance"] }
     end
     answer
   end
@@ -192,25 +192,25 @@ class NovaService < ServiceObject
       raise(I18n.t('model.service.dependency_missing', :name => @bc_name, :dependson => "cinder"))
     end
 
-    base["attributes"]["nova"]["quantum_instance"] = ""
+    base["attributes"]["nova"]["neutron_instance"] = ""
     begin
-      quantumService = QuantumService.new(@logger)
-      quantums = quantumService.list_active[1]
-      if quantums.empty?
+      neutronService = NeutronService.new(@logger)
+      neutrons = neutronService.list_active[1]
+      if neutrons.empty?
         # No actives, look for proposals
-        quantums = quantumService.proposals[1]
+        neutrons = neutronService.proposals[1]
       end
-      base["attributes"]["nova"]["quantum_instance"] = quantums[0] unless quantums.empty?
+      base["attributes"]["nova"]["neutron_instance"] = neutrons[0] unless neutrons.empty?
     rescue
-      @logger.info("Nova create_proposal: no quantum found")
+      @logger.info("Nova create_proposal: no neutron found")
     end
 
-    if base["attributes"]["nova"]["quantum_instance"] == ""
-      raise(I18n.t('model.service.dependency_missing', :name => @bc_name, :dependson => "quantum"))
+    if base["attributes"]["nova"]["neutron_instance"] == ""
+      raise(I18n.t('model.service.dependency_missing', :name => @bc_name, :dependson => "neutron"))
     end
 
     base["attributes"]["nova"]["db"]["password"] = random_password
-    base["attributes"]["nova"]["quantum_metadata_proxy_shared_secret"] = random_password
+    base["attributes"]["nova"]["neutron_metadata_proxy_shared_secret"] = random_password
 
     @logger.debug("Nova create_proposal: exiting")
     base
@@ -233,17 +233,17 @@ class NovaService < ServiceObject
     #
     net_svc = NetworkService.new @logger
     tnodes = role.override_attributes["nova"]["elements"]["nova-multi-controller"]
-    if role.default_attributes["nova"]["networking_backend"]=="quantum"
+    if role.default_attributes["nova"]["networking_backend"]=="neutron"
       tnodes.each do |n|
         net_svc.allocate_ip "default","public","host",n
       end unless tnodes.nil?
-      quantum = ProposalObject.find_proposal("quantum",role.default_attributes["nova"]["quantum_instance"])
+      neutron = ProposalObject.find_proposal("neutron",role.default_attributes["nova"]["neutron_instance"])
       all_nodes.each do |n|
-        if quantum["attributes"]["quantum"]["networking_mode"] == "gre"
+        if neutron["attributes"]["neutron"]["networking_mode"] == "gre"
           net_svc.allocate_ip "default", "os_sdn", "host", n
         else
           net_svc.enable_interface "default", "nova_fixed", n
-          if quantum["attributes"]["quantum"]["networking_mode"] == "vlan"
+          if neutron["attributes"]["neutron"]["networking_mode"] == "vlan"
             # Force "use_vlan" to false in VLAN mode (linuxbridge and ovs). We
             # need to make sure that the network recipe does NOT create the
             # VLAN interfaces (ethX.VLAN)

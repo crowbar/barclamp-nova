@@ -12,9 +12,9 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 
 if [ -f /etc/redhat-release ]; then
-  sudo yum --assumeyes install python-novaclient python-quantumclient bc
+  sudo yum --assumeyes install python-novaclient python-neutronclient bc
 else
-  sudo apt-get install -y python-novaclient python-quantumclient bc
+  sudo apt-get install -y python-novaclient python-neutronclient bc
 fi
 
 
@@ -35,7 +35,7 @@ cleanup() {
         done
         nova keypair-delete smoketest
         ssh-agent -k
-        quantum security-group-delete smoketest
+        neutron security-group-delete smoketest
     fi
 }
 
@@ -74,10 +74,10 @@ export OS_TENANT_NAME="admin"
 echo -e "Flushing floating ip list..."
 
 TMP_FILE=$(mktemp)
-quantum floatingip-list | awk {'print $2'} | grep -iv "id" | grep -v '^$' > $TMP_FILE
+neutron floatingip-list | awk {'print $2'} | grep -iv "id" | grep -v '^$' > $TMP_FILE
 exec 3<$TMP_FILE
 while read -u 3 LINE; do
-    quantum floatingip-delete $LINE
+    neutron floatingip-delete $LINE
 done
 rm -f $TMP_FILE
 
@@ -85,10 +85,10 @@ rm -f $TMP_FILE
 echo -e "Flushing security group list..."
 
 TMP_FILE=$(mktemp)
-quantum security-group-list | grep 'smoketest' | awk {'print $2'} > $TMP_FILE
+neutron security-group-list | grep 'smoketest' | awk {'print $2'} > $TMP_FILE
 exec 3<$TMP_FILE
 while read -u 3 LINE; do
-    quantum security-group-delete $LINE
+    neutron security-group-delete $LINE
 done
 rm -f $TMP_FILE
 
@@ -131,13 +131,13 @@ fi
 
 
 echo "Adding our security group"
-quantum security-group-create smoketest
-quantum security-group-rule-create --protocol icmp --direction ingress smoketest
-quantum security-group-rule-create --protocol tcp --port-range-min 1 \
+neutron security-group-create smoketest
+neutron security-group-rule-create --protocol icmp --direction ingress smoketest
+neutron security-group-rule-create --protocol tcp --port-range-min 1 \
     --port-range-max 65535 --direction ingress smoketest
-quantum security-group-rule-create --protocol udp --port-range-min 1 \
+neutron security-group-rule-create --protocol udp --port-range-min 1 \
     --port-range-max 65535 --direction ingress smoketest
-fixed_net=$(quantum net-list --quote none -F id --format csv -- --name fixed |tail -1 |tr -d '\r')
+fixed_net=$(neutron net-list --quote none -F id --format csv -- --name fixed |tail -1 |tr -d '\r')
 
 sshkey="$LOGDIR/nova-smoketest.pem"
 
