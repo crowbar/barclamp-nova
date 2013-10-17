@@ -636,7 +636,7 @@ if (($(bc <<< "$cinder_version>$cinder_broken_ver"))); then
 
     if [[ $ssh_ok = true  ]]; then
         echo -e "\n\n\nTests complete\n\n\n Cleaning up: instance_name: $b_device-test and volume: $b_device_id"
-        nova delete $b_device-test && nova volume-delete $b_device_id
+        nova delete $b_device-test && sleep 20 && nova volume-delete $b_device_id
         sleep 10
         for ((i=1; i<=5; i++)); do
             removed_instance_id=$(nova list | grep "$b_device_test")
