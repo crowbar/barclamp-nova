@@ -143,7 +143,7 @@ fixed_net=$(neutron net-list --quote none -F id --format csv -- --name fixed |ta
 
 echo "Adding smoke flavor"
 flavor_rnd=$(( 100 + $RANDOM % 100))
-nova flavor-create smoketest $rnd 512 2 1 || die 1 "Unable to create flavor"
+nova flavor-create smoketest ${flavor_rnd} 512 2 1 || die 1 "Unable to create flavor"
 
 
 sshkey="$LOGDIR/nova-smoketest.pem"
