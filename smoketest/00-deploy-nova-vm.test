@@ -636,14 +636,23 @@ if (($(bc <<< "$cinder_version>$cinder_broken_ver"))); then
 
     if [[ $ssh_ok = true  ]]; then
         echo -e "\n\n\nTests complete\n\n\n Cleaning up: instance_name: $b_device-test and volume: $b_device_id"
-        nova delete $b_device-test && sleep 20 && nova volume-delete $b_device_id
+        nova delete $b_device-test 
         sleep 10
         for ((i=1; i<=5; i++)); do
-            removed_instance_id=$(nova list | grep "$b_device_test")
-            removed_volume_id=$(nova volume-list | grep "$b_device_id")
-            echo -e "Verifying that instance: $in_id  and volume: $b_device_id actually removed, attempt #$i"
-            [[ ! $removed_instance_id ]] && [[ ! $removed_volume_id ]] && cleanup_ok=true && break || sleep 5 && continue
+          removed_instance_id=$(nova list | grep "$b_device_test")
+          echo -e "Verifying that instance: $in_id actually removed, attempt #$i"
+          [[ ! $removed_instance_id ]] && cleanup_ok_instance=true && break || sleep 5 && continue
         done
+
+        nova volume-delete $b_device_id
+        sleep 10
+        for ((i=1; i<=5; i++)); do
+            removed_volume_id=$(nova volume-list | grep "$b_device_id")
+            echo -e "Verifying that volume: $b_device_id actually removed, attempt #$i"
+            [[ ! $removed_volume_id ]] && cleanup_ok_volume=true && break || sleep 5 && continue
+        done
+       cleanup_ok=false
+       [[ ${cleanup_ok_volume} = true ]] && [[ ${cleanup_ok_instance} = true ]] && cleanup_ok=true
        [[ $cleanup_ok = true ]] && echo -e "Instance: $in_id  and volume: $b_device_id  cleanup:		SUCCESS"
     else
         echo -e "\n\n\nERROR:SSH test failed for instance: $in_id\n\n\n"
