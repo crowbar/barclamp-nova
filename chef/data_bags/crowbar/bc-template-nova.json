@@ -20,7 +20,7 @@
       "use_syslog": false,
       "gitrepo": "http://github.com/openstack/nova.git",
       "git_instance": "",
-      "git_refspec": "stable/grizzly",
+      "git_refspec": "stable/havana",
       "use_gitrepo": false,
       "use_gitbarclamp": true,
       "use_pip_cache": true,
