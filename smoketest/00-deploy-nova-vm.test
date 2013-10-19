@@ -12,9 +12,9 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 
 if [ -f /etc/redhat-release ]; then
-  sudo yum --assumeyes install python-novaclient python-quantumclient bc
+  sudo yum --assumeyes install python-novaclient python-neutronclient bc
 else
-  sudo apt-get install -y python-novaclient python-quantumclient bc
+  sudo apt-get install -y python-novaclient python-neutronclient bc
 fi
 
 
@@ -35,7 +35,8 @@ cleanup() {
         done
         nova keypair-delete smoketest
         ssh-agent -k
-        quantum security-group-delete smoketest
+        neutron security-group-delete smoketest
+        nova flavor-delete smoketest
     fi
 }
 
@@ -74,10 +75,10 @@ export OS_TENANT_NAME="admin"
 echo -e "Flushing floating ip list..."
 
 TMP_FILE=$(mktemp)
-quantum floatingip-list | awk {'print $2'} | grep -iv "id" | grep -v '^$' > $TMP_FILE
+neutron floatingip-list | awk {'print $2'} | grep -iv "id" | grep -v '^$' > $TMP_FILE
 exec 3<$TMP_FILE
 while read -u 3 LINE; do
-    quantum floatingip-delete $LINE
+    neutron floatingip-delete $LINE
 done
 rm -f $TMP_FILE
 
@@ -85,10 +86,10 @@ rm -f $TMP_FILE
 echo -e "Flushing security group list..."
 
 TMP_FILE=$(mktemp)
-quantum security-group-list | grep 'smoketest' | awk {'print $2'} > $TMP_FILE
+neutron security-group-list | grep 'smoketest' | awk {'print $2'} > $TMP_FILE
 exec 3<$TMP_FILE
 while read -u 3 LINE; do
-    quantum security-group-delete $LINE
+    neutron security-group-delete $LINE
 done
 rm -f $TMP_FILE
 
@@ -131,13 +132,19 @@ fi
 
 
 echo "Adding our security group"
-quantum security-group-create smoketest
-quantum security-group-rule-create --protocol icmp --direction ingress smoketest
-quantum security-group-rule-create --protocol tcp --port-range-min 1 \
+neutron security-group-create smoketest
+neutron security-group-rule-create --protocol icmp --direction ingress smoketest
+neutron security-group-rule-create --protocol tcp --port-range-min 1 \
     --port-range-max 65535 --direction ingress smoketest
-quantum security-group-rule-create --protocol udp --port-range-min 1 \
+neutron security-group-rule-create --protocol udp --port-range-min 1 \
     --port-range-max 65535 --direction ingress smoketest
-fixed_net=$(quantum net-list --quote none -F id --format csv -- --name fixed |tail -1 |tr -d '\r')
+fixed_net=$(neutron net-list --quote none -F id --format csv -- --name fixed |tail -1 |tr -d '\r')
+
+
+echo "Adding smoke flavor"
+flavor_rnd=$(( 100 + $RANDOM % 100))
+nova flavor-create smoketest ${flavor_rnd} 512 2 1 || die 1 "Unable to create flavor"
+
 
 sshkey="$LOGDIR/nova-smoketest.pem"
 
@@ -159,7 +166,7 @@ for ((idx=0; idx <= 2; idx++)); do
 
     echo "Launching $instance_name with $test_image"
     (
-        nova boot --poll --image "$test_image" --flavor 1 \
+        nova boot --poll --image "$test_image" --flavor ${flavor_rnd} \
             --nic net-id=$fixed_net \
             --security-groups smoketest \
             --key-name smoketest \
@@ -466,7 +473,7 @@ if [[ $img_ready = true ]];  then
     image_id=$(nova image-list | grep "$used_instance_name-image" | awk {'print $2'})
     isc_name="image-test"
     (
-           nova boot --poll --image "$image_id" --flavor 1 \
+           nova boot --poll --image "$image_id" --flavor ${flavor_rnd} \
                --nic net-id=$fixed_net \
                --security-groups smoketest \
                --key-name smoketest \
@@ -572,7 +579,7 @@ if (($(bc <<< "$cinder_version>$cinder_broken_ver"))); then
 
 #        b_device_id=$(nova volume-list | grep "$ivol_id" | awk {'print $2'})
         (
-               nova boot --poll --image "$test_image" --flavor 1 \
+               nova boot --poll --image "$test_image" --flavor ${flavor_rnd} \
                    --nic net-id=$fixed_net \
                    --security-groups smoketest \
                    --key-name smoketest \
@@ -629,14 +636,23 @@ if (($(bc <<< "$cinder_version>$cinder_broken_ver"))); then
 
     if [[ $ssh_ok = true  ]]; then
         echo -e "\n\n\nTests complete\n\n\n Cleaning up: instance_name: $b_device-test and volume: $b_device_id"
-        nova delete $b_device-test && nova volume-delete $b_device_id
+        nova delete $b_device-test 
         sleep 10
         for ((i=1; i<=5; i++)); do
-            removed_instance_id=$(nova list | grep "$b_device_test")
-            removed_volume_id=$(nova volume-list | grep "$b_device_id")
-            echo -e "Verifying that instance: $in_id  and volume: $b_device_id actually removed, attempt #$i"
-            [[ ! $removed_instance_id ]] && [[ ! $removed_volume_id ]] && cleanup_ok=true && break || sleep 5 && continue
+          removed_instance_id=$(nova list | grep "$b_device_test")
+          echo -e "Verifying that instance: $in_id actually removed, attempt #$i"
+          [[ ! $removed_instance_id ]] && cleanup_ok_instance=true && break || sleep 5 && continue
         done
+
+        nova volume-delete $b_device_id
+        sleep 10
+        for ((i=1; i<=5; i++)); do
+            removed_volume_id=$(nova volume-list | grep "$b_device_id")
+            echo -e "Verifying that volume: $b_device_id actually removed, attempt #$i"
+            [[ ! $removed_volume_id ]] && cleanup_ok_volume=true && break || sleep 5 && continue
+        done
+       cleanup_ok=false
+       [[ ${cleanup_ok_volume} = true ]] && [[ ${cleanup_ok_instance} = true ]] && cleanup_ok=true
        [[ $cleanup_ok = true ]] && echo -e "Instance: $in_id  and volume: $b_device_id  cleanup:		SUCCESS"
     else
         echo -e "\n\n\nERROR:SSH test failed for instance: $in_id\n\n\n"

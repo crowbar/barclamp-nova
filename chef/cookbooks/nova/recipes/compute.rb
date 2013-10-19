@@ -18,16 +18,16 @@
 # limitations under the License.
 #
 
-if node[:nova][:networking_backend]=="quantum"
+if node[:nova][:networking_backend]=="neutron"
 #unless node[:nova][:use_gitrepo]
-#  package "quantum" do
+#  package "neutron" do
 #    action :install
 #  end
 #else
-  include_recipe "nova::quantum"
-#  pfs_and_install_deps "quantum" do
-#    cookbook "quantum"
-#    cnode quantum
+  include_recipe "nova::neutron"
+#  pfs_and_install_deps "neutron" do
+#    cookbook "neutron"
+#    cnode neutron
 #  end
 #end
 end
@@ -270,7 +270,7 @@ execute "set vhost_net module" do
   command "grep -q 'vhost_net' /etc/modules || echo 'vhost_net' >> /etc/modules"
 end
 
-if node[:nova][:networking_backend]=="quantum" and not %w(redhat centos suse).include?(node.platform)
+if node[:nova][:networking_backend]=="neutron" and not %w(redhat centos suse).include?(node.platform)
   #since using native ovs we have to gain acess to lower networking functions
   service "libvirt-bin" do
     action :nothing

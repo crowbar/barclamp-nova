@@ -292,30 +292,30 @@ else
   cinder_insecure = false
 end
 
-quantum_servers = search_env_filtered(:node, "roles:quantum-server")
-if quantum_servers.length > 0
-  quantum_server = quantum_servers[0]
-  quantum_server = node if quantum_server.name == node.name
-  quantum_protocol = quantum_server[:quantum][:api][:protocol]
-  quantum_server_host = quantum_server[:fqdn]
-  quantum_server_port = quantum_server[:quantum][:api][:service_port]
-  quantum_insecure = quantum_protocol == 'https' && quantum_server[:quantum][:ssl][:insecure]
-  quantum_service_user = quantum_server[:quantum][:service_user]
-  quantum_service_password = quantum_server[:quantum][:service_password]
-  if quantum_server[:quantum][:networking_mode] != 'local'
+neutron_servers = search_env_filtered(:node, "roles:neutron-server")
+if neutron_servers.length > 0
+  neutron_server = neutron_servers[0]
+  neutron_server = node if neutron_server.name == node.name
+  neutron_protocol = neutron_server[:neutron][:api][:protocol]
+  neutron_server_host = neutron_server[:fqdn]
+  neutron_server_port = neutron_server[:neutron][:api][:service_port]
+  neutron_insecure = neutron_protocol == 'https' && neutron_server[:neutron][:ssl][:insecure]
+  neutron_service_user = neutron_server[:neutron][:service_user]
+  neutron_service_password = neutron_server[:neutron][:service_password]
+  if neutron_server[:neutron][:networking_mode] != 'local'
     per_tenant_vlan=true
   else
     per_tenant_vlan=false
   end
-  quantum_networking_plugin = quantum_server[:quantum][:networking_plugin]
-  quantum_networking_mode = quantum_server[:quantum][:networking_mode]
+  neutron_networking_plugin = neutron_server[:neutron][:networking_plugin]
+  neutron_networking_mode = neutron_server[:neutron][:networking_mode]
 else
-  quantum_server_host = nil
-  quantum_server_port = nil
-  quantum_service_user = nil
-  quantum_service_password = nil
+  neutron_server_host = nil
+  neutron_server_port = nil
+  neutron_service_user = nil
+  neutron_service_password = nil
 end
-Chef::Log.info("Quantum server at #{quantum_server_host}")
+Chef::Log.info("Neutron server at #{neutron_server_host}")
 
 env_filter = " AND inteltxt_config_environment:inteltxt-config-#{node[:nova][:itxt_instance]}"
 oat_servers = search(:node, "roles:oat-server#{env_filter}") || []
@@ -452,13 +452,13 @@ template "/etc/nova/nova.conf" do
             :vncproxy_ssl_enabled => api[:nova][:novnc][:ssl][:enabled],
             :vncproxy_cert_file => api_novnc_ssl_certfile,
             :vncproxy_key_file => api_novnc_ssl_keyfile,
-            :quantum_protocol => quantum_protocol,
-            :quantum_server_host => quantum_server_host,
-            :quantum_server_port => quantum_server_port,
-            :quantum_insecure => quantum_insecure,
-            :quantum_service_user => quantum_service_user,
-            :quantum_service_password => quantum_service_password,
-            :quantum_networking_plugin => quantum_networking_plugin,
+            :neutron_protocol => neutron_protocol,
+            :neutron_server_host => neutron_server_host,
+            :neutron_server_port => neutron_server_port,
+            :neutron_insecure => neutron_insecure,
+            :neutron_service_user => neutron_service_user,
+            :neutron_service_password => neutron_service_password,
+            :neutron_networking_plugin => neutron_networking_plugin,
             :keystone_service_tenant => keystone_service_tenant,
             :keystone_protocol => keystone_protocol,
             :keystone_host => keystone_host,

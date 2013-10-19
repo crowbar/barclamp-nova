@@ -245,7 +245,7 @@ compute_manager=nova.compute.manager.ComputeManager
 #cert_manager=nova.cert.manager.CertManager
 
 # full class name for the Manager for network (string value)
-<% if node[:nova][:networking_backend] != "quantum" -%>
+<% if node[:nova][:networking_backend] != "neutron" -%>
 <%   if node[:nova][:network][:dhcp_enabled] -%>
 <%     if node[:nova][:network][:tenant_vlans] -%>
 network_manager=nova.network.manager.VlanManager
@@ -413,13 +413,13 @@ ec2_scheme=<%= @ssl_enabled ? "https" : "http" %>
 # Options defined in nova.api.metadata.handler
 #
 
-# Set flag to indicate Quantum will proxy metadata requests
+# Set flag to indicate Neutron will proxy metadata requests
 # and resolve instance ids. (boolean value)
-service_quantum_metadata_proxy=<%= node[:nova][:networking_backend] == "quantum" ? 'True' : 'False' %>
+service_neutron_metadata_proxy=<%= node[:nova][:networking_backend] == "neutron" ? 'True' : 'False' %>
 
-# Shared secret to validate proxies Quantum metadata requests
+# Shared secret to validate proxies Neutron metadata requests
 # (string value)
-quantum_metadata_proxy_shared_secret=<%= node[:nova][:quantum_metadata_proxy_shared_secret] %>
+neutron_metadata_proxy_shared_secret=<%= node[:nova][:neutron_metadata_proxy_shared_secret] %>
 
 
 #
@@ -484,11 +484,11 @@ quantum_metadata_proxy_shared_secret=<%= node[:nova][:quantum_metadata_proxy_sha
 #enable_network_quota=false
 
 # Control for checking for default networks (string value)
-#use_quantum_default_nets=False
+#use_neutron_default_nets=False
 
-# Default tenant id when creating quantum networks (string
+# Default tenant id when creating neutron networks (string
 # value)
-#quantum_default_tenant_id=default
+#neutron_default_tenant_id=default
 
 
 #
@@ -962,7 +962,7 @@ instance_usage_audit=True
 
 # The full class name of the network API class to use (string
 # value)
-<%= "network_api_class=nova.network.quantumv2.api.API" if node[:nova][:networking_backend] == "quantum" %>
+<%= "network_api_class=nova.network.neutronv2.api.API" if node[:nova][:networking_backend] == "neutron" %>
 
 
 #
@@ -978,7 +978,7 @@ instance_usage_audit=True
 #
 
 # Default pool for floating ips (string value)
-<%= "default_floating_pool=floating" if node[:nova][:networking_backend] == "quantum" %>
+<%= "default_floating_pool=floating" if node[:nova][:networking_backend] == "neutron" %>
 
 # Autoassigning floating ip to VM (boolean value)
 #auto_assign_floating_ip=false
@@ -1083,7 +1083,7 @@ dhcpbridge=<%= @dhcpbridge %>
 #dnsmasq_config_file=
 
 # Driver used to create ethernet devices. (string value)
-<% if node[:nova][:networking_backend] == "quantum" -%>
+<% if node[:nova][:networking_backend] == "neutron" -%>
 linuxnet_interface_driver=""
 <% end -%>
 
@@ -1126,7 +1126,7 @@ linuxnet_interface_driver=""
 # Options defined in nova.network.manager
 #
 
-<% if node[:nova][:networking_backend] != "quantum" -%>
+<% if node[:nova][:networking_backend] != "neutron" -%>
 # Bridge for simple network instances (string value)
 <%= "flat_network_bridge=#{node[:nova][:network][:flat_network_bridge]}" if !node[:nova][:network][:tenant_vlans] %>
 
@@ -1220,50 +1220,50 @@ fixed_range=<%= node[:nova][:network][:fixed_range] %>
 <% end -%>
 
 #
-# Options defined in nova.network.quantumv2.api
+# Options defined in nova.network.neutronv2.api
 #
 
-# URL for connecting to quantum (string value)
-quantum_url=<%= @quantum_protocol %>://<%= @quantum_server_host %>:<%= @quantum_server_port %>
+# URL for connecting to neutron (string value)
+neutron_url=<%= @neutron_protocol %>://<%= @neutron_server_host %>:<%= @neutron_server_port %>
 
-# timeout value for connecting to quantum in seconds (integer
+# timeout value for connecting to neutron in seconds (integer
 # value)
-#quantum_url_timeout=30
+#neutron_url_timeout=30
 
-# username for connecting to quantum in admin context (string
+# username for connecting to neutron in admin context (string
 # value)
-quantum_admin_username=<%= @quantum_service_user %>
+neutron_admin_username=<%= @neutron_service_user %>
 
-# password for connecting to quantum in admin context (string
+# password for connecting to neutron in admin context (string
 # value)
-quantum_admin_password=<%= @quantum_service_password %>
+neutron_admin_password=<%= @neutron_service_password %>
 
-# tenant name for connecting to quantum in admin context
+# tenant name for connecting to neutron in admin context
 # (string value)
-quantum_admin_tenant_name=<%= @keystone_service_tenant %>
+neutron_admin_tenant_name=<%= @keystone_service_tenant %>
 
-# region name for connecting to quantum in admin context
+# region name for connecting to neutron in admin context
 # (string value)
-#quantum_region_name=<None>
+#neutron_region_name=<None>
 
-# auth url for connecting to quantum in admin context (string
+# auth url for connecting to neutron in admin context (string
 # value)
-quantum_admin_auth_url=<%= @keystone_protocol %>://<%= @keystone_host %>:<%= @keystone_admin_port %>/v2.0
+neutron_admin_auth_url=<%= @keystone_protocol %>://<%= @keystone_host %>:<%= @keystone_admin_port %>/v2.0
 
 # if set, ignore any SSL validation issues (boolean value)
-quantum_api_insecure=<%= @quantum_insecure ? 'True' : 'False' %>
+neutron_api_insecure=<%= @neutron_insecure ? 'True' : 'False' %>
 
-# auth strategy for connecting to quantum in admin context
+# auth strategy for connecting to neutron in admin context
 # (string value)
-#quantum_auth_strategy=keystone
+#neutron_auth_strategy=keystone
 
 # Name of Integration Bridge used by Open vSwitch (string
 # value)
-#quantum_ovs_bridge=br-int
+#neutron_ovs_bridge=br-int
 
-# Number of seconds before querying quantum for extensions
+# Number of seconds before querying neutron for extensions
 # (integer value)
-#quantum_extension_sync_interval=600
+#neutron_extension_sync_interval=600
 
 
 #
@@ -1284,7 +1284,7 @@ quantum_api_insecure=<%= @quantum_insecure ? 'True' : 'False' %>
 #
 
 # The full class name of the security API class (string value)
-<% if node[:nova][:networking_backend] == "quantum" %>security_group_api=quantum<% end %>
+<% if node[:nova][:networking_backend] == "neutron" %>security_group_api=neutron<% end %>
 
 # The full class name of the security group handler class
 # (string value)
@@ -1962,7 +1962,7 @@ compute_driver=libvirt.LibvirtDriver
 
 # Firewall driver (defaults to hypervisor specific iptables
 # driver) (string value)
-<%= "firewall_driver=nova.virt.firewall.NoopFirewallDriver" if node[:nova][:networking_backend] == "quantum" %>
+<%= "firewall_driver=nova.virt.firewall.NoopFirewallDriver" if node[:nova][:networking_backend] == "neutron" %>
 
 # Whether to allow network traffic from same network (boolean
 # value)
@@ -2093,10 +2093,10 @@ block_migration_flag=VIR_MIGRATE_UNDEFINE_SOURCE, VIR_MIGRATE_PEER2PEER, VIR_MIG
 #snapshot_image_format=<None>
 
 # The libvirt VIF driver to configure the VIFs. (string value)
-<% if node[:nova][:networking_backend] == "quantum" -%>
-<%   if @quantum_networking_plugin == "openvswitch" or @quantum_networking_plugin == "cisco" -%>
+<% if node[:nova][:networking_backend] == "neutron" -%>
+<%   if @neutron_networking_plugin == "openvswitch" or @neutron_networking_plugin == "cisco" -%>
 libvirt_vif_driver=nova.virt.libvirt.vif.LibvirtHybridOVSBridgeDriver
-<%   elsif @quantum_networking_plugin == "linuxbridge" -%>
+<%   elsif @neutron_networking_plugin == "linuxbridge" -%>
 libvirt_vif_driver=nova.virt.libvirt.vif.LibvirtGenericVIFDriver
 <%   end -%>
 <% end -%>
