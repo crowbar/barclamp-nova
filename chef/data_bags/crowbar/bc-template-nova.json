@@ -32,6 +32,7 @@
           "dnsmasq-base",
           "dnsmasq-utils",
           "kpartx",
+          "sysfsutils",
           "parted",
           "iputils-arping",
           "kvm",

@@ -114,6 +114,7 @@ debs:
       - python-paramiko
   pkgs:
     - euca2ools
+    - sysfsutils
     - unzip
     - iscsitarget
     - nova-volume
