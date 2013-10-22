@@ -639,7 +639,7 @@ if (($(bc <<< "$cinder_version>$cinder_broken_ver"))); then
         nova delete $b_device-test 
         sleep 10
         for ((i=1; i<=5; i++)); do
-          removed_instance_id=$(nova list | grep "$b_device_test")
+          removed_instance_id=$(nova list | grep "$b_device-test")
           echo -e "Verifying that instance: $in_id actually removed, attempt #$i"
           [[ ! $removed_instance_id ]] && cleanup_ok_instance=true && break || sleep 5 && continue
         done
