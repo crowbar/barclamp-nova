@@ -71,6 +71,8 @@ database_user "grant privileges to the nova database user" do
 end
 
 execute "nova-manage db sync" do
+  user node[:nova][:user]
+  group node[:nova][:group]
   command "nova-manage db sync"
   action :run
 end
