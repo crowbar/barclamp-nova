@@ -1941,7 +1941,8 @@ compute_scheduler_driver=nova.scheduler.filter_scheduler.FilterScheduler
 # include: libvirt.LibvirtDriver, xenapi.XenAPIDriver,
 # fake.FakeDriver, baremetal.BareMetalDriver,
 # vmwareapi.VMWareESXDriver (string value)
-compute_driver=libvirt.LibvirtDriver
+#compute_driver=libvirt.LibvirtDriver
+compute_driver=<%= node[:nova][:compute_driver] %>
 
 # The default format an ephemeral_volume will be formatted
 # with on creation. (string value)
