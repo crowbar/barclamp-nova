@@ -12,6 +12,7 @@
           "type": "map", 
           "required": true,
           "mapping": {
+            "compute_driver": { "type": "str", "required": true },
             "database_instance": { "type": "str", "required": true },
             "rabbitmq_instance": { "type": "str", "required": true },
             "keystone_instance": { "type": "str", "required": true },

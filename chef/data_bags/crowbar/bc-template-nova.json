@@ -3,6 +3,7 @@
   "description": "installs and configures the Openstack Nova component. It relies upon the network and glance barclamps for normal operation.",
   "attributes": {
     "nova": {
+      "compute_driver": "none",
       "database_instance": "none",
       "rabbitmq_instance": "none",
       "keystone_instance": "none",
@@ -142,6 +143,7 @@
         "nova-multi-controller": [ "readying", "ready", "applying" ],
         "nova-multi-compute-hyperv": [ "readying", "ready", "applying" ],
         "nova-multi-compute-kvm": [ "readying", "ready", "applying" ],
+        "nova-multi-compute-docker": [ "readying", "ready", "applying" ],
         "nova-multi-compute-qemu": [ "readying", "ready", "applying" ]
       },
       "elements": {},
@@ -149,12 +151,14 @@
         [ "nova-multi-controller" ],
         [ "nova-multi-compute-hyperv" ],
         [ "nova-multi-compute-kvm" ],
+        [ "nova-multi-compute-docker" ],
         [ "nova-multi-compute-qemu" ]
       ],
       "element_run_list_order": {
         "nova-multi-controller": 95,
         "nova-multi-compute-hyperv": 97,
         "nova-multi-compute-kvm": 97,
+        "nova-multi-compute-docker": 97,
         "nova-multi-compute-qemu": 97
       },
       "config": {
