@@ -20,7 +20,8 @@
 
 ::Chef::Node.send(:include, Opscode::OpenSSL::Password)
 
-
+# everything but Docker (docker recipe will override)
+default[:nova][:compute_driver] = "libvirt.LibvirtDriver"
 #
 # Database Settings
 #
