@@ -88,6 +88,7 @@ debs:
     repos:
       - deb http://ubuntu-cloud.archive.canonical.com/ubuntu precise-updates/havana main
       - deb http://ubuntu-cloud.archive.canonical.com/ubuntu precise-proposed/havana main
+      - deb http://get.docker.io/ubuntu docker main
     pkgs:
       - tgt
       - novnc
@@ -112,6 +113,8 @@ debs:
       - nova-consoleauth
       # paramiko needed for using EQL with nova-volume
       - python-paramiko
+      # docker!
+      - lxc-docker
   pkgs:
     - euca2ools
     - unzip
