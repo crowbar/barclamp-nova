@@ -1546,7 +1546,8 @@ notification_driver=nova.openstack.common.notifier.rpc_notifier
 
 # The messaging module to use, defaults to kombu. (string
 # value)
-#rpc_backend=nova.openstack.common.rpc.impl_kombu
+#we have to set it explicitely since for rhel it qpid by default and not affect other distribution cause we not support anything except of rabbit
+rpc_backend=nova.openstack.common.rpc.impl_kombu
 
 # Size of RPC thread pool (integer value)
 #rpc_thread_pool_size=64
