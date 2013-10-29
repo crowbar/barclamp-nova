@@ -181,7 +181,7 @@ for ((idx=0; idx <= 2; idx++)); do
 done
 wait
 
-declare -A fixed_ips floating_ips
+declare -A floating_ips
 for instance_name in "${instances[@]}"; do
     if nova show $instance_name |grep -q 'status.*ACTIVE'; then
         echo "$instance_name launched."
@@ -189,11 +189,6 @@ for instance_name in "${instances[@]}"; do
         die 1 "Failed to launch $instance_name"
     fi
 
-    nova show $instance_name > "$LOGDIR/nova-$instance_name.status"
-    [[ $(grep 'fixed network' "$LOGDIR/nova-$instance_name.status") =~ $ip_re ]] || \
-        die 1 "$instance_name has no fixed IP!"
-    echo "$instance_name at fixed IP ${BASH_REMATCH[1]}"
-    fixed_ips[$instance_name]=${BASH_REMATCH[1]}
     echo "Allocating a floating IP"
     [[ $(nova floating-ip-create) =~ $ip_re ]] || \
         die 1 "Could not allocate floating IP for $instance_name"
