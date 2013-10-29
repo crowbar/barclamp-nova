@@ -15,7 +15,19 @@ install_packages python-novaclient python-neutronclient bc
 
 [[ $DEBUG ]] && set -x
 ip_re='(([0-9]{1,3}\.){3}[0-9]{1,3})'
-declare -a instances images
+declare -a instances images floating_ips
+
+get_instance_floating_ip() {
+    local instance_name=$1
+
+    for (( i=0 ; i < ${#instances[@]}; i++ )); do
+        if [ "$instance_name" == "${instance_name[$i]}" ]; then
+            echo -n "${floating_ips[$i]}"
+        fi
+    done
+}
+
+
 cleanup() {
     # Only cleanup if the tests were successful
     if [ $? -eq 0 ]; then
@@ -24,8 +36,8 @@ cleanup() {
         for instance_name in "${instances[@]}"; do
             nova console-log $instance_name > "$LOGDIR/nova-$instance_name.console.log"
             nova delete $instance_name
-            ssh-keygen -f "/root/.ssh/known_hosts" -R "${floating_ips[$instance_name]}" &>/dev/null
-            nova floating-ip-delete "${floating_ips[$instance_name]}"
+            ssh-keygen -f "/root/.ssh/known_hosts" -R "$(get_instance_floating_ip $instance_name)" &>/dev/null
+            nova floating-ip-delete "$(get_instance_floating_ip $instance_name)"
             while nova list |grep -q $instance_name; do sleep 1; done
         done
         nova keypair-delete smoketest
@@ -181,7 +193,6 @@ for ((idx=0; idx <= 2; idx++)); do
 done
 wait
 
-declare -A floating_ips
 for instance_name in "${instances[@]}"; do
     if nova show $instance_name |grep -q 'status.*ACTIVE'; then
         echo "$instance_name launched."
@@ -192,19 +203,19 @@ for instance_name in "${instances[@]}"; do
     echo "Allocating a floating IP"
     [[ $(nova floating-ip-create) =~ $ip_re ]] || \
         die 1 "Could not allocate floating IP for $instance_name"
-    floating_ips[$instance_name]=${BASH_REMATCH[1]}
+    floating_ips+=(${BASH_REMATCH[1]})
     nova add-floating-ip "$instance_name" "${BASH_REMATCH[1]}" || \
         die 1 "Could not attach ${BASH_REMATCH[1]} to $instance_name"
     alive=false
     for ((i=0; i<150; i++)); do
         printf '.'
-        ping -q -c 1 -i 1 ${floating_ips[$instance_name]} &>/dev/null || continue
+        ping -q -c 1 -i 1 $(get_instance_floating_ip $instance_name) &>/dev/null || continue
         alive=true
         break
     done
     nova console-log $instance_name |tee "$LOGDIR/nova-$instance_name.console.log"
-    [[ $alive = true ]] || die 1 "Could not ping $instance_name at ${floating_ips[$instance_name]}"
-    echo "Can ping $instance_name at ${floating_ips[$instance_name]}"
+    [[ $alive = true ]] || die 1 "Could not ping $instance_name at $(get_instance_floating_ip $instance_name)"
+    echo "Can ping $instance_name at $(get_instance_floating_ip $instance_name)"
 done
 
 
@@ -225,7 +236,7 @@ if [[ $alive = true  ]]; then
         [[ $volume_status = "available" ]] && exists=true && break || sleep 20 && continue
      done
 else
-     echo "$instance_name at ${floating_ips[$used_instance_name]} not seems to be reachable"
+     echo "$instance_name at $(get_instance_floating_ip $used_instance_name) not seems to be reachable"
      exit 1
 fi
 
@@ -250,9 +261,9 @@ fi
 usable=false
 if [ $in_use = true ]; then
     echo -e "\n\nVolume tests stage - volume attach: $volume_id  instance_id: $used_instance_id attach status:	SUCCESS\n\n"
-    echo -e "Volume tests stage - accessibility test:    Target instance_id: $used_instance_id attached_volume_id: $volume_id  device: $v_device instance_ip: ${floating_ips[$used_instance_name]} used sshkey: $sshkey"
+    echo -e "Volume tests stage - accessibility test:    Target instance_id: $used_instance_id attached_volume_id: $volume_id  device: $v_device instance_ip: $(get_instance_floating_ip $used_instance_name) used sshkey: $sshkey"
     for ((i=1; i<=5; i++)); do
-       disk_probe=$(ssh -i $sshkey -l ubuntu ${floating_ips[$used_instance_name]} "sudo cat /proc/partitions | grep $v_device")
+       disk_probe=$(ssh -i $sshkey -l ubuntu $(get_instance_floating_ip $used_instance_name) "sudo cat /proc/partitions | grep $v_device")
        echo -e "Quering attached volume status attempt #$i"
        echo -e "Volume_status: $disk_probe"
        [[ $disk_probe ]] && usable=true && break || sleep 20 && continue
@@ -273,13 +284,13 @@ if [ $usable = true ]; then
     nova volume-detach $used_instance_id $a_volume
     sleep 5
     for ((i=1; i<5; i++)); do
-       disk_probe=$(ssh -i $sshkey -l ubuntu ${floating_ips[$a_instance_name]} "sudo cat /proc/partitions | grep 'vd'")
+       disk_probe=$(ssh -i $sshkey -l ubuntu $(get_instance_floating_ip $a_instance_name) "sudo cat /proc/partitions | grep 'vd'")
        echo -e "Quering  volume_id: $a_volume  device: $v_device  instnace_id: $used_instance_id  status attempt #$i"
        echo -e "Volume_status: $disk_probe"
        [[ $disk_probe = *vda* && $disk_probe != *$v_device* ]] && detached=true && break || sleep 20 && continue
     done
 else
-    echo -e "\n\nERROR: Volume tests stage - accessibility test:    Target instance_id: $instance_id attached_volume_id: $volume_id  device: $v_device instance_ip: ${floating_ips[$used_instance_name]} used sshkey: $sshkey failed\n\n"
+    echo -e "\n\nERROR: Volume tests stage - accessibility test:    Target instance_id: $instance_id attached_volume_id: $volume_id  device: $v_device instance_ip: $(get_instance_floating_ip $used_instance_name) used sshkey: $sshkey failed\n\n"
     exit 1
 fi
 
@@ -389,7 +400,7 @@ if [[ $s_attached = true ]];  then
     echo -e "\n\nVolume attach status for instance: $used_instance_id and volume_id: $sv_id:		SUCCESS\n\n"
     echo -e "Volume tests stage - accessibility test instance: $used_instance_id volume: $sv_id device: $v_device"
     for ((i=1; i<5; i++)); do
-       disk_probe=$(ssh -i $sshkey -l ubuntu ${floating_ips[$a_instance_name]} "sudo cat /proc/partitions | grep 'vdb'")
+       disk_probe=$(ssh -i $sshkey -l ubuntu $(get_instance_floating_ip $a_instance_name) "sudo cat /proc/partitions | grep 'vdb'")
        echo -e "Quering  volume_id: $a_volume  device: $v_device  instnace_id: $used_instance_id  status attempt #$i"
        echo -e "Volume_status: $disk_probe"
        [[ $disk_probe = *$v_device* ]] && s_usable=true && break || sleep 20 && continue
@@ -405,7 +416,7 @@ if [[ $s_usable = true ]];  then
     echo -e "Volume tests stage - detach test instance: $used_instance_id volume: $sv_id device: $v_device" 
     nova volume-detach $used_instance_id $sv_id
     for ((i=1; i<5; i++)); do
-       disk_probe=$(ssh -i $sshkey -l ubuntu ${floating_ips[$a_instance_name]} "sudo cat /proc/partitions | grep 'vd'")
+       disk_probe=$(ssh -i $sshkey -l ubuntu $(get_instance_floating_ip $a_instance_name) "sudo cat /proc/partitions | grep 'vd'")
        echo -e "Quering  volume_id: $a_volume  device: $v_device  instnace_id: $used_instance_id  status attempt #$i"
        echo -e "Volume_status: $disk_probe"
        [[ $disk_probe = *vda* && $disk_probe != *$v_device* ]] && s_detached=true && break || sleep 10 && continue
@@ -484,10 +495,10 @@ if [[ $img_ready = true ]];  then
     instances=("${instances[@]}" "$isc_name") && in_ready=true
     f_ip=$(nova floating-ip-create | grep "floating" | awk {'print $2'}) || die 1 "Failed to create floating IP for instance: $in_id"
     nova add-floating-ip $in_id $f_ip || die 1 "Failed to attach floating IP: $f_ip  to instance: $in_id"
-    floating_ips[$isc_name]=$f_ip
+    floating_ips+=($f_ip)
     for ((i=0; i<=150; i++)); do
          echo -e "Pinging instance_name: $isc_name instance_id: $in_id floating_ip: $f_ip instance: $in_id attempt #$i"
-         ping -q -c 1 -i 1 ${floating_ips[$isc_name]} &>/dev/null || continue
+         ping -q -c 1 -i 1 $f_ip &>/dev/null || continue
          reachable=true
          break
     done
@@ -594,10 +605,10 @@ if (($(bc <<< "$cinder_version>$cinder_broken_ver"))); then
         fi
         f_ip=$(nova floating-ip-create | grep "floating" | awk {'print $2'}) || die 1 "Failed to create floating IP for instance: $in_id"
         nova add-floating-ip $in_id $f_ip || die 1 "\n\n\nERROR:Failed to attach floating IP: $f_ip  to instance: $in_id\n\n\n"
-        floating_ips["$b_device-test"]=$f_ip
+        floating_ips+=($f_ip)
         for ((i=0; i<=150; i++)); do
             echo -e "Pinging instance_name: $b_device-test instance_id: $in_id floating_ip: $f_ip instance: $in_id attempt #$i"
-            ping -q -c 1 -i 1 ${floating_ips["$b_device-test"]} &>/dev/null || continue
+            ping -q -c 1 -i 1 $f_ip &>/dev/null || continue
             v_reachable=true
             break
         done
@@ -611,16 +622,22 @@ if (($(bc <<< "$cinder_version>$cinder_broken_ver"))); then
     fi
 
     if [[ $v_reachable = true  ]]; then
-        echo -e "\n\nInstance tests stage - ping instance_name: $b_device-test  instance_id: $in_id on floating_ip: ${floating_ips["$b_device-test"]} status:		SUCCESS\n\n"
-        echo -e "Instance tests stage - getting access through SSH to guest OS: instance_name: $b_device-test instance_id: $in_id on floating_ip: ${floating_ips["$b_device-test"]} used_ssh_key: $sshkey used_command: 'sudo cat /proc/partitions | grep vdb "
+        echo -e "\n\nInstance tests stage - ping instance_name: $b_device-test " \
+                "instance_id: $in_id on floating_ip: $f_ip " \
+                "status:		SUCCESS\n\n"
+        echo -e "Instance tests stage - getting access through SSH to guest " \
+                "OS: instance_name: $b_device-test instance_id: $in_id on " \
+                "floating_ip: $f_ip " \
+                "used_ssh_key: $sshkey used_command: 'sudo cat /proc/partitions | grep vdb "
         for ((i=1; i<=5; i++)); do
-            disk_probe=$(ssh -i $sshkey -l ubuntu ${floating_ips["$b_device-test"]} "sudo cat /proc/partitions | grep 'vdb'")
+            disk_probe=$(ssh -i $sshkey -l ubuntu $f_ip "sudo cat /proc/partitions | grep 'vdb'")
             echo -e "Quering  volume_id: $b_device_id  device: $v_device  instnace_id: $in_id  status attempt #$i"
             echo -e "Volume_status: $disk_probe"
             [[ $disk_probe = *$v_device* ]] && ssh_ok=true && break || sleep 10 && continue
         done
     else
-        echo -e "\n\nERROR: Instance tests stage - Instance: $in_id on floating_ip: ${floating_ips["$b_device-test"]} is not responding to ping \n\n"
+        echo -e "\n\nERROR: Instance tests stage - Instance: $in_id on " \
+                "floating_ip: $f_ip is not responding to ping \n\n"
         exit 1
     fi
 
