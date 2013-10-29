@@ -308,11 +308,6 @@ echo -e "Detach test: attached_volume_id: $volume_id  from instance: $used_insta
 
 
 s_volume_deleted=false
-if [ -f "/etc/redhat-release"  ]; then
-    s_volume_deleted=true
-    echo -e "\n\n\n WARNING: Tests are conducted on RHEL based release, cinder snapshots related tests will be skipped due to bug: https://bugs.launchpad.net/cinder/+bug/1191812  \n\n\n"
-    echo -e "WARNING: \"s_volume_deleted\" variable will be forcibly set to true in order for tests to continue"
-else
 
 if [[ $detached = true ]]; then
     echo -e "\n\nVolume $a_volume detached from instance_id: $instance_id  status:	SUCCESS\n\n"
@@ -664,7 +659,6 @@ else
    echo -e "\n\nTest set for instances booted from volume created from glance image  will be skipped due to Cinder Bug #1183283, check comments provided in this script code for details \n\n"
 fi
 # Cinder Bug #1183283  workaround end
-fi
 
 # Need to test full network connectivity, Cinder, and instance interconnectivity.
 
