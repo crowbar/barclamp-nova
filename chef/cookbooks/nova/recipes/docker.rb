@@ -19,6 +19,7 @@
 
 # Author: Judd Maltin
 
+node.set[:nova][:compute_driver] = "docker.DockerDriver"
 
 if node.platform == "ubuntu"
 
@@ -31,7 +32,6 @@ if node.platform == "ubuntu"
     action :start
   end
 
-  node.set[:nova][:compute_driver] = "docker.DockerDriver"
 
 
   # setup registry
