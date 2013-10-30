@@ -55,6 +55,7 @@ define :nova_package, :enable => true do
         unless %w(redhat centos).include?(node.platform)
           action [:enable]
         else
+          #needed until https://bugs.launchpad.net/oslo/+bug/1177184 is solved
           action [:enable, :start]
         end
       end
