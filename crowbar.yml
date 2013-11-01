@@ -83,7 +83,7 @@ locale_additions:
         edit_deployment: 
           deployment: Deployment
 
-build_cmd: build.sh
+#build_cmd: build.sh
 
 debs:
   ubuntu-12.04:
