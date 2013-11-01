@@ -32,6 +32,14 @@ if node.platform == "ubuntu"
     action :start
   end
 
+  # not packaged yet.  overight by package maintainers, I guess
+  cookbook_file "/etc/nova/rootwrap.d/docker.filters" do
+    source "docker.filters"
+    action :create_if_missing
+    mode 0644
+    owner "root"
+  end
+
 
 
   # setup registry
