@@ -40,6 +40,10 @@ if node.platform == "ubuntu"
     owner "root"
   end
 
+  group "docker" do
+    append true
+    members "nova"
+  end
 
 
   # setup registry
