@@ -45,6 +45,32 @@ if node.platform == "ubuntu"
     members "nova"
   end
 
+  # address bug in docker by mangling /usr/lib/python2.7/dist-packages/nova/compute/manager.py
+  bash "mange nova context=context" do
+    code <<-EOH
+      #sed -e '1651 s/,$/)/' -e '1652d' manager.py 
+      sed -i -e '/self.driver.destroy(instance, network_info, block_device_info,/{n;d}' /usr/lib/python2.7/dist-packages/nova/compute/manager.py'
+      sed -i -e 's/self.driver.destroy(instance, network_info, block_device_info,/self.driver.destroy(instance, network_info, block_device_info)/' /usr/lib/python2.7/dist-packages/nova/compute/manager.py'
+    EOH
+    only_if 'grep -q "self.driver.destroy(instance, network_info, block_device_info," /usr/lib/python2.7/dist-packages/nova/compute/manager.py'
+  end
+
+  cookbook_file "/tmp/nova_docker_driver.py.patch" do
+    source "driver.py.patch"
+    action :create_if_missing
+  end
+
+  bash "patch nova docker driver.py" do
+    code <<-EOH
+      patch -Nl /usr/share/pyshared/nova/virt/docker/driver.py /tmp/nova_docker_driver.py.patch
+    EOH
+    only_if "patch --dry-run -Nl /usr/share/pyshared/nova/virt/docker/driver.py /tmp/nova_docker_driver.py.patch"
+  end
+
+  service "nova-compute" do
+    action :restart
+  end
+
 
   # setup registry
   # http://get.docker.io/images/openstack/docker-registry.tar.gz
