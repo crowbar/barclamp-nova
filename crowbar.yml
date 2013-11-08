@@ -83,11 +83,14 @@ locale_additions:
         edit_deployment: 
           deployment: Deployment
 
+#build_cmd: build.sh
+
 debs:
   ubuntu-12.04:
     repos:
       - deb http://ubuntu-cloud.archive.canonical.com/ubuntu precise-updates/havana main
       - deb http://ubuntu-cloud.archive.canonical.com/ubuntu precise-proposed/havana main
+      - deb http://get.docker.io/ubuntu docker main
     pkgs:
       - tgt
       - novnc
@@ -112,6 +115,8 @@ debs:
       - nova-consoleauth
       # paramiko needed for using EQL with nova-volume
       - python-paramiko
+      # docker!
+      - lxc-docker
   pkgs:
     - euca2ools
     - unzip
@@ -165,3 +170,5 @@ rpms:
 git_repo:
   - nova https://github.com/openstack/nova.git stable/havana
   # - novnc https://github.com/kanaka/noVNC.git master
+
+
