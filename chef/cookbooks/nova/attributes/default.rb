@@ -89,6 +89,7 @@ default[:nova][:network][:vlan_start] = 100
 
 default[:nova][:service_user] = "nova"
 default[:nova][:service_password] = "nova"
+default[:nova][:service_ssh_key] = ""
 
 default[:nova][:ssl][:enabled] = false
 default[:nova][:ssl][:certfile] = "/etc/nova/ssl/certs/signing_cert.pem"
