@@ -1437,7 +1437,7 @@ lock_path=/var/lock/nova
 
 # Print debugging output (set logging level to DEBUG instead
 # of default WARNING level). (boolean value)
-#debug=false
+debug=<%= node[:nova][:debug] %>
 
 # Print more verbose output (set logging level to INFO instead
 # of default WARNING level). (boolean value)

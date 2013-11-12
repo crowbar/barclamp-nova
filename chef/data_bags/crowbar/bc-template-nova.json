@@ -3,6 +3,7 @@
   "description": "installs and configures the Openstack Nova component. It relies upon the network and glance barclamps for normal operation.",
   "attributes": {
     "nova": {
+      "debug": false,
       "database_instance": "none",
       "rabbitmq_instance": "none",
       "keystone_instance": "none",
@@ -138,6 +139,7 @@
   "deployment": {
     "nova": {
       "crowbar-revision": 0,
+      "schema-revision": 1,
       "element_states": {
         "nova-multi-controller": [ "readying", "ready", "applying" ],
         "nova-multi-compute-hyperv": [ "readying", "ready", "applying" ],
