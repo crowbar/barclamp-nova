@@ -249,6 +249,15 @@ unless nova_home_dir.nil? or nova_home_dir.empty?
     action :nothing
   end
 
+  directory "#{nova_home_dir}/.ssh"
+    owner "#{node[:nova][:user]"
+    group "#{node[:nova][:group]"
+    mode 0644
+    action :create
+    recursive true
+  end
+
+
   execute "Create Nova SSH key" do
     command "su #{node[:nova][:user]} -c \"ssh-keygen -q -t rsa  -P '' -f '#{nova_home_dir}/.ssh/id_rsa'\""
     creates "#{nova_home_dir}/.ssh/id_rsa.pub"
