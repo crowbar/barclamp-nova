@@ -249,7 +249,7 @@ unless nova_home_dir.nil? or nova_home_dir.empty?
     action :nothing
   end
 
-  directory "#{nova_home_dir}/.ssh"
+  directory "#{nova_home_dir}/.ssh" do
     owner "#{node[:nova][:user]}"
     group "#{node[:nova][:group]}"
     mode 0644
