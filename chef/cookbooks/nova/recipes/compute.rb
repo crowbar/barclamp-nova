@@ -252,7 +252,7 @@ unless nova_home_dir.nil? or nova_home_dir.empty?
   directory "#{nova_home_dir}/.ssh" do
     owner "#{node[:nova][:user]}"
     group "#{node[:nova][:group]}"
-    mode 0644
+    mode 0700
     action :create
     recursive true
   end
