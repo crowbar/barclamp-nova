@@ -114,6 +114,7 @@ debs:
       - python-paramiko
   pkgs:
     - euca2ools
+    - sysfsutils
     - unzip
     - iscsitarget
     - nova-volume
@@ -164,4 +165,4 @@ rpms:
 
 git_repo:
   - nova https://github.com/openstack/nova.git stable/havana
-  # - novnc https://github.com/kanaka/noVNC.git master
+  - novnc https://github.com/kanaka/noVNC.git master
