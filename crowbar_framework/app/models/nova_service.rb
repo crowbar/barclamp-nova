@@ -55,8 +55,10 @@ class NovaService < ServiceObject
     nodes = NodeObject.all
     nodes.delete_if { |n| n.nil? }
     nodes.delete_if { |n| n.admin? } if nodes.size > 1
-    head = nodes.shift
-    nodes = [ head ] if nodes.empty?
+
+    controller  = nodes.delete nodes.detect { |n| n if n.intended_role == "controller"}
+    controller ||= nodes.shift
+    nodes = [ controller ] if nodes.empty?
 
     hyperv = nodes.select { |n| n if n[:target_platform] =~ /^(windows-|hyperv-)/ }
     non_hyperv = nodes - hyperv
@@ -64,7 +66,7 @@ class NovaService < ServiceObject
     qemu = non_hyperv - kvm
 
     base["deployment"]["nova"]["elements"] = {
-      "nova-multi-controller" => [ head.name ],
+      "nova-multi-controller" => [ controller.name ],
       "nova-multi-compute-hyperv" => hyperv.map { |x| x.name },
       "nova-multi-compute-kvm" => kvm.map { |x| x.name },
       "nova-multi-compute-qemu" => qemu.map { |x| x.name }  
