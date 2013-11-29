@@ -55,6 +55,7 @@ class NovaService < ServiceObject
     nodes = NodeObject.all
     nodes.delete_if { |n| n.nil? }
     nodes.delete_if { |n| n.admin? } if nodes.size > 1
+    nodes.delete_if { |n| n.intended_role == "storage" }
 
     controller  = nodes.delete nodes.detect { |n| n if n.intended_role == "controller"}
     controller ||= nodes.shift
