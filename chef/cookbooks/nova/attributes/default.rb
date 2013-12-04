@@ -20,6 +20,7 @@
 
 ::Chef::Node.send(:include, Opscode::OpenSSL::Password)
 
+default[:nova][:debug] = false
 
 #
 # Database Settings
