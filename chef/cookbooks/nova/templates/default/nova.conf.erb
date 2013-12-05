@@ -105,7 +105,7 @@ glance_api_servers=<%= @glance_server_ip %>:<%= @glance_server_port %>
 sql_connection=<%= @database_connection %>
 <% end -%>
 connection_type=libvirt
-libvirt_type=qemu
+libvirt_type=<%= node[:nova][:libvirt_type] %>
 libvirt_cpu_mode=none
 libvirt_use_virtio_for_bridges=True
 compute_driver=libvirt.LibvirtDriver
