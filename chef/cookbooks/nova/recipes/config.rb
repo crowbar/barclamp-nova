@@ -226,11 +226,6 @@ if node[:nova][:use_gitrepo]
     user_gid "libvirtd"
   end
 
-  # This account needs to be ssh'able, so must have a login shell
-  user "nova" do
-    shell "/bin/bash"
-    action :modify  
-  end
 
   execute "cp_policy.json" do
     command "cp #{nova_path}/etc/nova/policy.json /etc/nova/"
