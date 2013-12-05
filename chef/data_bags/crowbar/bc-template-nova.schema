@@ -114,6 +114,7 @@
           "required": true,
           "mapping": {
             "crowbar-revision": { "type": "int", "required": true },
+            "schema-revision": { "type": "int" },
             "crowbar-committing": { "type": "bool" },
             "crowbar-status": { "type": "str" },
             "crowbar-failed": { "type": "str" },
