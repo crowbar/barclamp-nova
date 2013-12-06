@@ -1953,8 +1953,11 @@ compute_driver=libvirt.LibvirtDriver
 #preallocate_images=none
 
 # Whether to use cow images (boolean value)
+<% if @libvirt_type.eql?('xen') -%>
+use_cow_images=false
+<% else -%>
 #use_cow_images=true
-
+<% end -%>
 
 #
 # Options defined in nova.virt.firewall
