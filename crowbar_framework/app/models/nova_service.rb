@@ -61,6 +61,11 @@ class NovaService < ServiceObject
     controller ||= nodes.shift
     nodes = [ controller ] if nodes.empty?
 
+    # restrict nodes to 'compute' roles only if compute role was defined
+    if nodes.detect { |n| n if n.intended_role == "compute" }
+      nodes       = nodes.select { |n| n if n.intended_role == "compute" }
+    end
+
     hyperv = nodes.select { |n| n if n[:target_platform] =~ /^(windows-|hyperv-)/ }
     non_hyperv = nodes - hyperv
     kvm = non_hyperv.select { |n| n if n[:cpu]['0'][:flags].include?("vmx") or n[:cpu]['0'][:flags].include?("svm") }
