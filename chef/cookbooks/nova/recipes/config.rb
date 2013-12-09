@@ -221,15 +221,17 @@ end
 if node[:nova][:use_gitrepo]
   package("libvirt-bin")
 
-  create_user_and_dirs "nova" do
-    opt_dirs [node[:nova][:instances_path]]
-    user_gid "libvirtd"
+  # This account needs to be ssh'able, so must have a login shell
+  user node[:nova][:user] do
+    shell "/bin/bash"
+    home node[:nova][:home_dir]
+    gid "libvirtd"
+    action :create
   end
 
-  # This account needs to be ssh'able, so must have a login shell
-  user "nova" do
-    shell "/bin/bash"
-    action :modify  
+  directory node[:nova][:instances_path] do
+    owner node[:nova][:user]
+    group "libvirtd"
   end
 
   execute "cp_policy.json" do

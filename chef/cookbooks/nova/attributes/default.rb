@@ -62,6 +62,7 @@ else
     default[:nova][:user] = "openstack-nova"
     default[:nova][:group] = "openstack-nova"
 end
+default[:nova][:home_dir] = '/var/lib/nova'
 default[:nova][:instances_path] = '/var/lib/nova/instances'
 
 #
