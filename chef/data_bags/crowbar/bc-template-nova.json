@@ -3,7 +3,6 @@
   "description": "installs and configures the Openstack Nova component. It relies upon the network and glance barclamps for normal operation.",
   "attributes": {
     "nova": {
-      "debug": false,
       "database_instance": "none",
       "rabbitmq_instance": "none",
       "keystone_instance": "none",
@@ -15,7 +14,8 @@
       "trusted_flavors": false,
       "libvirt_type": "kvm",
       "use_novnc": true,
-      "verbose": false,
+      "debug": false,
+      "verbose": true,
       "use_shared_instance_storage": false,
       "use_migration": false,
       "use_syslog": false,
