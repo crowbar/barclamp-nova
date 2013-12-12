@@ -225,14 +225,6 @@ if node[:nova][:use_gitrepo]
     opt_dirs [node[:nova][:instances_path]]
   end
 
-  # This account needs to be ssh'able, so must have a login shell
-  user node[:nova][:user] do
-    shell "/bin/bash"
-    supports :manage_home => true
-    home node[:nova][:home_dir]
-    gid "libvirtd"
-  end
-
   execute "cp_policy.json" do
     command "cp #{nova_path}/etc/nova/policy.json /etc/nova/"
     creates "/etc/nova/policy.json"

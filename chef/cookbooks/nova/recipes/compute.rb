@@ -245,6 +245,14 @@ end
 
 unless nova_home_dir.nil? or nova_home_dir.empty?
 
+  # This account needs to be ssh'able, so must have a login shell
+  user node[:nova][:user] do
+    shell "/bin/bash"
+    supports :manage_home => true
+    home node[:nova][:home_dir]
+    gid "libvirtd"
+  end
+
   ruby_block "nova_read_ssh_public_key" do
     block do
       node.set[:nova][:service_ssh_key] = File.read("#{nova_home_dir}/.ssh/id_rsa.pub")
