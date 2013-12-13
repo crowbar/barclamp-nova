@@ -75,7 +75,7 @@ execute "nova-manage db sync" do
   group node[:nova][:group]
   command "nova-manage db sync"
   action :run
-end
+end unless %w(suse).include? node.platform
 
 # save data so it can be found by search
 node.save
