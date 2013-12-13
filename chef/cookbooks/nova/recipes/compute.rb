@@ -95,7 +95,12 @@ if %w(redhat centos suse).include?(node.platform)
 
       # load modules only when appropriate kernel is present
       execute "loading kvm modules" do
-        command "grep -q vmx /proc/cpuinfo && /sbin/modprobe kvm-intel; grep -q svm /proc/cpuinfo && /sbin/modprobe kvm-amd; /sbin/modprobe vhost-net"
+        command <<-EOF
+            grep -qw vmx /proc/cpuinfo && /sbin/modprobe kvm-intel
+            grep -qw svm /proc/cpuinfo && /sbin/modprobe kvm-amd
+            /sbin/modprobe vhost-net
+            /sbin/modprobe nbd
+          EOF
         only_if { %x[uname -r].include?('default') }
       end
 
