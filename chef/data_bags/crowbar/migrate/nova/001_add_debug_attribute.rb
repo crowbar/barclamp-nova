@@ -4,6 +4,6 @@ def upgrade ta, td, a, d
 end
 
 def downgrade ta, td, a, d
-  a.delete['debug']
+  a.delete 'debug'
   return a, d
 end
