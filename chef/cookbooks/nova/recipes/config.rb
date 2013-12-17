@@ -218,7 +218,6 @@ else
   node.set[:nova][:network][:vlan_start] = fixed_net["vlan"]
 end
 
-if node[:nova][:use_gitrepo]
   package("libvirt-bin")
 
   create_user_and_dirs "nova" do
@@ -271,7 +270,6 @@ if node[:nova][:use_gitrepo]
   })
   not_if {File.exists?("/etc/nova/rootwrap.d")}
   end
-end
 
 keystones = search_env_filtered(:node, "recipes:keystone\\:\\:server")
 if keystones.length > 0
