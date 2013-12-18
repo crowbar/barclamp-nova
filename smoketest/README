@@ -14,8 +14,6 @@ Cinder-volume tests:
 9. Snapshot vm to volume
 10. Boot from snapshoted instance-volume(with tests if it accesible from vm)
 11. Create volume from image
-
-Tests implementaion in progress:
 12. Boot from volume created from image(with tests if it accesible from vm)
 13. Snapshot delete
 14. Full volumes cleanup 
