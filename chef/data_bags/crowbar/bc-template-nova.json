@@ -98,7 +98,7 @@
   "deployment": {
     "nova": {
       "crowbar-revision": 0,
-      "schema-revision": 1,
+      "schema-revision": 2,
       "element_states": {
         "nova-multi-controller": [ "readying", "ready", "applying" ],
         "nova-multi-compute-hyperv": [ "readying", "ready", "applying" ],
