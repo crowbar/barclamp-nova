@@ -1,165 +1,72 @@
+= attributes_for @proposal do
+  .panel-sub
+    = header @dep_raw, true
 
+  .panel-body
+    = instance_field :database
+    = instance_field :rabbitmq
+    = instance_field :keystone
+    = instance_field :glance
+    = instance_field :cinder
+    = instance_field :neutron
 
-%input#proposal_attributes{:type => "hidden", :name => "proposal_attributes", :value => @proposal.raw_data['attributes'][@proposal.barclamp].to_json}
-%p
-  %label{:for => "proposal_attributes"}= t('.attributes')
-  = link_to t('raw'), proposal_barclamp_path(:id => @proposal.name, :controller => @proposal.barclamp, :dep_raw => @dep_raw, :attr_raw => true), :style => "float: right;"
-  %div.container
-    = render_instance_selector("database", :database_instance, t('.database_instance'), "database_instance", @proposal)
-    = render_instance_selector("rabbitmq", :rabbitmq_instance, t('.rabbitmq_instance'), "rabbitmq_instance", @proposal)
-    = render_instance_selector("keystone", :keystone_instance, t('.keystone_instance'), "keystone_instance", @proposal)
-    = render_instance_selector("glance", :glance_instance, t('.glance_instance'), "glance_instance", @proposal)
-    = render_instance_selector("cinder", :cinder_instance, t('.cinder_instance'), "cinder_instance", @proposal)
-    = render_instance_selector("neutron", :neutron_instance, t('.neutron_instance'), "neutron_instance", @proposal)
     - if defined? InteltxtService
-      = render_instance_selector("inteltxt", :itxt_instance, t('.itxt_instance'), "itxt_instance", @proposal)
-      %p
-        %label{ :for => :trusted_flavors }= t('.trusted_flavors')
-        = select_tag :trusted_flavors, options_for_select([['true','true'], ['false', 'false']], @proposal.raw_data['attributes'][@proposal.barclamp]["trusted_flavors"].to_s), :onchange => "update_value('trusted_flavors', 'trusted_flavors', 'boolean')"
+      = instance_field :inteltxt
+      = boolean_field :trusted_flavors
 
-    %p
-      %label{ :for => :use_novnc }= t('.use_novnc')
-      = select_tag :use_novnc, options_for_select([['true','true'], ['false', 'false']], @proposal.raw_data['attributes'][@proposal.barclamp]["use_novnc"].to_s), :onchange => "update_value('use_novnc', 'use_novnc', 'boolean')"
+    = boolean_field :use_novnc
 
-    %label.section-header{ :for => :scheduler_div }= t('.scheduler_header')
-    %div.section{ :id => :scheduler_div }
-      %p
-        %label{ :for => :ram_allocation_ratio }= t('.ram_allocation_ratio')
-        %input#ram_allocation_ratio{:type => "text", :name => "ram_allocation_ratio", :'data-default' => @proposal.raw_data['attributes'][@proposal.barclamp]["scheduler"]["ram_allocation_ratio"], :onchange => "update_value('scheduler/ram_allocation_ratio','ram_allocation_ratio', 'float')"}
-      %p
-        %label{ :for => :cpu_allocation_ratio }= t('.cpu_allocation_ratio')
-        %input#cpu_allocation_ratio{:type => "text", :name => "cpu_allocation_ratio", :'data-default' => (@proposal.raw_data['attributes'][@proposal.barclamp]["scheduler"].nil? ? "16.0" : @proposal.raw_data['attributes'][@proposal.barclamp]["scheduler"]["cpu_allocation_ratio"]), :onchange => "update_value('scheduler/cpu_allocation_ratio','cpu_allocation_ratio', 'float')"}
+    %fieldset
+      %legend
+        = t(".scheduler_header")
 
-    %label.section-header{ :for => :live_migration_div }= t('.live_migration')
-    %div.section{ :id => :live_migration_div }
-      %p
-        %label{ :for => :shared_instance_storage }= t('.shared_instance_storage')
-        = select_tag :shared_instance_storage, options_for_select([['true','true'], ['false', 'false']], @proposal.raw_data['attributes'][@proposal.barclamp]["use_shared_instance_storage"].to_s), :onchange => "update_value('use_shared_instance_storage', 'shared_instance_storage', 'boolean')"
-      %p
-        %label{ :for => :enable_libvirt_migration }= t('.enable_libvirt_migration')
-        = select_tag :enable_libvirt_migration, options_for_select([['true','true'], ['false', 'false']], @proposal.raw_data['attributes'][@proposal.barclamp]["use_migration"].to_s), :onchange => "update_value('use_migration', 'enable_libvirt_migration', 'boolean')"
+      = float_field %w(scheduler ram_allocation_ratio)
+      = float_field %w(scheduler cpu_allocation_ratio)
 
-    %label.section-header{ :for => :kvm_div }= t('.kvm')
-    %div.section{ :id => :kvm_div }
-      %p
-        %label{ :for => :kvm_ksm }= t('.kvm_ksm')
-        = select_tag :kvm_ksm, options_for_select([['true','true'], ['false', 'false']], @proposal.raw_data['attributes'][@proposal.barclamp]["kvm"]["ksm_enabled"].to_s), :onchange => "update_value('kvm/ksm_enabled', 'kvm_ksm', 'boolean')"
+    %fieldset
+      %legend
+        = t(".live_migration_header")
 
-    %label.section-header{ :for => :protocol_div }= t('.ssl_header')
-    %div.section{ :id => :protocol_div }
-      %p
-        %label{ :for => :protocol }= t('.protocol')
-        = select_tag :protocol, options_for_select([['HTTP','false'], ['HTTPS', 'true']], @proposal.raw_data['attributes'][@proposal.barclamp]["ssl"]["enabled"].to_s), :onchange => "update_value('ssl/enabled', 'protocol', 'boolean')"
+      = boolean_field :use_shared_instance_storage
+      = boolean_field :use_migration
 
-      %div{ :id => :ssl_div }
-        %p
-          %label{ :for => :ssl_generate_certs }= t('.ssl_generate_certs')
-          = select_tag :ssl_generate_certs, options_for_select([['true','true'], ['false', 'false']], @proposal.raw_data['attributes'][@proposal.barclamp]["ssl"]["generate_certs"].to_s), :onchange => "update_value('ssl/generate_certs', 'ssl_generate_certs', 'boolean')"
-        %p
-          %label{ :for => :ssl_certfile }= t('.ssl_certfile')
-          = text_field_tag :ssl_certfile, @proposal.raw_data['attributes'][@proposal.barclamp]["ssl"]["certfile"], :class=> "input-xxlarge", :size => 80, :onchange => "update_value('ssl/certfile', 'ssl_certfile', 'string')"
-        %p
-          %label{ :for => :ssl_keyfile }= t('.ssl_keyfile')
-          = text_field_tag :ssl_keyfile, @proposal.raw_data['attributes'][@proposal.barclamp]["ssl"]["keyfile"], :class=> "input-xxlarge", :size => 80, :onchange => "update_value('ssl/keyfile', 'ssl_keyfile', 'string')"
-        %p
-          %label{ :for => :ssl_insecure }= t('.ssl_insecure')
-          = select_tag :ssl_insecure, options_for_select([['true','true'], ['false', 'false']], @proposal.raw_data['attributes'][@proposal.barclamp]["ssl"]["insecure"].to_s), :onchange => "update_value('ssl/insecure', 'ssl_insecure', 'boolean')"
-        %p
-          %label{ :for => :ssl_cert_required }= t('.ssl_cert_required')
-          = select_tag :ssl_cert_required, options_for_select([['true','true'], ['false', 'false']], @proposal.raw_data['attributes'][@proposal.barclamp]["ssl"]["cert_required"].to_s), :onchange => "update_value('ssl/cert_required', 'ssl_cert_required', 'boolean')"
-        %p
-          %label{ :for => :ssl_ca_certs }= t('.ssl_ca_certs')
-          = text_field_tag :ssl_ca_certs, @proposal.raw_data['attributes'][@proposal.barclamp]["ssl"]["ca_certs"], :class=> "input-xxlarge", :size => 80, :onchange => "update_value('ssl/ca_certs', 'ssl_ca_certs', 'string')"
+    %fieldset
+      %legend
+        = t(".kvm_header")
 
-    %label.section-header{ :for => :novnc_protocol_div }= t('.novnc_ssl_header')
-    %div.section{ :id => :novnc_protocol_div }
-      %p
-        %label{ :for => :novnc_protocol }= t('.protocol')
-        = select_tag :novnc_protocol, options_for_select([['HTTP','false'], ['HTTPS', 'true']], @proposal.raw_data['attributes'][@proposal.barclamp]["novnc"]["ssl"]["enabled"].to_s), :onchange => "update_value('novnc/ssl/enabled', 'novnc_protocol', 'boolean')"
-      %div{ :id => :novnc_ssl_div }
-        %p
-          %em= t('.novnc_ssl_hint')
-        %p
-          %label{ :for => :novnc_ssl_certfile }= t('.ssl_certfile')
-          = text_field_tag :novnc_ssl_certfile, @proposal.raw_data['attributes'][@proposal.barclamp]["novnc"]["ssl"]["certfile"], :class=> "input-xxlarge", :size => "80", :onchange => "update_value('novnc/ssl/certfile', 'novnc_ssl_certfile', 'string')"
-        %p
-          %label{ :for => :novnc_ssl_keyfile }= t('.ssl_keyfile')
-          = text_field_tag :novnc_ssl_keyfile, @proposal.raw_data['attributes'][@proposal.barclamp]["novnc"]["ssl"]["keyfile"], :class=> "input-xxlarge", :size => "80", :onchange => "update_value('novnc/ssl/keyfile', 'novnc_ssl_keyfile', 'string')"
+      = boolean_field %w(kvm ksm_enabled)
 
-    %label.section-header{ :for => :logging_div }= t('.logging_header')
-    %div.section{ :id => :logging_div }
-      %p
-        %label{ :for => :verbose }= t('.verbose')
-        = select_tag :verbose, options_for_select([['true','true'], ['false', 'false']], @proposal.raw_data['attributes'][@proposal.barclamp]["verbose"].to_s), :onchange => "update_value('verbose', 'verbose', 'boolean')"
-    = render 'barclamp/git/pfsdeps.html.haml'
+    %fieldset
+      %legend
+        = t(".ssl_header")
 
-:javascript
+      = boolean_field %w(ssl enabled), :collection => :ssl_protocols_for_nova, "data-sslprefix" => "ssl", "data-sslcert" => "/etc/nova/ssl/certs/signing_cert.pem", "data-sslkey" => "/etc/nova/ssl/private/signing_key.pem"
 
-  function toggle_protocol() {
-    if ($('#protocol option:selected').attr('value') == 'true') {
-      $('#ssl_div').show();
-    } else {
-      $('#ssl_div').hide();
-    }
-  };
+      #ssl_container
+        = boolean_field %w(ssl generate_certs)
+        = string_field %w(ssl certfile)
+        = string_field %w(ssl keyfile)
+        = boolean_field %w(ssl insecure)
+        = boolean_field %w(ssl cert_required), "data-enabler" => "true", "data-enabler-target" => "#ssl_ca_certs"
+        = string_field %w(ssl ca_certs)
 
-  function toggle_ssl_cert_required() {
-    if ($('#ssl_cert_required option:selected').attr('value') == 'true') {
-      $('#ssl_ca_certs').removeAttr('disabled');
-    } else {
-      $('#ssl_ca_certs').attr('disabled', 'disabled');
-    }
-  };
+    %fieldset
+      %legend
+        = t(".novnc_ssl_header")
 
-  function toggle_ssl_generate_certs_full(init) {
-    if ($('#ssl_generate_certs option:selected').attr('value') == 'true') {
-      $('#ssl_certfile').attr('disabled', 'disabled');
-      $('#ssl_keyfile').attr('disabled', 'disabled');
-      $('#ssl_insecure').attr('disabled', 'disabled');
+      = boolean_field %w(novnc ssl enabled), :collection => :ssl_protocols_for_nova, "data-sslprefix" => "novnc_ssl", "data-sslcert" => "", "data-sslkey" => ""
 
-      var value = '/etc/nova/ssl/certs/signing_cert.pem'
-      $('#ssl_certfile').attr('value', value);
-      update_value_direct('ssl/certfile', value, 'string');
-      value = '/etc/nova/ssl/private/signing_key.pem'
-      $('#ssl_keyfile').attr('value', value);
-      update_value_direct('ssl/keyfile', value, 'string');
-      $('#ssl_insecure').attr('value', 'true');
-      update_value_direct('ssl/insecure', 'true', 'boolean');
-    } else {
-      $('#ssl_certfile').removeAttr('disabled');
-      $('#ssl_keyfile').removeAttr('disabled');
-      $('#ssl_insecure').removeAttr('disabled');
+      #novnc_ssl_container
+        .alert.alert-info
+          = t(".novnc_ssl_hint")
+          
+        = string_field %w(novnc ssl certfile)
+        = string_field %w(novnc ssl keyfile)
 
-      // No need to change the certfile/keyfile values
-      if (!init) {
-        // Reset insecure to false, to not leave it as true by accident.
-        // We do not change insecure on page loading, though!
-        $('#ssl_insecure').attr('value', 'false');
-        update_value_direct('ssl/insecure', 'false', 'boolean');
-      }
-    }
-  };
+    %fieldset
+      %legend
+        = t(".logging_header")
 
-  function toggle_ssl_generate_certs() {
-    toggle_ssl_generate_certs_full(false);
-  };
+      = boolean_field :verbose
 
-  function toggle_novnc_protocol() {
-    if ($('#novnc_protocol option:selected').attr('value') == 'true') {
-      $('#novnc_ssl_div').show();
-    } else {
-      $('#novnc_ssl_div').hide();
-    }
-  };
-
-  $(document).ready(function () {
-    toggle_protocol();
-    toggle_ssl_cert_required();
-    toggle_ssl_generate_certs_full(true);
-    toggle_novnc_protocol();
-  });
-
-  $('#protocol').change(toggle_protocol);
-  $('#ssl_cert_required').change(toggle_ssl_cert_required);
-  $('#novnc_protocol').change(toggle_novnc_protocol);
-  $('#ssl_generate_certs').change(toggle_ssl_generate_certs);
+    = render "barclamp/git/pfsdeps"
