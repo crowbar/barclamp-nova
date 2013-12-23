@@ -104,10 +104,10 @@ debs:
 rpms:
   centos-6.4:
     repos:
-      - rpm http://repos.fedorapeople.org/repos/openstack/openstack-havana/epel-6
+      - bare openstack havana http://repos.fedorapeople.org/repos/openstack/openstack-havana/epel-6/
   redhat-6.4:
     repos:
-      - rpm http://repos.fedorapeople.org/repos/openstack/openstack-havana/epel-6
+      - bare openstack havana http://repos.fedorapeople.org/repos/openstack/openstack-havana/epel-6/
   pkgs:
     - openstack-nova
     - openstack-nova-compute
