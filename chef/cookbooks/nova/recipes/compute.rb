@@ -243,13 +243,12 @@ if !nova_controller.nil? and nova_controller.length > 0 and nova_controller[0].n
 
 end
 
-# Create and distribute ssh keys for nova user on all compute nodes
 unless node[:nova][:user].empty? or node["etc"]["passwd"][node[:nova][:user]].nil?
   nova_home_dir = node["etc"]["passwd"][node[:nova][:user]]["dir"]
 end
 
-unless nova_home_dir.nil? or nova_home_dir.empty?
 
+if node[:nova][:use_gitrepo]
   # This account needs to be ssh'able, so must have a login shell
   user node[:nova][:user] do
     shell "/bin/bash"
@@ -257,36 +256,38 @@ unless nova_home_dir.nil? or nova_home_dir.empty?
     home node[:nova][:home_dir]
     gid "libvirtd"
   end
+end
 
-  ruby_block "nova_read_ssh_public_key" do
-    block do
-      node.set[:nova][:service_ssh_key] = File.read("#{nova_home_dir}/.ssh/id_rsa.pub")
-      node.save
-    end
-    action :nothing
+# Create and distribute ssh keys for nova user on all compute nodes
+ruby_block "nova_read_ssh_public_key" do
+  block do
+    node.set[:nova][:service_ssh_key] = File.read("#{node[:nova][:home_dir]}/.ssh/id_rsa.pub")
+    node.save
   end
+  action :nothing
+end
 
-  execute "Create Nova SSH key" do
-    command "su #{node[:nova][:user]} -c \"ssh-keygen -q -t rsa  -P '' -f '#{nova_home_dir}/.ssh/id_rsa'\""
-    creates "#{nova_home_dir}/.ssh/id_rsa.pub"
-    notifies :create, "ruby_block[nova_read_ssh_public_key]"
-  end
+execute "Create Nova SSH key" do
+  command "su #{node[:nova][:user]} -c \"ssh-keygen -q -t rsa  -P '' -f '#{node[:nova][:home_dir]}/.ssh/id_rsa'\""
+  creates "#{node[:nova][:home_dir]}/.ssh/id_rsa.pub"
+  only_if { ::File.exist?(node[:nova][:home_dir]) }
+  notifies :create, "ruby_block[nova_read_ssh_public_key]"
+end
 
-  ssh_auth_keys = ""
-  search_env_filtered(:node, "roles:nova-multi-compute-kvm") do |n|
-      ssh_auth_keys += n[:nova][:service_ssh_key]
-  end
-  search_env_filtered(:node, "roles:nova-multi-compute-xen") do |n|
-      ssh_auth_keys += n[:nova][:service_ssh_key]
-  end
-  search_env_filtered(:node, "roles:nova-multi-compute-qemu") do |n|
-      ssh_auth_keys += n[:nova][:service_ssh_key]
-  end
+ssh_auth_keys = ""
+search_env_filtered(:node, "roles:nova-multi-compute-kvm") do |n|
+    ssh_auth_keys += n[:nova][:service_ssh_key]
+end
+search_env_filtered(:node, "roles:nova-multi-compute-xen") do |n|
+    ssh_auth_keys += n[:nova][:service_ssh_key]
+end
+search_env_filtered(:node, "roles:nova-multi-compute-qemu") do |n|
+    ssh_auth_keys += n[:nova][:service_ssh_key]
+end
 
-  file "#{nova_home_dir}/.ssh/authorized_keys" do
-    content ssh_auth_keys
-    owner node[:nova][:user]
-  end
+file "#{node[:nova][:home_dir]}/.ssh/authorized_keys" do
+  content ssh_auth_keys
+  owner node[:nova][:user]
 end
 
 link "/etc/libvirt/qemu/networks/autostart/default.xml" do
