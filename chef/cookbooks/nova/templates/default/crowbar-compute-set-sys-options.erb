@@ -1,0 +1,18 @@
+#!/bin/sh
+
+if test -w /sys/kernel/mm/ksm/run; then
+  echo <%= @ksm_enabled %> > /sys/kernel/mm/ksm/run
+fi
+
+# Note: path to setting is OS dependent
+# redhat /sys/kernel/mm/redhat_transparent_hugepage/enabled
+# Below will work on both Ubuntu and SLES
+if test -w /sys/kernel/mm/transparent_hugepage/enabled; then
+  echo <%= @tranparent_hugepage_enabled %> > /sys/kernel/mm/transparent_hugepage/enabled
+fi
+
+if test -w /sys/kernel/mm/transparent_hugepage/defrag; then
+  echo <%= @tranparent_hugepage_defrag %> > /sys/kernel/mm/transparent_hugepage/defrag
+fi
+
+find /sys/block -type l -name 'sd*' -exec sh -c 'echo deadline > {}/queue/scheduler' \;

@@ -1,180 +1,165 @@
 
+
 %input#proposal_attributes{:type => "hidden", :name => "proposal_attributes", :value => @proposal.raw_data['attributes'][@proposal.barclamp].to_json}
 %p
   %label{:for => "proposal_attributes"}= t('.attributes')
   = link_to t('raw'), proposal_barclamp_path(:id => @proposal.name, :controller => @proposal.barclamp, :dep_raw => @dep_raw, :attr_raw => true), :style => "float: right;"
   %div.container
-    %p
-      %label{ :for => :mysql_instance }= t('.mysql_instance')
-      = instance_selector("mysql", :mysql_instance, "mysql_instance", @proposal)
-    %p
-      %label{ :for => :keystone_instance }= t('.keystone_instance')
-      = instance_selector("keystone", :keystone_instance, "keystone_instance", @proposal)
-    %p
-      %label{ :for => :service_user }= t('.service_user')
-      %input#service_user{:type => "text", :name => "service_user", :'data-default' => @proposal.raw_data['attributes'][@proposal.barclamp]["service_user"], :onchange => "update_value('service_user','service_user', 'string')"}
-    %p
-      %label{ :for => :service_password }= t('.service_password')
-      %input#service_password{:type => "text", :name => "service_password", :'data-default' => @proposal.raw_data['attributes'][@proposal.barclamp]["service_password"], :onchange => "update_value('service_password','service_password', 'string')"}
-    %p
-      %label{ :for => :glance_instance }= t('.glance_instance')
-      = instance_selector("glance", :glance_instance, "glance_instance", @proposal)
-    %p
-      %label{ :for => :verbose }= t('.verbose')
-      = select_tag :verbose, options_for_select([['true','true'], ['false', 'false']], @proposal.raw_data['attributes'][@proposal.barclamp]["verbose"].to_s), :onchange => "update_value('verbose', 'verbose', 'boolean')"
+    = render_instance_selector("database", :database_instance, t('.database_instance'), "database_instance", @proposal)
+    = render_instance_selector("rabbitmq", :rabbitmq_instance, t('.rabbitmq_instance'), "rabbitmq_instance", @proposal)
+    = render_instance_selector("keystone", :keystone_instance, t('.keystone_instance'), "keystone_instance", @proposal)
+    = render_instance_selector("glance", :glance_instance, t('.glance_instance'), "glance_instance", @proposal)
+    = render_instance_selector("cinder", :cinder_instance, t('.cinder_instance'), "cinder_instance", @proposal)
+    = render_instance_selector("neutron", :neutron_instance, t('.neutron_instance'), "neutron_instance", @proposal)
+    - if defined? InteltxtService
+      = render_instance_selector("inteltxt", :itxt_instance, t('.itxt_instance'), "itxt_instance", @proposal)
+      %p
+        %label{ :for => :trusted_flavors }= t('.trusted_flavors')
+        = select_tag :trusted_flavors, options_for_select([['true','true'], ['false', 'false']], @proposal.raw_data['attributes'][@proposal.barclamp]["trusted_flavors"].to_s), :onchange => "update_value('trusted_flavors', 'trusted_flavors', 'boolean')"
+
     %p
       %label{ :for => :use_novnc }= t('.use_novnc')
       = select_tag :use_novnc, options_for_select([['true','true'], ['false', 'false']], @proposal.raw_data['attributes'][@proposal.barclamp]["use_novnc"].to_s), :onchange => "update_value('use_novnc', 'use_novnc', 'boolean')"
-    %p
-      %label{ :for => :libvirt_type }= t('.libvirt_type')
-      = select_tag :libvirt_type, options_for_select([['kvm','kvm'], ['qemu', 'qemu']], @proposal.raw_data['attributes'][@proposal.barclamp]["libvirt_type"].to_s), :onchange => "update_value('libvirt_type', 'libvirt_type', 'string')"
-    %p
-      %label{ :for => :network_header }= t('.network_header')
-    %div.container
+
+    %label.section-header{ :for => :scheduler_div }= t('.scheduler_header')
+    %div.section{ :id => :scheduler_div }
       %p
-        %label{ :for => :tenant_vlans }= t('.tenant_vlans')
-        = select_tag :tenant_vlans, options_for_select([['true','true'], ['false', 'false']], @proposal.raw_data['attributes'][@proposal.barclamp]["network"]["tenant_vlans"].to_s), :onchange => "update_value('network/tenant_vlans', 'tenant_vlans', 'boolean')"
+        %label{ :for => :ram_allocation_ratio }= t('.ram_allocation_ratio')
+        %input#ram_allocation_ratio{:type => "text", :name => "ram_allocation_ratio", :'data-default' => @proposal.raw_data['attributes'][@proposal.barclamp]["scheduler"]["ram_allocation_ratio"], :onchange => "update_value('scheduler/ram_allocation_ratio','ram_allocation_ratio', 'float')"}
       %p
-        %label{ :for => :dhcp_enabled }= t('.dhcp_enabled')
-        = select_tag :dhcp_enabled, options_for_select([['true','true'], ['false', 'false']], @proposal.raw_data['attributes'][@proposal.barclamp]["network"]["dhcp_enabled"].to_s), :onchange => "update_value('network/dhcp_enabled', 'dhcp_enabled', 'boolean')"
+        %label{ :for => :cpu_allocation_ratio }= t('.cpu_allocation_ratio')
+        %input#cpu_allocation_ratio{:type => "text", :name => "cpu_allocation_ratio", :'data-default' => (@proposal.raw_data['attributes'][@proposal.barclamp]["scheduler"].nil? ? "16.0" : @proposal.raw_data['attributes'][@proposal.barclamp]["scheduler"]["cpu_allocation_ratio"]), :onchange => "update_value('scheduler/cpu_allocation_ratio','cpu_allocation_ratio', 'float')"}
+
+    %label.section-header{ :for => :live_migration_div }= t('.live_migration')
+    %div.section{ :id => :live_migration_div }
       %p
-        %label{ :for => :ha_enabled }= t('.ha_enabled')
-        = select_tag :ha_enabled, options_for_select([['true','true'], ['false', 'false']], @proposal.raw_data['attributes'][@proposal.barclamp]["network"]["ha_enabled"].to_s), :onchange => "update_value('network/ha_enabled', 'ha_enabled', 'boolean')"
+        %label{ :for => :shared_instance_storage }= t('.shared_instance_storage')
+        = select_tag :shared_instance_storage, options_for_select([['true','true'], ['false', 'false']], @proposal.raw_data['attributes'][@proposal.barclamp]["use_shared_instance_storage"].to_s), :onchange => "update_value('use_shared_instance_storage', 'shared_instance_storage', 'boolean')"
       %p
-        %label{ :for => :allow_same_net_traffic }= t('.allow_same_net_traffic')
-        = select_tag :allow_same_net_traffic, options_for_select([['true','true'], ['false', 'false']], @proposal.raw_data['attributes'][@proposal.barclamp]["network"]["allow_same_net_traffic"].to_s), :onchange => "update_value('network/allow_same_net_traffic', 'allow_same_net_traffic', 'boolean')"
+        %label{ :for => :enable_libvirt_migration }= t('.enable_libvirt_migration')
+        = select_tag :enable_libvirt_migration, options_for_select([['true','true'], ['false', 'false']], @proposal.raw_data['attributes'][@proposal.barclamp]["use_migration"].to_s), :onchange => "update_value('use_migration', 'enable_libvirt_migration', 'boolean')"
+
+    %label.section-header{ :for => :kvm_div }= t('.kvm')
+    %div.section{ :id => :kvm_div }
       %p
-        %label{ :for => :num_networks }= t('.num_networks')
-        %input#num_networks{:type => "text", :name => "num_networks", :'data-default' => @proposal.raw_data['attributes'][@proposal.barclamp]["network"]["num_networks"], :onchange => "update_value('network/num_networks','num_networks', 'integer')"}
+        %label{ :for => :kvm_ksm }= t('.kvm_ksm')
+        = select_tag :kvm_ksm, options_for_select([['true','true'], ['false', 'false']], @proposal.raw_data['attributes'][@proposal.barclamp]["kvm"]["ksm_enabled"].to_s), :onchange => "update_value('kvm/ksm_enabled', 'kvm_ksm', 'boolean')"
+
+    %label.section-header{ :for => :protocol_div }= t('.ssl_header')
+    %div.section{ :id => :protocol_div }
       %p
-        %label{ :for => :network_size }= t('.network_size')
-        %input#network_size{:type => "text", :name => "network_size", :'data-default' => @proposal.raw_data['attributes'][@proposal.barclamp]["network"]["network_size"], :onchange => "update_value('network/network_size','network_size', 'integer')"}
-    %p
-      %label{ :for => :volume_header }= t('.volume_header')
-    %div.container
+        %label{ :for => :protocol }= t('.protocol')
+        = select_tag :protocol, options_for_select([['HTTP','false'], ['HTTPS', 'true']], @proposal.raw_data['attributes'][@proposal.barclamp]["ssl"]["enabled"].to_s), :onchange => "update_value('ssl/enabled', 'protocol', 'boolean')"
+
+      %div{ :id => :ssl_div }
+        %p
+          %label{ :for => :ssl_generate_certs }= t('.ssl_generate_certs')
+          = select_tag :ssl_generate_certs, options_for_select([['true','true'], ['false', 'false']], @proposal.raw_data['attributes'][@proposal.barclamp]["ssl"]["generate_certs"].to_s), :onchange => "update_value('ssl/generate_certs', 'ssl_generate_certs', 'boolean')"
+        %p
+          %label{ :for => :ssl_certfile }= t('.ssl_certfile')
+          = text_field_tag :ssl_certfile, @proposal.raw_data['attributes'][@proposal.barclamp]["ssl"]["certfile"], :class=> "input-xxlarge", :size => 80, :onchange => "update_value('ssl/certfile', 'ssl_certfile', 'string')"
+        %p
+          %label{ :for => :ssl_keyfile }= t('.ssl_keyfile')
+          = text_field_tag :ssl_keyfile, @proposal.raw_data['attributes'][@proposal.barclamp]["ssl"]["keyfile"], :class=> "input-xxlarge", :size => 80, :onchange => "update_value('ssl/keyfile', 'ssl_keyfile', 'string')"
+        %p
+          %label{ :for => :ssl_insecure }= t('.ssl_insecure')
+          = select_tag :ssl_insecure, options_for_select([['true','true'], ['false', 'false']], @proposal.raw_data['attributes'][@proposal.barclamp]["ssl"]["insecure"].to_s), :onchange => "update_value('ssl/insecure', 'ssl_insecure', 'boolean')"
+        %p
+          %label{ :for => :ssl_cert_required }= t('.ssl_cert_required')
+          = select_tag :ssl_cert_required, options_for_select([['true','true'], ['false', 'false']], @proposal.raw_data['attributes'][@proposal.barclamp]["ssl"]["cert_required"].to_s), :onchange => "update_value('ssl/cert_required', 'ssl_cert_required', 'boolean')"
+        %p
+          %label{ :for => :ssl_ca_certs }= t('.ssl_ca_certs')
+          = text_field_tag :ssl_ca_certs, @proposal.raw_data['attributes'][@proposal.barclamp]["ssl"]["ca_certs"], :class=> "input-xxlarge", :size => 80, :onchange => "update_value('ssl/ca_certs', 'ssl_ca_certs', 'string')"
+
+    %label.section-header{ :for => :novnc_protocol_div }= t('.novnc_ssl_header')
+    %div.section{ :id => :novnc_protocol_div }
       %p
-        %label{ :for => :volume_name }= t('.volume_name')
-        %input#volume_name{:type => "text", :name => "volume_name", :'data-default' => @proposal.raw_data['attributes'][@proposal.barclamp]["volume"]["volume_name"], :onchange => "update_value('volume/volume_name','volume_name', 'string')"}
+        %label{ :for => :novnc_protocol }= t('.protocol')
+        = select_tag :novnc_protocol, options_for_select([['HTTP','false'], ['HTTPS', 'true']], @proposal.raw_data['attributes'][@proposal.barclamp]["novnc"]["ssl"]["enabled"].to_s), :onchange => "update_value('novnc/ssl/enabled', 'novnc_protocol', 'boolean')"
+      %div{ :id => :novnc_ssl_div }
+        %p
+          %em= t('.novnc_ssl_hint')
+        %p
+          %label{ :for => :novnc_ssl_certfile }= t('.ssl_certfile')
+          = text_field_tag :novnc_ssl_certfile, @proposal.raw_data['attributes'][@proposal.barclamp]["novnc"]["ssl"]["certfile"], :class=> "input-xxlarge", :size => "80", :onchange => "update_value('novnc/ssl/certfile', 'novnc_ssl_certfile', 'string')"
+        %p
+          %label{ :for => :novnc_ssl_keyfile }= t('.ssl_keyfile')
+          = text_field_tag :novnc_ssl_keyfile, @proposal.raw_data['attributes'][@proposal.barclamp]["novnc"]["ssl"]["keyfile"], :class=> "input-xxlarge", :size => "80", :onchange => "update_value('novnc/ssl/keyfile', 'novnc_ssl_keyfile', 'string')"
+
+    %label.section-header{ :for => :logging_div }= t('.logging_header')
+    %div.section{ :id => :logging_div }
       %p
-        %label{ :for => :volume_type }= t('.volume_type')
-        = select_tag :volume_type, options_for_select([['raw','raw'], ['local', 'local']], @proposal.raw_data['attributes'][@proposal.barclamp]["volume"]["volume_type"].to_s), :onchange => "update_value('volume/volume_type', 'volume_type', 'string')"
-      %p
-        %label{ :for => :local_file }= t('.volume_file_name')
-        %input#local_file{:type => "text", :name => "local_file", :'data-default' => @proposal.raw_data['attributes'][@proposal.barclamp]["volume"]["local_file"], :onchange => "update_value('volume/local_file','local_file', 'string')"}
-      %p
-        %label{ :for => :local_size }= t('.volume_file_size')
-        %input#local_size{:type => "text", :name => "local_size", :'data-default' => @proposal.raw_data['attributes'][@proposal.barclamp]["volume"]["local_size"], :onchange => "update_value('volume/local_size','local_size', 'integer')"}
-      %p
-        %label{ :for => :nova_raw_method }= t('.volume_raw_mode')
-        = select_tag :nova_raw_method, options_for_select([['first','first'], ['all', 'all'], ['selected', 'selected']], @proposal.raw_data['attributes'][@proposal.barclamp]["volume"]["nova_raw_method"].to_s), :onchange => "update_value('volume/nova_raw_method', 'nova_raw_method', 'string')"
-      %div{ :id => 'nova_volume_disks', :class => 'container' }
-        %label{ :for => :volume_disks }= t('.nova_volume_disks')
-        %ul{ :id => 'nova_volume_disks_list'}
+        %label{ :for => :verbose }= t('.verbose')
+        = select_tag :verbose, options_for_select([['true','true'], ['false', 'false']], @proposal.raw_data['attributes'][@proposal.barclamp]["verbose"].to_s), :onchange => "update_value('verbose', 'verbose', 'boolean')"
+    = render 'barclamp/git/pfsdeps.html.haml'
 
 :javascript
 
-  var volume_role = 'nova-multi-volume';
-  var volume_path = 'div.column_50 div ul#' + volume_role + '.ddlist';
-  var volume_disk_list_path = 'ul#nova_volume_disks_list';
+  function toggle_protocol() {
+    if ($('#protocol option:selected').attr('value') == 'true') {
+      $('#ssl_div').show();
+    } else {
+      $('#ssl_div').hide();
+    }
+  };
 
-  function update_nova_disks(){
-    var listItems = $("li input", volume_disk_list_path);
-    var disks = [];
-    var checked_count = 0;
-    for (var i = 0; i < listItems.size(); ++i){
-      if (listItems[i].checked){
-        disks.push(listItems[i].name);
-        checked_count = checked_count + 1;
+  function toggle_ssl_cert_required() {
+    if ($('#ssl_cert_required option:selected').attr('value') == 'true') {
+      $('#ssl_ca_certs').removeAttr('disabled');
+    } else {
+      $('#ssl_ca_certs').attr('disabled', 'disabled');
+    }
+  };
+
+  function toggle_ssl_generate_certs_full(init) {
+    if ($('#ssl_generate_certs option:selected').attr('value') == 'true') {
+      $('#ssl_certfile').attr('disabled', 'disabled');
+      $('#ssl_keyfile').attr('disabled', 'disabled');
+      $('#ssl_insecure').attr('disabled', 'disabled');
+
+      var value = '/etc/nova/ssl/certs/signing_cert.pem'
+      $('#ssl_certfile').attr('value', value);
+      update_value_direct('ssl/certfile', value, 'string');
+      value = '/etc/nova/ssl/private/signing_key.pem'
+      $('#ssl_keyfile').attr('value', value);
+      update_value_direct('ssl/keyfile', value, 'string');
+      $('#ssl_insecure').attr('value', 'true');
+      update_value_direct('ssl/insecure', 'true', 'boolean');
+    } else {
+      $('#ssl_certfile').removeAttr('disabled');
+      $('#ssl_keyfile').removeAttr('disabled');
+      $('#ssl_insecure').removeAttr('disabled');
+
+      // No need to change the certfile/keyfile values
+      if (!init) {
+        // Reset insecure to false, to not leave it as true by accident.
+        // We do not change insecure on page loading, though!
+        $('#ssl_insecure').attr('value', 'false');
+        update_value_direct('ssl/insecure', 'false', 'boolean');
       }
     }
-    if (listItems.size() > 0 && checked_count == 0){
-      i18n_msg('no_disks_checked');
+  };
+
+  function toggle_ssl_generate_certs() {
+    toggle_ssl_generate_certs_full(false);
+  };
+
+  function toggle_novnc_protocol() {
+    if ($('#novnc_protocol option:selected').attr('value') == 'true') {
+      $('#novnc_ssl_div').show();
+    } else {
+      $('#novnc_ssl_div').hide();
     }
-    var proposal_input = $("input#proposal_attributes"); 
-    var proposal_data = JSON.parse(proposal_input.val());
-    proposal_data['volume']['nova_volume_disks'] = disks;
-    proposal_input.val(JSON.stringify(proposal_data));
-  }
+  };
 
-  function make_disk_list(data, node){
-    $(volume_disk_list_path).empty();
-    if ($.isEmptyObject(data)){
-      i18n_msg('warning', node, volume_role, 'It has no suitable disk for nova-volume storage. '
-                                           + 'If applyed, regular file will be used for volume group');
-    }
-    $.each(data, function(disk, size){
-      var li = document.createElement('li');
-      var inp = document.createElement('input');
-      var label = document.createTextNode(disk + ", size: " + size + " sectors");
-      inp.type = "checkbox";
-      inp.name = disk;
-      inp.value = disk;
-      inp.onclick = update_nova_disks;
-      li.appendChild(inp);
-      li.appendChild(label);
-      $(volume_disk_list_path).append(li);
-    });
-    update_nova_disks();
-  }
+  $(document).ready(function () {
+    toggle_protocol();
+    toggle_ssl_cert_required();
+    toggle_ssl_generate_certs_full(true);
+    toggle_novnc_protocol();
+  });
 
-  function on_role_change(callback, param) {
-    var node = $('li', volume_path).attr('id');
-    if (node) {
-      $.getJSON('/nodes/nova/1.0?id=' + node,
-        function(data){
-          if (data) {
-            make_disk_list(data, node);
-            if (callback){
-              callback(param);
-            }
-          };
-        });
-    }
-  }
-
-  function check_disks_loaded_from_proposal(disks){
-    var listItems = $("li input", volume_disk_list_path);
-    for (var i = 0; i < listItems.size(); ++i){
-      if ($.inArray(listItems[i].name, disks) != -1 ){
-        listItems[i].checked = true;
-      };
-    }
-  }
-
-  function load_proposal_disk_attrs() {
-    var proposal_data = JSON.parse($("input#proposal_attributes").val()); 
-    var disks = proposal_data['volume']['nova_volume_disks'];
-    
-    on_role_change(check_disks_loaded_from_proposal, disks);      
- 
-  }
-
-  // HACK HACK HACK
-  // TODO: figure out the better way of overriding this functions
-  window.setTimeout(function(){
-
-    messages['warning'] = 'Warning: Avoid using Node [0] to Role [1]. [2]';
-    messages['no_disks_checked'] = 'Warning: If no one of disks from the list are checked, '
-                                 + 'will use any suitable disk from it for the volume group';
-  
-    var org_drop_item = this.drop_item;
-    var org_remove_item = this.remove_item;
-    this.drop_item = function(name, list) {
-            var vall = org_drop_item(name, list);
-            if (vall && list == volume_role) {
-              on_role_change();
-            }
-            return vall;
-    }
-
-    this.remove_item = function(name, list) {
-            var vall = org_remove_item(name, list);
-            if (list == volume_role) {
-              $(volume_disk_list_path).empty();
-              update_nova_disks();
-            }
-            return vall;
-    }
-
-    load_proposal_disk_attrs();
-  }, 0);
+  $('#protocol').change(toggle_protocol);
+  $('#ssl_cert_required').change(toggle_ssl_cert_required);
+  $('#novnc_protocol').change(toggle_novnc_protocol);
+  $('#ssl_generate_certs').change(toggle_ssl_generate_certs);

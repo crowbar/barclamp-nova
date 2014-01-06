@@ -1,8 +1,4 @@
-#
-# Cookbook Name:: nova
-# Recipe:: scheduler
-#
-# Copyright 2010, Opscode, Inc.
+# Copyright 2013 Dell, Inc.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -17,7 +13,6 @@
 # limitations under the License.
 #
 
-include_recipe "nova::config"
-
-nova_package("scheduler")
-nova_package("conductor")
+node.set[:cookbook] = cookbook_name
+include_recipe "neutron::common_install"
+node.delete(:cookbook)

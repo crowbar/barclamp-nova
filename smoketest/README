@@ -1,0 +1,19 @@
+Neutron
+1. Floating ip attachement
+2. Touch(ping) floating ip
+
+Cinder-volume tests:
+1. Create volume
+2. Volume List (with tests if created volume is in "available" state)
+3. Volume attach (with tests if it accesible from vm)
+4. Volume detach
+5. Volume snapshot
+6. Test volume created from a snapshot (list\convert to volume)
+7. Check availability of volumes created from snapshots, from inside of guest OS
+8. Remove snapshots and parent volumes
+9. Snapshot vm to volume
+10. Boot from snapshoted instance-volume(with tests if it accesible from vm)
+11. Create volume from image
+12. Boot from volume created from image(with tests if it accesible from vm)
+13. Snapshot delete
+14. Full volumes cleanup 

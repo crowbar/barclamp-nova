@@ -20,8 +20,9 @@
 
 include_recipe "nova::config" 
 
-nova_package("network")
-
+if node[:nova][:networking_backend]=="nova-network"
+  nova_package("network")
+end
 
 # Crowbar uses the network node as the gateway in flat non-dhcp modes, add the
 # firewall rule for UEC images to be able to fetch metadata info
@@ -33,6 +34,7 @@ end
 bash "turn on routing" do
   code <<-'EOH'
 sysctl -w net.ipv4.conf.all.forwarding=1
+sysctl -w net.ipv4.conf.all.rp_filter=0
 EOH
 end
 
@@ -44,10 +46,17 @@ if node.platform != "suse"
     action :create
   end
 else
-  ruby_block "edit sysconfig syslog" do
+  ruby_block "edit sysconfig sysctl" do
     block do
       rc = Chef::Util::FileEdit.new("/etc/sysconfig/sysctl")
       rc.search_file_replace_line(/^IP_FORWARD=/, 'IP_FORWARD="yes"')
+      rc.write_file
+    end
+  end
+  ruby_block "edit sysctl.conf" do
+    block do
+      rc = Chef::Util::FileEdit.new("/etc/sysctl.conf")
+      rc.search_file_replace_line(/^net.ipv4.conf.all.rp_filter/, 'net.ipv4.conf.all.rp_filter = 0')
       rc.write_file
     end
   end

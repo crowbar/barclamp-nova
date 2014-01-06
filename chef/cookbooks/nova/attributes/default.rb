@@ -28,36 +28,46 @@ default[:nova][:db][:password] = nil
 default[:nova][:db][:user] = "nova"
 default[:nova][:db][:database] = "nova"
 
-#
-# RabbitMQ Settings
-#
-set_unless[:nova][:rabbit][:password] = secure_password
-default[:nova][:rabbit][:user] = "nova"
-default[:nova][:rabbit][:vhost] = "/nova"
+default[:nova][:use_migration] = false
+default[:nova][:use_shared_instance_storage] = false
 
 #
 # Hypervisor Settings
 #
-default[:nova][:libvirt_type] = "kvm"    
+default[:nova][:libvirt_type] = "kvm"
 
 #
-# KVM Settings                       
-# 
+# KVM Settings
+#
 
-default[:nova][:kvm][:ksm_enabled] = 0  # 0 = disable, 1 = enable
+default[:nova][:kvm][:ksm_enabled] = false
 
+
+#
+# Scheduler Settings
+#
+default[:nova][:scheduler][:ram_allocation_ratio] = 1.0
+default[:nova][:scheduler][:cpu_allocation_ratio] = 16.0
 
 #
 # Shared Settings
 #
 default[:nova][:hostname] = "nova"
 default[:nova][:my_ip] = ipaddress
-default[:nova][:api] = ""
-default[:nova][:user] = "nova"
+unless %w(suse).include?(node.platform)
+    default[:nova][:user] = "nova"
+    default[:nova][:group] = "nova"
+else
+    default[:nova][:user] = "openstack-nova"
+    default[:nova][:group] = "openstack-nova"
+end
+default[:nova][:instances_path] = '/var/lib/nova/instances'
 
 #
 # General network parameters
 #
+
+default[:nova][:networking_backend] = "neutron"
 default[:nova][:network][:ha_enabled] = true
 default[:nova][:network][:dhcp_enabled] = true
 default[:nova][:network][:tenant_vlans] = true
@@ -68,22 +78,33 @@ default[:nova][:fixed_range] = "10.0.0.0/8"
 default[:nova][:floating_range] = "4.4.4.0/24"
 default[:nova][:num_networks] = 1
 default[:nova][:network_size] = 256
+default[:nova][:neutron_metadata_proxy_shared_secret] = ""
 #
 default[:nova][:network][:flat_network_bridge] = "br100"
 default[:nova][:network][:flat_injected] = true
 default[:nova][:network][:flat_dns] = "8.8.4.4"
 default[:nova][:network][:flat_interface] = "eth0"
-default[:nova][:network][:flat_network_dhcp_start] = "10.0.0.2"
 default[:nova][:network][:vlan_interface] = "eth1"
 default[:nova][:network][:vlan_start] = 100
 
 default[:nova][:service_user] = "nova"
 default[:nova][:service_password] = "nova"
+default[:nova][:service_ssh_key] = ""
 
-default[:nova][:volume][:volume_name] = "nova-volumes"
-default[:nova][:volume][:type] = "local"
-default[:nova][:volume][:nova_raw_method] = "all"
-default[:nova][:volume][:nova_volume_disks] = []
-default[:nova][:volume][:local_file] = "/var/lib/nova/volume.raw"
-default[:nova][:volume][:local_size] = 2000
+default[:nova][:ssl][:enabled] = false
+default[:nova][:ssl][:certfile] = "/etc/nova/ssl/certs/signing_cert.pem"
+default[:nova][:ssl][:keyfile] = "/etc/nova/ssl/private/signing_key.pem"
+default[:nova][:ssl][:generate_certs] = false
+default[:nova][:ssl][:insecure] = false
+default[:nova][:ssl][:cert_required] = false
+default[:nova][:ssl][:ca_certs] = "/etc/nova/ssl/certs/ca.pem"
 
+default[:nova][:novnc][:ssl][:enabled] = false
+default[:nova][:novnc][:ssl][:certfile] = ""
+default[:nova][:novnc][:ssl][:keyfile] = ""
+
+#
+# Transparent Hugepage Settings
+#
+default[:nova][:hugepage][:tranparent_hugepage_enabled] = "always"
+default[:nova][:hugepage][:tranparent_hugepage_defrag] = "always"

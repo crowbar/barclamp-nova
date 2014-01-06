@@ -11,116 +11,662 @@
 # distributed under the License is distributed on an "AS IS" BASIS,
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 
+if [ -f /etc/redhat-release ]; then
+  sudo yum --assumeyes install python-novaclient python-neutronclient bc
+else
+  sudo apt-get install -y python-novaclient python-neutronclient bc
+fi
+
+
 [[ $DEBUG ]] && set -x
-
-die() { res=$1; shift; echo "$@"; exit $res; }
-
-nova_do() {
-    # $1 = address of nova controller
-    # $@ = command to run as the nova user.
-    local address="$1" 
-    shift
-    [[ $1 ]] || return 1
-    run_on "$address" sudo -u nova -i "$@"
+ip_re='(([0-9]{1,3}\.){3}[0-9]{1,3})'
+declare -a instances images
+cleanup() {
+    # Only cleanup if the tests were successful
+    if [ $? -eq 0 ]; then
+        trap '' QUIT TERM
+        local instance_name
+        for instance_name in "${instances[@]}"; do
+            nova console-log $instance_name > "$LOGDIR/nova-$instance_name.console.log"
+            nova delete $instance_name
+            ssh-keygen -f "/root/.ssh/known_hosts" -R "${floating_ips[$instance_name]}" &>/dev/null
+            nova floating-ip-delete "${floating_ips[$instance_name]}"
+            while nova list |grep -q $instance_name; do sleep 1; done
+        done
+        nova keypair-delete smoketest
+        ssh-agent -k
+        neutron security-group-delete smoketest
+        nova flavor-delete smoketest
+    fi
 }
+
+
+trap cleanup EXIT QUIT TERM
+
+die() {
+    res=$1
+    shift
+    echo "$@"
+    exit $res
+}
+
 
 echo "Deploying Nova VMs."
 echo "Finding Nova controller..."
 nova_ip=$(knife_node_find 'roles:nova-multi-controller' FQDN)
 if ! [[ $nova_ip ]]; then
-    echo "Could not find nova controller."
+   echo "Could not find nova controller."
     exit 1
 fi
 echo "Controller at $nova_ip. Verifying nova services..."
-echo "Rest of smoketest is not functional.  Exiting."
 
-exit 0
+echo "Finding keystone..."
+keystone_ip=$(knife_node_find 'roles:keystone-server' IP)
+if [[ ! $keystone_ip ]]; then
+    die 1 "Cannot find Keystone"
+fi
+
+export OS_AUTH_URL="http://$keystone_ip:5000/v2.0"
+export OS_USERNAME="admin"
+export OS_PASSWORD="crowbar"
+export OS_TENANT_NAME="admin"
+
+
+echo -e "Flushing floating ip list..."
+
+TMP_FILE=$(mktemp)
+neutron floatingip-list | awk {'print $2'} | grep -iv "id" | grep -v '^$' > $TMP_FILE
+exec 3<$TMP_FILE
+while read -u 3 LINE; do
+    neutron floatingip-delete $LINE
+done
+rm -f $TMP_FILE
+
+
+echo -e "Flushing security group list..."
+
+TMP_FILE=$(mktemp)
+neutron security-group-list | grep 'smoketest' | awk {'print $2'} > $TMP_FILE
+exec 3<$TMP_FILE
+while read -u 3 LINE; do
+    neutron security-group-delete $LINE
+done
+rm -f $TMP_FILE
+
+
+prop_file="$LOGDIR/nova-proposal.json"
+
+crowbar nova proposal show smoketest >"$prop_file"
+
+nova_user=admin
+nova_pass=crowbar
+[[ $nova_user && $nova_pass ]] || die 1 "nova_user: $nova_user | nova_pass: $nova_pass"
 
 while read node_type node zone node_enabled node_status rest; do
     case $node_type in
-	nova-network) [[ $node_enabled = enabled && \
-	    $node_status = ':-)' ]] && nova_network=true;;
-	nova-compute) [[ $node_enabled = enabled && \
-	    $node_status = ':-)' ]] && nova_compute=true;;
-	nova-scheduler) [[ $node_enabled = enabled && \
-	    $node_status = ':-)' ]] && nova_scheduler=true;;
+        nova-compute) [[ $node_enabled = enabled && \
+            $node_status = 'up' ]] && nova_compute=true;;
+        nova-scheduler) [[ $node_enabled = enabled && \
+            $node_status = 'up' ]] && nova_scheduler=true;;
     esac
-done < <(nova_do "$nova_ip" nova-manage service list |tee \
+done < <(nova service-list |tr -d '|' |tee \
     "$LOGDIR/nova-services.status")
-if ! [[ $nova_network && $nova_compute && $nova_scheduler ]]; then
+if ! [[ $nova_compute && $nova_scheduler ]]; then
     echo "Nova services do not report as healthy!"
     exit 1
 fi
 
-echo "Nova services healthy. Finding test image to launch..."
 test_image=''
-ami_re='(ami-[0-9]+)'
+images=$(nova image-list | grep "ACTIVE" | grep "ubuntu" | grep "\-image" | awk {'print $2'})
+[[ ! $images ]] && error="Could not find a test image to run on Nova"
+[[ "${#images[@]}" -gt "1" ]] && error="Failed to select test_image, to many options: ${images[@]}"
+[[ "$(nova image-show ${images[0]} | grep "status" | awk {'print $4'})" != "ACTIVE" ]]  && error="Found test_image is not recognized as valid: ${images[@]}"
 
-###
-# Things after here are broken.
-###
+if [ $error ];  then
+    echo -e  "Error occured during image selection: $error"
+    exit 1
+  else
+    test_image=${images[0]}
+    echo -e  "Selected test_image id: $test_image"
+fi
 
-while read line;do
-    [[ $line =~ $ami_re ]] || continue
-    img_id="${BASH_REMATCH[1]}"
-    [[ $line =~ available && $line =~ public ]] || continue
-    test_image=$img_id
-    break
-done < <(nova_do "$nova_ip" euca-describe-images |tee \
-    "$LOGDIR/nova-images.status")
-if [[ ! $test_image ]]; then
-    echo "Could not find a test image to run on Nova"
+
+echo "Adding our security group"
+neutron security-group-create smoketest
+neutron security-group-rule-create --protocol icmp --direction ingress smoketest
+neutron security-group-rule-create --protocol tcp --port-range-min 1 \
+    --port-range-max 65535 --direction ingress smoketest
+neutron security-group-rule-create --protocol udp --port-range-min 1 \
+    --port-range-max 65535 --direction ingress smoketest
+fixed_net=$(neutron net-list --quote none -F id --format csv -- --name fixed |tail -1 |tr -d '\r')
+
+
+echo "Adding smoke flavor"
+flavor_rnd=$(( 100 + $RANDOM % 100))
+nova flavor-create smoketest ${flavor_rnd} 512 2 1 || die 1 "Unable to create flavor"
+
+
+sshkey="$LOGDIR/nova-smoketest.pem"
+
+# Create a keypair, and let us use it.
+if [[ ! $SSH_AGENT_PID ]]; then
+    . <(ssh-agent)
+fi
+nova keypair-add smoketest >"$sshkey"
+chmod 600 "$sshkey"
+
+
+ssh-add "$sshkey"
+
+for ((idx=0; idx <= 2; idx++)); do
+    instance_name="smoketest-$idx"
+    instances[$idx]=$instance_name
+    # Things to add here:
+    # Binding a volume with Cinder
+
+    echo "Launching $instance_name with $test_image"
+    (
+        nova boot --poll --image "$test_image" --flavor ${flavor_rnd} \
+            --nic net-id=$fixed_net \
+            --security-groups smoketest \
+            --key-name smoketest \
+            "$instance_name" | \
+            tee "$LOGDIR/nova-$instance_name.status"
+    ) &
+    sleep 120
+    for ((i=1; i<=5; i++)); do
+      echo -e "Checking instance: $instance_name status attempt #$i"
+      if [[ "$(nova list | grep "$instance_name" | awk {'print $6'})" = "ACTIVE" ]]; then
+        echo -e "Instance: $instance_name is:		ACTIVE"
+        break
+      fi
+      sleep 10
+    done
+    [[ "$(nova list | grep "$instance_name" | awk {'print $6'})" = "ERROR" ]] && die "Instance: $i_id failed to boot"
+done
+wait
+
+declare -A fixed_ips floating_ips
+for instance_name in "${instances[@]}"; do
+    if nova show $instance_name |grep -q 'status.*ACTIVE'; then
+        echo "$instance_name launched."
+    else
+        die 1 "Failed to launch $instance_name"
+    fi
+
+    nova show $instance_name > "$LOGDIR/nova-$instance_name.status"
+    [[ $(grep 'fixed network' "$LOGDIR/nova-$instance_name.status") =~ $ip_re ]] || \
+        die 1 "$instance_name has no fixed IP!"
+    echo "$instance_name at fixed IP ${BASH_REMATCH[1]}"
+    fixed_ips[$instance_name]=${BASH_REMATCH[1]}
+    echo "Allocating a floating IP"
+    [[ $(nova floating-ip-create) =~ $ip_re ]] || \
+        die 1 "Could not allocate floating IP for $instance_name"
+    floating_ips[$instance_name]=${BASH_REMATCH[1]}
+    nova add-floating-ip "$instance_name" "${BASH_REMATCH[1]}" || \
+        die 1 "Could not attach ${BASH_REMATCH[1]} to $instance_name"
+    alive=false
+    for ((i=0; i<150; i++)); do
+        printf '.'
+        ping -q -c 1 -i 1 ${floating_ips[$instance_name]} &>/dev/null || continue
+        alive=true
+        break
+    done
+    nova console-log $instance_name |tee "$LOGDIR/nova-$instance_name.console.log"
+    [[ $alive = true ]] || die 1 "Could not ping $instance_name at ${floating_ips[$instance_name]}"
+    echo "Can ping $instance_name at ${floating_ips[$instance_name]}"
+done
+
+
+
+used_instance_name=${instances[0]}
+used_instance_id=$(nova list | grep "$used_instance_name" | awk {'print $2'})
+
+
+if [[ $alive = true  ]]; then
+    volume="smoketest-volume"
+    v_device="vdb"
+    make_volume=$(nova volume-create --display_name $volume 1 | grep  ' id' | awk {'print $4'})
+    volume_id=$make_volume && sleep 3
+    echo -e "Volume tests stage - volume create:     instance_id: $used_instance_id volume_name: $volume  volume_id: $volume_id"
+    for ((i=1; i<=5; i++)); do
+        volume_status=$(nova volume-list | grep "$volume_id" | awk {'print $4'})
+        echo -e "Quering created volume: $volume_id  status attempt #$i"
+        [[ $volume_status = "available" ]] && exists=true && break || sleep 20 && continue
+     done
+else
+     echo "$instance_name at ${floating_ips[$used_instance_name]} not seems to be reachable"
+     exit 1
+fi
+
+
+
+if [[ $exists = true  ]]; then
+    echo -e "\n\nVolume tests  stage - volume create   volume_id: $volume_id :		SUCCESS\n\n"
+    nova volume-attach $used_instance_id $volume_id /dev/$v_device && sleep 5
+    for ((i=1; i<5; i++)); do
+        volume_status=$(nova volume-list | grep "$volume_id" | awk {'print $4'})
+        echo -e "Volume status: $volume_status"
+        echo -e "Quering attached volume: $volume_id  instance_id: $used_instance_id   attempt #$i"
+        [[ $volume_status = "in-use" ]] && in_use=true && break || sleep 20 && continue
+     done
+else
+    echo "\n\nERROR: Volume_id: $volume_id creation failed\n\n"
     exit 1
 fi
 
-echo "Launching $test_image..." 
-nova_do "$nova_ip" euca-run-instances "$test_image" -k mykey -t m1.tiny |tee \
-    "$LOGDIR/nova-run-instance.status"
-tries=0
-img_addr=''
 
-while ((tries++ < 30)); do
-    while read ltype l_id img_id img_addr1 img_addr2 img_status rest; do
-	[[ $img_id = $test_image ]] || continue
-	[[ $img_status =~ fail ]] && {
-	    echo "Nova reports that $test_image failed to deploy"
-	    cat "$LOGDIR/nova-running-instances.$tries.log"
-	    exit 1
-	}
-	[[ $img_id = $test_image && $img_status = running ]] || continue
-	img_addr=${img_addr1}
-    done < <(nova_do "$nova_ip" euca-describe-instances | \
-	tee "$LOGDIR/nova-running-instances.$tries.log")
-    cat "$LOGDIR/nova-running-instances.$tries.log"
-    [[ $img_addr ]] && break
-    sleep 10
-done
-if [[ ! $img_addr ]]; then
-    echo "$test_image failed to deploy after ${tries}0 seconds!"
+
+usable=false
+if [ $in_use = true ]; then
+    echo -e "\n\nVolume tests stage - volume attach: $volume_id  instance_id: $used_instance_id attach status:	SUCCESS\n\n"
+    echo -e "Volume tests stage - accessibility test:    Target instance_id: $used_instance_id attached_volume_id: $volume_id  device: $v_device instance_ip: ${floating_ips[$used_instance_name]} used sshkey: $sshkey"
+    for ((i=1; i<=5; i++)); do
+       disk_probe=$(ssh -i $sshkey -l ubuntu ${floating_ips[$used_instance_name]} "sudo cat /proc/partitions | grep $v_device")
+       echo -e "Quering attached volume status attempt #$i"
+       echo -e "Volume_status: $disk_probe"
+       [[ $disk_probe ]] && usable=true && break || sleep 20 && continue
+    done
+else
+    echo -e "\n\nERROR: Volume tests stage - volume attach: $volume_id  instance_id: $used_instance_id attach failed\n\n"
     exit 1
-fi	
-echo "Launched. Testing network connectivity..."
-tries=0
-while ! nova_do "$nova_ip" ping -n -c 1 "$img_addr" >> "$LOGDIR/nova-ping-$img_addr.log"; do
-    if ((tries++ > 60)) ; then
-      cat "$LOGDIR/nova-ping-$img_addr.log"
-      echo "Could not ping $img_addr from $nova_ip"
-      exit 1
-    fi
-done
-echo "Could ping deployed image."
-tries=0
+fi
 
-## The SSH test is known to not work right now.
-# Leave it enabled, but do not fail the smoketest if it fails.
-while ! nova_do "$nova_ip" ssh -o 'StrictHostKeyChecking=no' -o 'UserKnownHostsFile=/dev/null' -i /var/lib/nova/mykey.priv ubuntu@"$img_addr" date >> "$LOGDIR/nova-ssh-$img_addr.log" ; do
-    if ((tries++ > 120)) ; then
-      cat "$LOGDIR/nova-ssh-$img_addr.log"
-      cat "$LOGDIR/nova-ssh-$img_addr.err"
-      echo "Could not ssh $img_addr from $nova_ip"
-      exit 0
-    fi
+
+
+if [ $usable = true ]; then
+    echo -e "\n\nVolume tests stage - accessibility test:    $volume_id access from instance: $used_instance_name: SUCCESS\n\n"
+    a_status=$(nova volume-list | grep "$used_instance_id" | awk {'print $4'})
+    a_volume=$(nova volume-list | grep "$used_instance_id" | awk {'print $2'})
+    a_instance_name=$(nova list | grep "$used_instance_id" | awk {'print $4'})
+    echo -e "Volume tests stage - detach test :    volume: $a_volume attached to: $used_instance_name  with status: $a_status"
+    nova volume-detach $used_instance_id $a_volume
+    sleep 5
+    for ((i=1; i<5; i++)); do
+       disk_probe=$(ssh -i $sshkey -l ubuntu ${floating_ips[$a_instance_name]} "sudo cat /proc/partitions | grep 'vd'")
+       echo -e "Quering  volume_id: $a_volume  device: $v_device  instnace_id: $used_instance_id  status attempt #$i"
+       echo -e "Volume_status: $disk_probe"
+       [[ $disk_probe = *vda* && $disk_probe != *$v_device* ]] && detached=true && break || sleep 20 && continue
+    done
+else
+    echo -e "\n\nERROR: Volume tests stage - accessibility test:    Target instance_id: $instance_id attached_volume_id: $volume_id  device: $v_device instance_ip: ${floating_ips[$used_instance_name]} used sshkey: $sshkey failed\n\n"
+    exit 1
+fi
+
+echo -e "\n\n\nFollowing volume tests completed:\n"
+[[ $exists = true  ]] && res_1="SUCCESS" || res_1="FAILURE"
+[[ $in_use = true  ]] && res_2="SUCCESS" || res_2="FAILURE"
+[[ $usable = true  ]] && res_3="SUCCESS" || res_3="FAILURE"
+[[ $detached = true  ]] && res_4="SUCCESS" || res_4="FAILURE"
+
+
+echo -e "Create test: $volume_id :		$res_1"
+echo -e "Attach test: volume_id: $volume_id to instance: $used_instance_id  device: $v_device:		$res_2"
+echo -e "Access test: attached_volume_id: $volume_id  from instance: $used_instance_id device: $v_device used sshkey: $sshkey:		$res_3"
+echo -e "Detach test: attached_volume_id: $volume_id  from instance: $used_instance_id device: $v_device :		$res_4"
+
+
+
+s_volume_deleted=false
+if [ -f "/etc/redhat-release"  ]; then
+    s_volume_deleted=true
+    echo -e "\n\n\n WARNING: Tests are conducted on RHEL based release, cinder snapshots related tests will be skipped due to bug: https://bugs.launchpad.net/cinder/+bug/1191812  \n\n\n"
+    echo -e "WARNING: \"s_volume_deleted\" variable will be forcibly set to true in order for tests to continue"
+else
+
+if [[ $detached = true ]]; then
+    echo -e "\n\nVolume $a_volume detached from instance_id: $instance_id  status:	SUCCESS\n\n"
+    v_snapshot_id=$(nova volume-snapshot-create $a_volume | grep ' id ' | awk {'print $4'} && sleep 10)
+    for ((i=1; i<=5; i++)); do
+      v_snapshot_test=$(nova volume-snapshot-list | grep "$v_snapshot_id" | awk {'print $6'})
+      echo -e "Snapshot tests stage snapshot creation test:   volume: $a_volume  v_snapshot_id: $v_snapshot_id  v_snapshot_status: $v_snapshot_test"
+      echo -e "Quering volume snapshot: $v_snapshot_id status, attempt #$i"
+      [[ $v_snapshot_test = "available" ]] && snapshot_ready=true && break || sleep 10 && continue
+    done
+else
+      echo -e "\n\nERROR: Volume $a_volume is not detached from instance_id: $used_instance_id\n\n"
+    exit 1
+fi
+
+
+
+if [[ $snapshot_ready = true ]];  then
+    echo -e "\n\nSnapshot $v_snapshot_id creation status:	SUCCESS\n\n"
+     vol_id=$(nova volume-create --snapshot-id $v_snapshot_id --display_name volume_from_snapshot 1 | grep ' id ' | awk {'print $4'})
+     sv_id=$vol_id
+     for ((i=1; i<=5; i++)); do
+         echo -e "Quering  status for volume_id: $sv_id  attempt #$i"
+         [[ "$(nova volume-list | grep "$sv_id" | awk {'print $4'})" = "available" ]] && volume_ready=true && break || sleep 10 && continue
+     done
+else
+    echo -e "\n\nERROR: snapshot: $v_snapshot_id is not ready for volume creation\n\n"
+    exit 1
+fi
+
+
+
+if [[ $volume_ready = true ]];  then
+    echo -e "\n\nVolume: $sv_id from snapshot: $v_snapshot_id  creation  status:		SUCCESS\n\n"
+    echo -e "Snapshot tests stage - Snapshot deletion"
+    echo -e "Removing snapshot: $v_snapshot_id"
+    nova volume-snapshot-delete $v_snapshot_id && sleep 3
+    for ((i=1; i<=5; i++)); do
+        echo -e "Quering  status for snapshot_id: $v_snapshot_id  attempt #$i"
+        [[ "$(nova volume-snapshot-list | grep "$v_snapshot_id")" != *$v_snapshot_id* ]] && snapshot_deleted=true && break || sleep 10 && continue
+    done
+else
+    echo -e "\n\nERROR: snapshot: $v_snapshot_id deletion failed \n\n"
+    exit 1
+fi
+
+
+
+if [[ $snapshot_deleted = true ]];  then
+    echo -e "\n\nSnapshot: $v_snapshot_id  deletion  status:	SUCCESS\n\n"
+    echo -e "Volume tests stage - Parent volume  deletion"
+    echo -e "Removing volume: $volume_id"
+    nova volume-delete $volume_id && sleep 3
+    for ((i=1; i<=5; i++)); do
+        echo -e "Quering  status for volume_id: $volume_id  attempt #$i"
+        [[ "$(nova volume-list | grep "$volume_id")" != *$volume_id* ]] && p_volume_deleted=true && break || sleep 10 && continue
+    done
+    [[ $volume_deleted = true ]] && echo -e "\n\nVolume tests stage - volume deletion:	SUCCESS\n\n"
+else
+    echo -e "\n\nERROR: Volume: $volume_id deletion failed \n\n"
+    exit 1
+fi
+
+
+
+
+if [[ $p_volume_deleted = true ]];  then
+    echo -e "\n\n Volume tests stage - Parent volume deletion: $volume_id status:	SUCCESS\n\n"
+    echo -e "Volume tests stage - volume from snapshot attach test volume: $sv_id  instance: $used_instance_id"
+    v_attach=$(nova volume-attach $used_instance_id $sv_id /dev/$v_device | grep 'id' | awk {'print $4'})
+    a_id=$v_attach
+    for ((i=1; i<=5; i++)); do
+      echo -e "Checking volume attach status for instance: $used_instance_id and volume_id: $sv_id  attempt #$i"
+      [[ "$(nova volume-list | grep "$sv_id" | awk {'print $4'})" = "in-use" ]] && s_attached=true && break || sleep 30 && continue
+    done
+else
+   echo -e "\n\nERROR: volume: $sv_id is not attached to instance: $used_instance_id\n\n"
+   exit 1
+fi
+
+
+
+if [[ $s_attached = true ]];  then
+    echo -e "\n\nVolume attach status for instance: $used_instance_id and volume_id: $sv_id:		SUCCESS\n\n"
+    echo -e "Volume tests stage - accessibility test instance: $used_instance_id volume: $sv_id device: $v_device"
+    for ((i=1; i<5; i++)); do
+       disk_probe=$(ssh -i $sshkey -l ubuntu ${floating_ips[$a_instance_name]} "sudo cat /proc/partitions | grep 'vdb'")
+       echo -e "Quering  volume_id: $a_volume  device: $v_device  instnace_id: $used_instance_id  status attempt #$i"
+       echo -e "Volume_status: $disk_probe"
+       [[ $disk_probe = *$v_device* ]] && s_usable=true && break || sleep 20 && continue
+    done
+else
+    echo -e "\n\nERROR: Volume attach status for instance: $used_instance_id and volume_id: $sv_id device: $v_device failed\n\n"
+    exit 1
+fi
+
+
+if [[ $s_usable = true ]];  then
+    echo -e "\n\nVolume access status for instance: $used_instance_id and volume_id: $sv_id:         SUCCESS\n\n"
+    echo -e "Volume tests stage - detach test instance: $used_instance_id volume: $sv_id device: $v_device" 
+    nova volume-detach $used_instance_id $sv_id
+    for ((i=1; i<5; i++)); do
+       disk_probe=$(ssh -i $sshkey -l ubuntu ${floating_ips[$a_instance_name]} "sudo cat /proc/partitions | grep 'vd'")
+       echo -e "Quering  volume_id: $a_volume  device: $v_device  instnace_id: $used_instance_id  status attempt #$i"
+       echo -e "Volume_status: $disk_probe"
+       [[ $disk_probe = *vda* && $disk_probe != *$v_device* ]] && s_detached=true && break || sleep 10 && continue
+    done
+    [[ $s_detached = true ]] && echo -e "\n\nVolume detach status for instance: $used_instance_id and volume_id: $sv_id device: $v_device:		SUCCESS\n\n"
+    echo -e "Volume tests stage - volume remove"
+    nova volume-delete $sv_id
+     for ((i=1; i<=5; i++)); do
+        echo -e "Quering  status for volume from snapshot id: $sv_id  attempt #$i"
+        [[ "$(nova volume-list | grep "$sv_id")" != *$sv_id* ]] && s_volume_deleted=true && echo -e "\n\nVolume tests stage - volume remove status:		SUCCESS\n\n" && break || sleep 10 && continue
+    done
+else
+    echo -e "\n\nERROR: Volume detach status for instance: $used_instance_id and volume_id: $sv_id device: $v_device failed\n\n"
+    exit 1
+fi
+
+
+
+echo -e "\n\n\nFollowing volume tests completed:\n"
+[[ $snapshot_ready = true  ]] && res_1="SUCCESS" || res1_1="FAILURE"
+[[ $volume_ready = true  ]] && res_2="SUCCESS" || res_2="FAILURE"
+[[ $snapshot_deleted = true  ]] && res_3="SUCCESS" || res_3="FAILURE"
+[[ $p_volume_deleted = true  ]] && res_4="SUCCESS" || res_4="FAILURE"
+[[ $s_attached = true  ]] && res_5="SUCCESS" || res_5="FAILURE"
+[[ $s_usable = true  ]] && res_6="SUCCESS" || res_6="FAILURE"
+[[ $s_detached = true  ]] && res_7="SUCCESS" || res_7="FAILURE"
+[[ $s_volume_deleted = true  ]] && res_8="SUCCESS" || res_8="FAILURE"
+
+
+echo -e "Snapshot create test for parent volume $a_volume : snapshot: $v_snapshot_id;             $res_1"
+echo -e "Volume from snapshot create  test: v_snapshot_id: $v_snapshot_id  volume from snapshot id: $sv_id:         $res_2"
+echo -e "Snapshot deletion test: snapshot_id: $v_snapshot_id:          $res_3"
+echo -e "Parent volume deletion test: volume $a_volume: $v_snapshot_id:          $res_4"
+echo -e "Volume from snapshot  attach volume: $sv_id instance: $used_instance_id:              $res_5"
+echo -e "Volume from snapshot access: volume: $sv_id instance: $used_instance_id device: $v_device             $res_6"
+echo -e "Volume from snapshot detach: volume: $sv_id instance: $used_instance_id device: $v_device             $res_7"
+echo -e "Volume from snapshot delete: volume: $sv_id		$res_8"
+
+
+
+if [[ $s_volume_deleted = true ]];  then
+    echo -e "Image tests stage - Create an image from instance: $used_instance_id image_name: $used_instance_name-image"
+    nova image-create $used_instance_id $used_instance_name-image --poll && sleep 20
+    for ((i=1; i<=5; i++)); do
+       echo -e "Quering  image status: instnace_id: $used_instance_id  image_name: $used_instance_name-image attempt #$i"
+       [[ $(nova image-list | grep "$used_instance_name-image" | awk {'print $6'}) = "ACTIVE" ]] && img_ready=true && break || sleep 10 && continue
+    done
+else
+    echo -e "\n\nERROR: Volume delete status for instance: $used_instance_id and volume_id: $sv_id  failed\n\n"
+    exit 1
+fi
+
+if [[ $img_ready = true ]];  then
+    echo -e "\n\nImage tests stage - Create an image from instance: $used_instance_id status:	SUCCESS\n\n"
+    image_id=$(nova image-list | grep "$used_instance_name-image" | awk {'print $2'})
+    isc_name="image-test"
+    (
+           nova boot --poll --image "$image_id" --flavor ${flavor_rnd} \
+               --nic net-id=$fixed_net \
+               --security-groups smoketest \
+               --key-name smoketest \
+               "$isc_name" | \
+               tee "$LOGDIR/nova-$isc_name.status"
+    ) &
+    sleep 120
+    in_id=$(nova list | grep "$isc_name" | awk {'print $2'})
+    for ((i=1; i<=5; i++)); do
+      echo -e "Checking instance: $in_id status attempt #$i"
+      if [[ "$(nova list | grep "$in_id" | awk {'print $6'})" = "ACTIVE" ]]; then
+        echo -e "Instance: $isc_name is:           ACTIVE"
+        break
+      fi
+      sleep 10
+    done
+    [[ "$(nova list | grep "$in_id" | awk {'print $6'})" = "ERROR" ]] && die "Instance: $in_id failed to boot"
+    instances=("${instances[@]}" "$isc_name") && in_ready=true
+    f_ip=$(nova floating-ip-create | grep "floating" | awk {'print $2'}) || die 1 "Failed to create floating IP for instance: $in_id"
+    nova add-floating-ip $in_id $f_ip || die 1 "Failed to attach floating IP: $f_ip  to instance: $in_id"
+    floating_ips[$isc_name]=$f_ip
+    for ((i=0; i<=150; i++)); do
+         echo -e "Pinging instance_name: $isc_name instance_id: $in_id floating_ip: $f_ip instance: $in_id attempt #$i"
+         ping -q -c 1 -i 1 ${floating_ips[$isc_name]} &>/dev/null || continue
+         reachable=true
+         break
+    done
+    echo -e "Waiting for 60 seconds for sshd daemon to start on guest vm"
+    printf '.'
+    sleep 60
+else
+    echo -e "\n\nERROR: Image tests stage - Create an image from instance: $in_id image_name: $used_instance_name-image image_id: $image_id failed\n\n"
+    exit 1
+fi
+
+if [[ $reachable = true ]];  then
+    echo -e "\n\nInstance tests stage - ping instance_name: $isc_name instance_id: $in_id on floating_ip: $f_ip booted_from_snapshot: $image_id   status:		SUCCESS\n\n"
+    echo -e "Instance tests stage - getting access through SSH to guest OS: instance_name: $isc_name instance_id: $in_id on floating_ip: $f_ip used_ssh_key: $sshkey used_command: 'whoami' "
+    for ((i=1; i<=5; i++)); do
+       echo -e "SSH access test instnace_id: $in_id  ip: $f_ip attempt #$i"
+       [[ "$(ssh -i $sshkey -l ubuntu $f_ip "whoami")" = "ubuntu" ]] && ssh_pass=true && break || sleep 60 && continue
+    done
+    echo -e "Removing instance snapshot $image_id"
+    nova image-delete $image_id
+    for ((i=1; i<=5; i++)); do
+       echo -e "Checking if instance snapshot: $image_id exists attempt #$i"
+       [[ "$(nova image-list | grep '$image_id')" != *$image_id* ]] && isnapshot_removed=true && break || sleep 20 && continue
+    done
+    [[ $isnapshot_removed = true ]] && echo -e "\n\n\n Snapshot: $image_id of instance: $in_id deletion status:		SUCCESS\n\n\n" || die "\n\n\nERROR: snapshot: $image_id of instance: $in_id deletion failed\n\n\n"
+else
+    echo -e "\n\n\nERROR: Instance tests stage - Instance: $in_id on floating_ip: $f_ip is not responding to ping \n\n\n"
+    exit 1
+fi
+
+
+#  Following code added in order to implement workaround for cinder Bug #1183283: Creating a Cinder volume from an image ID fails to copy the image to the volume.
+#  Fix provided in: " https://github.com/openstack/cinder/commit/e7d973c51445fac372d5fe4641517797f0803e4b " but this bug is present in our actual version of Cinder, which is 1.0.3
+#  Workaround will be removed once bug will be fixed
+# Cinder Bug #1183283  workaround start
+
+cinder_broken_ver="1.0.3"
+
+
+cinder_broken_ver=$(echo "$cinder_broken_ver" | sed -e 's/[[:digit:]]*\.//' | sed -e 's/[[:alpha:]]//g' | sed -e 's/^0\.//' | sed 's/[\/|\-]//g')
+for ((i=1; i<=5; i++)); do
+    echo -e "Checking Cinder version on server: $cinder_server_ip attempt #$i"
+    cinder_server_ip=$(knife_node_find 'roles:cinder-controller' IP)
+    cinder_version=$(ssh $cinder_server_ip "cinder --version" 2>&1 | sed -e 's/[[:digit:]]*\.//' | sed -e 's/[[:alpha:]]//g' | sed -e 's/^0\.//' | sed 's/[\/|\-]//g' | tr -dc '$[:print:]\r\n\t\\^M')
+    [[ "$cinder_version" ]] && break || sleep 20 && continue
 done
+
+if (($(bc <<< "$cinder_version>$cinder_broken_ver"))); then
+# Cinder Bug #1183283  workaround end
+    if [[ $ssh_pass = true ]];  then
+        b_device="volume-from-image"
+        echo -e "\n\nInstance tests stage - getting access through SSH to guest OS: instance_name: $isc_name instance_id: $in_id on floating_ip: $f_ip used_ssh_key: $sshkey used_command: 'whoami' status:		SUCCESS\n\n"
+        echo -e "Volume tests stage - Create volume from image volume_name: $b_device source_image: $test_image"
+
+        make_b=$(nova volume-create --display_name $b_device  --image-id $test_image 2 | grep  ' id' | awk {'print $4'})
+        vl_id=$make_b && sleep 3
+        b_device_id=$(nova volume-list | grep "$vl_id" | awk {'print $2'})
+
+        for ((i=1; i<=10; i++)); do
+            b_device_status=$(nova volume-list | grep $b_device_id | awk {'print $4'})
+            echo -e "Quering volume  volume_name: volume-from-image  volume_id: $b_device_id status attempt #$i"
+            echo -e "Block device actual status: $b_device_status"
+            printf '.'
+            [[ "$b_device_status" = "available" ]] && b_device_ready=true && break || sleep 20 && continue
+        done
+    else
+       echo -e "\n\nERROR: Instance tests stage - SSH access to instance: $in_id on floating_ip: $f_ip failed\n\n"
+       exit 1
+    fi
+
+
+    if [[ $b_device_ready = true ]];  then
+    echo -e "\n\n\nVolume tests stage - volume create from image volume_name: $b_device  status:	SUCCESS\n\n\n"
+    echo -e "Booting instance instance_name: $b_device-test volume_name: $b_device volume_id: $b_device_id"
+#
+# Bug #1008622 OpenStack Compute (nova): Booting from volume shouldn't require specifying an image
+# "--image" flag was specified despite the fact we are testing "Volume from image creation" scenario, this behavior may be fixed in future and following block of code may stop to work
+#
+
+#        b_device_id=$(nova volume-list | grep "$ivol_id" | awk {'print $2'})
+        (
+               nova boot --poll --image "$test_image" --flavor ${flavor_rnd} \
+                   --nic net-id=$fixed_net \
+                   --security-groups smoketest \
+                   --key-name smoketest \
+                   --block-device-mapping vdb=$b_device_id:::0 \
+                   "$b_device-test" | \
+                    tee "$LOGDIR/nova-$isc_name.status"
+        ) &
+        sleep 120
+        instances=("${instances[@]}" "$b_device-test")
+        in_id=$(nova list | grep "$b_device-test" | awk {'print $2'})
+        for ((i=1; i<=5; i++)); do
+           echo -e "Checking instance: $in_id status attempt #$i"
+           if [[ "$(nova list | grep "$in_id" | awk {'print $6'})" = "ACTIVE" ]]; then
+               echo -e "Instance: $b_device-test is:           ACTIVE"
+               break
+           fi
+           sleep 10
+        done
+        if [[ "$(nova list | grep "$in_id" | awk {'print $6'})" = "ERROR" ]]; then
+            echo -e "Instance: $in_id failed to boot"
+            exit 1
+        fi
+        f_ip=$(nova floating-ip-create | grep "floating" | awk {'print $2'}) || die 1 "Failed to create floating IP for instance: $in_id"
+        nova add-floating-ip $in_id $f_ip || die 1 "\n\n\nERROR:Failed to attach floating IP: $f_ip  to instance: $in_id\n\n\n"
+        floating_ips["$b_device-test"]=$f_ip
+        for ((i=0; i<=150; i++)); do
+            echo -e "Pinging instance_name: $b_device-test instance_id: $in_id floating_ip: $f_ip instance: $in_id attempt #$i"
+            ping -q -c 1 -i 1 ${floating_ips["$b_device-test"]} &>/dev/null || continue
+            v_reachable=true
+            break
+        done
+        echo -e "Waiting for 60 seconds for sshd daemon to start on guest vm"
+        printf '.'
+        sleep 60
+    else
+       echo -e "\n\nERROR: Volume tests stage - Action 'Create volume from image' volume_name: $b_device  volume_id: $b_device_id failed\n\n"
+       exit 1
+
+    fi
+
+    if [[ $v_reachable = true  ]]; then
+        echo -e "\n\nInstance tests stage - ping instance_name: $b_device-test  instance_id: $in_id on floating_ip: ${floating_ips["$b_device-test"]} status:		SUCCESS\n\n"
+        echo -e "Instance tests stage - getting access through SSH to guest OS: instance_name: $b_device-test instance_id: $in_id on floating_ip: ${floating_ips["$b_device-test"]} used_ssh_key: $sshkey used_command: 'sudo cat /proc/partitions | grep vdb "
+        for ((i=1; i<=5; i++)); do
+            disk_probe=$(ssh -i $sshkey -l ubuntu ${floating_ips["$b_device-test"]} "sudo cat /proc/partitions | grep 'vdb'")
+            echo -e "Quering  volume_id: $b_device_id  device: $v_device  instnace_id: $in_id  status attempt #$i"
+            echo -e "Volume_status: $disk_probe"
+            [[ $disk_probe = *$v_device* ]] && ssh_ok=true && break || sleep 10 && continue
+        done
+    else
+        echo -e "\n\nERROR: Instance tests stage - Instance: $in_id on floating_ip: ${floating_ips["$b_device-test"]} is not responding to ping \n\n"
+        exit 1
+    fi
+
+    if [[ $ssh_ok = true  ]]; then
+        echo -e "\n\n\nTests complete\n\n\n Cleaning up: instance_name: $b_device-test and volume: $b_device_id"
+        nova delete $b_device-test 
+        sleep 10
+        for ((i=1; i<=5; i++)); do
+          removed_instance_id=$(nova list | grep "$b_device-test")
+          echo -e "Verifying that instance: $in_id actually removed, attempt #$i"
+          [[ ! $removed_instance_id ]] && cleanup_ok_instance=true && break || sleep 5 && continue
+        done
+
+        nova volume-delete $b_device_id
+        sleep 10
+        for ((i=1; i<=5; i++)); do
+            removed_volume_id=$(nova volume-list | grep "$b_device_id")
+            echo -e "Verifying that volume: $b_device_id actually removed, attempt #$i"
+            [[ ! $removed_volume_id ]] && cleanup_ok_volume=true && break || sleep 5 && continue
+        done
+       cleanup_ok=false
+       [[ ${cleanup_ok_volume} = true ]] && [[ ${cleanup_ok_instance} = true ]] && cleanup_ok=true
+       [[ $cleanup_ok = true ]] && echo -e "Instance: $in_id  and volume: $b_device_id  cleanup:		SUCCESS"
+    else
+        echo -e "\n\n\nERROR:SSH test failed for instance: $in_id\n\n\n"
+        exit 1
+    fi
+    [[ $cleanup_ok = true ]] && echo -e "Clean up for instance_name: $b_device-test and volume: $b_device_id status:		SUCCESS" || echo -e "ERROR: Clean up process for instance_name: $b_device-test and volume: $b_device_id failed"
+# Cinder Bug #1183283  workaround start
+else
+   echo -e "\n\nTest set for instances booted from volume created from glance image  will be skipped due to Cinder Bug #1183283, check comments provided in this script code for details \n\n"
+fi
+# Cinder Bug #1183283  workaround end
+fi
+
+# Need to test full network connectivity, Cinder, and instance interconnectivity.
 
 echo "Nova VM deploy passed."
 exit 0

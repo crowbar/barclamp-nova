@@ -22,44 +22,57 @@
 # Nova scale data holder
 nova_scale = {
   :computes => [],
-  :volumes => [],
   :networks => [],
   :schedulers => [],
   :apis => []
 }
 
-unless node[:nova_environment].nil?
-  search(:node, "roles:nova-single-machine AND nova_environment:#{node[:nova_environment]}") do |n|
-    nova_scale[:computes] << n
-#   nova_scale[:volumes] << n
-    nova_scale[:networks] << n
-    nova_scale[:schedulers] << n
-    nova_scale[:apis] << n
-  end
-
-  search(:node, "roles:nova-multi-controller AND nova_environment:#{node[:nova_environment]}") do |n|
-    nova_scale[:networks] << n
-    nova_scale[:schedulers] << n
-    nova_scale[:apis] << n
-  end
-
-  search(:node, "roles:nova-multi-compute AND nova_environment:#{node[:nova_environment]}") do |n|
-    nova_scale[:computes] << n
-#   nova_scale[:volumes] << n
-  end
-  # As other nova and swift roles come on-line we should add them here.
+search_env_filtered(:node, "roles:nova-single-machine") do |n|
+  nova_scale[:computes] << n
+  nova_scale[:networks] << n
+  nova_scale[:schedulers] << n
+  nova_scale[:apis] << n
 end
 
-include_recipe "nagios::common" if node["roles"].include?("nagios-client")
+search_env_filtered(:node, "roles:nova-multi-controller") do |n|
+  nova_scale[:networks] << n
+  nova_scale[:schedulers] << n
+  nova_scale[:apis] << n
+end
 
-template "/etc/nagios/nrpe.d/nova_nrpe.cfg" do
-  source "nova_nrpe.cfg.erb"
-  mode "0644"
-  group node[:nagios][:group]
-  owner node[:nagios][:user]
-  variables( {
-    :nova_scale => nova_scale
-  })    
-   notifies :restart, "service[nagios-nrpe-server]"
-end if node["roles"].include?("nagios-client")    
+search_env_filtered(:node, "roles:nova-multi-compute-hyperv") do |n|
+  nova_scale[:computes] << n
+end
 
+search_env_filtered(:node, "roles:nova-multi-compute-kvm") do |n|
+  nova_scale[:computes] << n
+end
+
+search_env_filtered(:node, "roles:nova-multi-compute-qemu") do |n|
+  nova_scale[:computes] << n
+end
+
+if node["roles"].include?("nagios-client")    
+  include_recipe "nagios::common"
+
+  nova_admin_ip = Chef::Recipe::Barclamp::Inventory.get_network_by_type(node, "admin").address
+  template "/etc/nagios/nrpe.d/nova_nrpe.cfg" do
+    source "nova_nrpe.cfg.erb"
+    mode "0644"
+    group node[:nagios][:group]
+    owner node[:nagios][:user]
+    variables( {
+      :nova_scale => nova_scale,
+      :nova_admin_ip => nova_admin_ip
+    })    
+    notifies :restart, "service[nagios-nrpe-server]"
+  end 
+
+  template "/etc/sudoers.d/nagios_sudoers" do
+    source "nagios_sudoers.erb"
+    mode "0440"
+    group "root"
+    owner "root"
+  end
+
+end

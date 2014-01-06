@@ -1,8 +1,8 @@
 #
 # Cookbook Name:: nova
-# Recipe:: scheduler
+# Recipe:: cert
 #
-# Copyright 2010, Opscode, Inc.
+# Copyright 2012, Novell, Inc.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -19,5 +19,4 @@
 
 include_recipe "nova::config"
 
-nova_package("scheduler")
-nova_package("conductor")
+nova_package("cert")

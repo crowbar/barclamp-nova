@@ -3,13 +3,100 @@
   "description": "installs and configures the Openstack Nova component. It relies upon the network and glance barclamps for normal operation.",
   "attributes": {
     "nova": {
+      "database_instance": "none",
+      "rabbitmq_instance": "none",
       "keystone_instance": "none",
       "service_user": "nova",
       "glance_instance": "none",
+      "cinder_instance": "none",
+      "neutron_instance": "none",
+      "itxt_instance": "none",
+      "trusted_flavors": false,
       "libvirt_type": "kvm",
       "use_novnc": true,
-      "verbose": true,
-      "user": "nova",
+      "verbose": false,
+      "use_shared_instance_storage": false,
+      "use_migration": false,
+      "use_syslog": false,
+      "gitrepo": "http://github.com/openstack/nova.git",
+      "git_instance": "",
+      "git_refspec": "stable/grizzly",
+      "use_gitrepo": false,
+      "use_gitbarclamp": true,
+      "use_pip_cache": true,
+      "use_virtualenv": true,
+      "networking_backend": "neutron",
+      "pfs_deps": [
+        "dnsmasq-base",
+        "dnsmasq-utils",
+        "kpartx",
+        "parted",
+        "iputils-arping",
+        "kvm",
+        "gawk",
+        "iptables",
+        "ebtables",
+        "sqlite3",
+        "sudo",
+        "kvm",
+        "libvirt-bin",
+        "vlan",
+        "curl",
+        "socat",
+        "python-anyjson",
+        "python-mysqldb",
+        "python-xattr",
+        "python-lxml",
+        "python-mox",
+        "python-paste",
+        "python-migrate",
+        "python-gflags",
+        "python-greenlet",
+        "python-libvirt",
+        "python-libxml2",
+        "python-routes",
+        "python-netaddr",
+        "python-pastedeploy",
+        "python-eventlet",
+        "python-cheetah",
+        "python-carrot",
+        "python-tempita",
+        "python-sqlalchemy",
+        "python-paramiko",
+        "python-iso8601",
+        "python-httplib2",
+        "python-suds",
+        "python-lockfile",
+        "python-m2crypto",
+        "python-boto",
+        "python-kombu",
+        "python-feedparser",
+        "python-iso8601",
+        "python-dateutil",
+        "python-numpy",
+        "lvm2",
+        "open-iscsi",
+        "open-iscsi-utils",
+        "tgt",
+        "python-amqplib",
+        "python-boto",
+        "python-webob",
+        "pip://eventlet>=0.9.17",
+        "pip://setuptools_git>=0.4",
+        "pip://python-neutronclient>=2.1",
+        "pip://python-glanceclient>=0.5.0,<2",
+        "pip://python-novaclient",
+        "pip://python-ceilometerclient",
+        "pip://python-cinderclient",
+        "pip://python-keystoneclient>=0.3.0",
+        "pip://prettytable>=0.6,<0.8",
+        "pip://websockify<0.4",
+        "pip://stevedore>=0.7",
+        "pip://Babel>=0.9.6",
+        "pip://pyasn1",
+        "pip://netaddr>=0.7.6",
+        "pip://Markdown>=2.0.1"
+      ],
       "network": {
         "ha_enabled": true,
         "tenant_vlans": false,
@@ -18,24 +105,33 @@
         "num_networks": 1,
         "network_size": 256
       },
-      "volume": {
-        "volume_name": "nova-volumes",
-        "volume_type": "raw",
-        "nova_raw_method": "all",
-        "nova_volume_disks": [],
-        "local_file": "/var/lib/nova/volume.raw",
-        "local_size": 2000
-      },
-      "rabbit": {
-        "password": "secure_password",
-        "user": "nova",
-        "vhost": "/nova"
+      "scheduler": {
+	"ram_allocation_ratio": 1.0,
+	"cpu_allocation_ratio": 16.0
       },
       "db": {
-        "mysql_instance": "none",
         "password": "",
         "user": "nova",
         "database": "nova"
+      },
+      "kvm": {
+        "ksm_enabled": false
+      },
+      "ssl": {
+        "enabled": false,
+        "certfile": "/etc/nova/ssl/certs/signing_cert.pem",
+        "keyfile": "/etc/nova/ssl/private/signing_key.pem",
+        "generate_certs": false,
+        "insecure": false,
+        "cert_required": false,
+        "ca_certs": "/etc/nova/ssl/certs/ca.pem"
+      },
+      "novnc": {
+        "ssl": {
+          "enabled": false,
+          "certfile": "",
+          "keyfile": ""
+        }
       }
     }
   },
@@ -48,15 +144,24 @@
     "nova": {
       "crowbar-revision": 0,
       "element_states": {
-        "nova-multi-volume": [ "readying", "ready", "applying" ],
         "nova-multi-controller": [ "readying", "ready", "applying" ],
-        "nova-multi-compute": [ "readying", "ready", "applying" ]
+        "nova-multi-compute-hyperv": [ "readying", "ready", "applying" ],
+        "nova-multi-compute-kvm": [ "readying", "ready", "applying" ],
+        "nova-multi-compute-qemu": [ "readying", "ready", "applying" ]
       },
       "elements": {},
       "element_order": [
         [ "nova-multi-controller" ],
-        [ "nova-multi-compute", "nova-multi-volume" ]
+        [ "nova-multi-compute-hyperv" ],
+        [ "nova-multi-compute-kvm" ],
+        [ "nova-multi-compute-qemu" ]
       ],
+      "element_run_list_order": {
+        "nova-multi-controller": 95,
+        "nova-multi-compute-hyperv": 97,
+        "nova-multi-compute-kvm": 97,
+        "nova-multi-compute-qemu": 97
+      },
       "config": {
         "environment": "nova-config-base",
         "mode": "full",
