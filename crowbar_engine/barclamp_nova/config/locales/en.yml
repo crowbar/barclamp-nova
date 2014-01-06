@@ -1,0 +1,46 @@
+# Copyright 2013, Dell
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#  http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+#
+en:
+  barclamp:
+    nova:
+      edit_attributes:
+        attributes: Attributes
+        mysql_instance: MySQL
+        keystone_instance: Keystone
+        service_user: Keystone Service User
+        service_password: Keystone Service Password
+        glance_instance: Glance
+        verbose: Verbose
+        use_novnc: Use NoVNC (otherwise VPN-VNC)
+        dhcp_enabled: DHCP Enabled
+        ha_enabled: High Availability Enabled
+        tenant_vlans: Use Tenant Vlans
+        libvirt_type: Hypervisor
+        network_header: Network Options
+        allow_same_net_traffic: Allow Same-Network Traffic
+        num_networks: Number of Networks
+        network_size: Network Size
+        volume_header: Volume Options
+        volume_type: Type of Volume
+        volume_name: Name of Volume
+        volume_file_name: Volume File Name
+        volume_file_size: Maximum File Size (GB)
+        volume_file_size_error: Maximum File Size must be at least 2GB
+        volume_file_location: Volume File Location
+        volume_raw_mode: Disk selection method
+        nova_volume_disks: Disks for nova-volume storage volume group
+      edit_deployment:
+        deployment: Deployment
+
