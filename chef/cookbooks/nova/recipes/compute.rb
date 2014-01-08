@@ -49,9 +49,8 @@ def set_boot_kernel_and_trigger_reboot(flavor='default')
           # found boot index
           break if line.include?('Xen')
         else
-          # take first kernel as default, unless we are searching for xen
-          # kernel
-          break
+          # take first non-xen kernel as default
+          break unless line.include?('Xen')
         end
 
         default_boot += 1
@@ -92,11 +91,14 @@ if %w(redhat centos suse).include?(node.platform)
   case node[:nova][:libvirt_type]
     when "kvm"
       package "kvm"
+      set_boot_kernel_and_trigger_reboot
+
+      # load modules only when appropriate kernel is present
       execute "loading kvm modules" do
         command "grep -q vmx /proc/cpuinfo && /sbin/modprobe kvm-intel; grep -q svm /proc/cpuinfo && /sbin/modprobe kvm-amd; /sbin/modprobe vhost-net"
+        only_if { %x[uname -r].include?('default') }
       end
 
-      set_boot_kernel_and_trigger_reboot
     when "xen"
       %w{kernel-xen xen xen-tools openvswitch-kmp-xen}.each do |pkg|
         package pkg do
@@ -107,6 +109,8 @@ if %w(redhat centos suse).include?(node.platform)
       service "xend" do
         action :nothing
         supports :status => true, :start => true, :stop => true, :restart => true
+        # restart xend only when xen kernel is already present
+        only_if { %x[uname -r].include?('xen') }
       end
 
       template "/etc/xen/xend-config.sxp" do
