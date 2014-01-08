@@ -20,7 +20,7 @@ en:
         use_migration: Enable Libvirt Migration
         kvm_header: KVM Options
         kvm:
-          ksm: Enable Kernel Samepage Merging
+          ksm_enabled: Enable Kernel Samepage Merging
         ssl_header: SSL Support
         ssl:
           enabled: Protocol
