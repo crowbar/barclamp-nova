@@ -345,7 +345,8 @@ directory "/var/lock/nova" do
   group "root"
 end
 
-if api == node and api[:nova][:ssl][:enabled]
+# only require certs for nova controller
+if api == node and api[:nova][:ssl][:enabled] and node["roles"].include?("nova-multi-controller")
   if api[:nova][:ssl][:generate_certs]
     package "openssl"
     ruby_block "generate_certs for nova" do
