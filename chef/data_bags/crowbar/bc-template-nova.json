@@ -51,6 +51,7 @@
           "open-iscsi-utils",
           "tgt",
           "libmysqlclient-dev",
+          "pip://pbr>=0.5.21,<1.0",
           "pip://setuptools-git",
           "pip://distribute==0.6.28",
           "pip://MySQL-python",
