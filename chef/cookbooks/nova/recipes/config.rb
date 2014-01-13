@@ -280,11 +280,6 @@ if neutron_servers.length > 0
   neutron_insecure = neutron_protocol == 'https' && neutron_server[:neutron][:ssl][:insecure]
   neutron_service_user = neutron_server[:neutron][:service_user]
   neutron_service_password = neutron_server[:neutron][:service_password]
-  if neutron_server[:neutron][:networking_mode] != 'local'
-    per_tenant_vlan=true
-  else
-    per_tenant_vlan=false
-  end
   neutron_networking_plugin = neutron_server[:neutron][:networking_plugin]
   neutron_networking_mode = neutron_server[:neutron][:networking_mode]
 else
