@@ -18,6 +18,7 @@
       "verbose": true,
       "use_shared_instance_storage": false,
       "use_migration": false,
+      "auto_assign_floating_ip": false,
       "use_syslog": false,
       "gitrepo": "http://github.com/openstack/nova.git",
       "git_instance": "",
@@ -98,7 +99,7 @@
   "deployment": {
     "nova": {
       "crowbar-revision": 0,
-      "schema-revision": 2,
+      "schema-revision": 3,
       "element_states": {
         "nova-multi-controller": [ "readying", "ready", "applying" ],
         "nova-multi-compute-hyperv": [ "readying", "ready", "applying" ],

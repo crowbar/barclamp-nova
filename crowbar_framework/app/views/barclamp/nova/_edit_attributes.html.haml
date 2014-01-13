@@ -15,6 +15,7 @@
       = boolean_field :trusted_flavors
 
     = boolean_field :use_novnc
+    = boolean_field :auto_assign_floating_ip
 
     %fieldset
       %legend
@@ -59,7 +60,7 @@
       #novnc_ssl_container
         .alert.alert-info
           = t(".novnc_ssl_hint")
-          
+
         = string_field %w(novnc ssl certfile)
         = string_field %w(novnc ssl keyfile)
 
