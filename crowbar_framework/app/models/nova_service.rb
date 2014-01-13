@@ -78,144 +78,16 @@ class NovaService < ServiceObject
       "nova-multi-compute-qemu" => qemu.map { |x| x.name }  
     }
 
-    base["attributes"][@bc_name]["git_instance"] = ""
-    begin
-      gitService = GitService.new(@logger)
-      gits = gitService.list_active[1]
-      if gits.empty?
-        # No actives, look for proposals
-        gits = gitService.proposals[1]
-      end
-      unless gits.empty?
-        base["attributes"][@bc_name]["git_instance"] = gits[0]
-      end
-    rescue
-      @logger.info("#{@bc_name} create_proposal: no git found")
-    end
-
-    base["attributes"]["nova"]["database_instance"] = ""
-    begin
-      databaseService = DatabaseService.new(@logger)
-      dbs = databaseService.list_active[1]
-      if dbs.empty?
-        # No actives, look for proposals
-        dbs = databaseService.proposals[1]
-      end
-      if dbs.empty?
-        @logger.info("Nova create_proposal: no database proposal found")
-      else
-        base["attributes"]["nova"]["database_instance"] = dbs[0]
-      end
-    rescue
-      @logger.info("Nova create_proposal: no database found")
-    end
-
-    if base["attributes"]["nova"]["database_instance"] == ""
-      raise(I18n.t('model.service.dependency_missing', :name => @bc_name, :dependson => "database"))
-    end
-
-    base["attributes"]["nova"]["rabbitmq_instance"] = ""
-    begin
-      rabbitmqService = RabbitmqService.new(@logger)
-      rabbitmqs = rabbitmqService.list_active[1]
-      if rabbitmqs.empty?
-        # No actives, look for proposals
-        rabbitmqs = rabbitmqService.proposals[1]
-      end
-      base["attributes"]["nova"]["rabbitmq_instance"] = rabbitmqs[0] unless rabbitmqs.empty?
-    rescue
-      @logger.info("Nova create_proposal: no rabbitmq found")
-    end
-
-    if base["attributes"]["nova"]["rabbitmq_instance"] == ""
-      raise(I18n.t('model.service.dependency_missing', :name => @bc_name, :dependson => "rabbitmq"))
-    end
-
-    base["attributes"]["nova"]["keystone_instance"] = ""
-    begin
-      keystoneService = KeystoneService.new(@logger)
-      keystones = keystoneService.list_active[1]
-      if keystones.empty?
-        # No actives, look for proposals
-        keystones = keystoneService.proposals[1]
-      end
-      base["attributes"]["nova"]["keystone_instance"] = keystones[0] unless keystones.empty?
-    rescue
-      @logger.info("Nova create_proposal: no keystone found")
-    end
-
-    if base["attributes"]["nova"]["keystone_instance"] == ""
-      raise(I18n.t('model.service.dependency_missing', :name => @bc_name, :dependson => "keystone"))
-    end
+    base["attributes"][@bc_name]["git_instance"] = find_dep_proposal("git", true)
+    base["attributes"][@bc_name]["itxt_instance"] = find_dep_proposal("itxt", true)
+    base["attributes"][@bc_name]["database_instance"] = find_dep_proposal("database")
+    base["attributes"][@bc_name]["rabbitmq_instance"] = find_dep_proposal("rabbitmq")
+    base["attributes"][@bc_name]["keystone_instance"] = find_dep_proposal("keystone")
+    base["attributes"][@bc_name]["glance_instance"] = find_dep_proposal("glance")
+    base["attributes"][@bc_name]["cinder_instance"] = find_dep_proposal("cinder")
+    base["attributes"][@bc_name]["neutron_instance"] = find_dep_proposal("neutron")
 
     base["attributes"]["nova"]["service_password"] = '%012d' % rand(1e12)
-
-    base["attributes"][@bc_name]["itxt_instance"] = ""
-    begin
-      itxtService = InteltxtService.new(@logger)
-      itxts = itxtService.list_active[1]
-      if itxts.empty?
-        # No actives, look for proposals
-        #itxts = itxtService.proposals[1]
-        itxts = [ "None" ]
-      end
-      unless itxts.empty?
-        base["attributes"][@bc_name]["itxt_instance"] = itxts[0]
-      end
-    rescue
-      @logger.info("#{@bc_name} create_proposal: no itxt found")
-    end
-
-    base["attributes"]["nova"]["glance_instance"] = ""
-    begin
-      glanceService = GlanceService.new(@logger)
-      glances = glanceService.list_active[1]
-      if glances.empty?
-        # No actives, look for proposals
-        glances = glanceService.proposals[1]
-      end
-      base["attributes"]["nova"]["glance_instance"] = glances[0] unless glances.empty?
-    rescue
-      @logger.info("Nova create_proposal: no glance found")
-    end
-
-    if base["attributes"]["nova"]["glance_instance"] == ""
-      raise(I18n.t('model.service.dependency_missing', :name => @bc_name, :dependson => "glance"))
-    end
-
-    base["attributes"]["nova"]["cinder_instance"] = ""
-    begin
-      cinderService = CinderService.new(@logger)
-      cinders = cinderService.list_active[1]
-      if cinders.empty?
-        # No actives, look for proposals
-        cinders = cinderService.proposals[1]
-      end
-      base["attributes"]["nova"]["cinder_instance"] = cinders[0] unless cinders.empty?
-    rescue
-      @logger.info("Nova create_proposal: no cinder found")
-    end
-
-    if base["attributes"]["nova"]["cinder_instance"] == ""
-      raise(I18n.t('model.service.dependency_missing', :name => @bc_name, :dependson => "cinder"))
-    end
-
-    base["attributes"]["nova"]["neutron_instance"] = ""
-    begin
-      neutronService = NeutronService.new(@logger)
-      neutrons = neutronService.list_active[1]
-      if neutrons.empty?
-        # No actives, look for proposals
-        neutrons = neutronService.proposals[1]
-      end
-      base["attributes"]["nova"]["neutron_instance"] = neutrons[0] unless neutrons.empty?
-    rescue
-      @logger.info("Nova create_proposal: no neutron found")
-    end
-
-    if base["attributes"]["nova"]["neutron_instance"] == ""
-      raise(I18n.t('model.service.dependency_missing', :name => @bc_name, :dependson => "neutron"))
-    end
 
     base["attributes"]["nova"]["db"]["password"] = random_password
     base["attributes"]["nova"]["neutron_metadata_proxy_shared_secret"] = random_password
