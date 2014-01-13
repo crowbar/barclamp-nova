@@ -32,12 +32,9 @@ class NovaService < ServiceObject
     answer << { "barclamp" => "glance", "inst" => role.default_attributes["nova"]["glance_instance"] }
     answer << { "barclamp" => "rabbitmq", "inst" => role.default_attributes["nova"]["rabbitmq_instance"] }
     answer << { "barclamp" => "cinder", "inst" => role.default_attributes[@bc_name]["cinder_instance"] }
+    answer << { "barclamp" => "neutron", "inst" => role.default_attributes[@bc_name]["neutron_instance"] }
     if role.default_attributes[@bc_name]["use_gitrepo"]
       answer << { "barclamp" => "git", "inst" => role.default_attributes[@bc_name]["git_instance"] }
-    end
-
-    if role.default_attributes[@bc_name]["networking_backend"] == "neutron"
-      answer << { "barclamp" => "neutron", "inst" => role.default_attributes[@bc_name]["neutron_instance"] }
     end
     answer
   end
@@ -120,45 +117,31 @@ class NovaService < ServiceObject
     #
     net_svc = NetworkService.new @logger
     tnodes = role.override_attributes["nova"]["elements"]["nova-multi-controller"]
-    if role.default_attributes["nova"]["networking_backend"]=="neutron"
-      tnodes.each do |n|
-        net_svc.allocate_ip "default","public","host",n
-      end unless tnodes.nil?
-      neutron = ProposalObject.find_proposal("neutron",role.default_attributes["nova"]["neutron_instance"])
-      all_nodes.each do |n|
-        if neutron["attributes"]["neutron"]["networking_mode"] == "gre"
-          net_svc.allocate_ip "default", "os_sdn", "host", n
-        else
-          net_svc.enable_interface "default", "nova_fixed", n
-          if neutron["attributes"]["neutron"]["networking_mode"] == "vlan"
-            # Force "use_vlan" to false in VLAN mode (linuxbridge and ovs). We
-            # need to make sure that the network recipe does NOT create the
-            # VLAN interfaces (ethX.VLAN)
-            node = NodeObject.find_node_by_name n
-            if node.crowbar["crowbar"]["network"]["nova_fixed"]["use_vlan"]
-              @logger.info("Forcing use_vlan to false for the nova_fixed network on node #{n}")
-              node.crowbar["crowbar"]["network"]["nova_fixed"]["use_vlan"] = false
-              node.save
-            end
-          end
-        end
-      end unless all_nodes.nil?
-    else
-      tnodes = all_nodes if role.default_attributes["nova"]["network"]["ha_enabled"]
-      unless tnodes.nil? or tnodes.empty?
-        tnodes.each do |n|
-          net_svc.allocate_ip "default", "public", "host", n
-          unless role.default_attributes["nova"]["network"]["tenant_vlans"]
-            net_svc.allocate_ip "default", "nova_fixed", "router", n
+    tnodes.each do |n|
+      net_svc.allocate_ip "default","public","host",n
+    end unless tnodes.nil?
+
+    neutron = ProposalObject.find_proposal("neutron",role.default_attributes["nova"]["neutron_instance"])
+
+    all_nodes.each do |n|
+      if neutron["attributes"]["neutron"]["networking_mode"] == "gre"
+        net_svc.allocate_ip "default", "os_sdn", "host", n
+      else
+        net_svc.enable_interface "default", "nova_fixed", n
+        if neutron["attributes"]["neutron"]["networking_mode"] == "vlan"
+          # Force "use_vlan" to false in VLAN mode (linuxbridge and ovs). We
+          # need to make sure that the network recipe does NOT create the
+          # VLAN interfaces (ethX.VLAN)
+          node = NodeObject.find_node_by_name n
+          if node.crowbar["crowbar"]["network"]["nova_fixed"]["use_vlan"]
+            @logger.info("Forcing use_vlan to false for the nova_fixed network on node #{n}")
+            node.crowbar["crowbar"]["network"]["nova_fixed"]["use_vlan"] = false
+            node.save
           end
         end
       end
-      unless role.default_attributes["nova"]["network"]["tenant_vlans"]
-        all_nodes.each do |n|
-          net_svc.enable_interface "default", "nova_fixed", n
-        end
-      end
-    end
+    end unless all_nodes.nil?
+
     @logger.debug("Nova apply_role_pre_chef_call: leaving")
   end
 

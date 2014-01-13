@@ -66,7 +66,7 @@ template "/etc/nova/api-paste.ini" do
 end
 
 apis = search_env_filtered(:node, "recipes:nova\\:\\:api")
-if apis.length > 0 and !node[:nova][:network][:ha_enabled]
+if apis.length > 0
   api = apis[0]
   api = node if api.name == node.name
 else

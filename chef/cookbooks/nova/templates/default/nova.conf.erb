@@ -234,17 +234,7 @@ metadata_listen = <%= @metadata_bind_address %>
 #cert_manager=nova.cert.manager.CertManager
 
 # full class name for the Manager for network (string value)
-<% if node[:nova][:networking_backend] != "neutron" -%>
-<%   if node[:nova][:network][:dhcp_enabled] -%>
-<%     if node[:nova][:network][:tenant_vlans] -%>
-network_manager=nova.network.manager.VlanManager
-<%     else -%>
-network_manager=nova.network.manager.FlatDHCPManager
-<%     end -%>
-<%   else -%>
-network_manager=nova.network.manager.FlatManager
-<%   end -%>
-<% end -%>
+#network_manager=nova.network.manager.VlanManager
 
 # full class name for the Manager for scheduler (string value)
 #scheduler_manager=nova.scheduler.manager.SchedulerManager
@@ -404,7 +394,7 @@ ec2_scheme=<%= @ssl_enabled ? "https" : "http" %>
 
 # Set flag to indicate Neutron will proxy metadata requests
 # and resolve instance ids. (boolean value)
-service_neutron_metadata_proxy=<%= node[:nova][:networking_backend] == "neutron" ? 'True' : 'False' %>
+service_neutron_metadata_proxy=True
 
 # Shared secret to validate proxies Neutron metadata requests
 # (string value)
@@ -986,7 +976,7 @@ instance_usage_audit=True
 
 # The full class name of the network API class to use (string
 # value)
-<%= "network_api_class=nova.network.neutronv2.api.API" if node[:nova][:networking_backend] == "neutron" %>
+network_api_class=nova.network.neutronv2.api.API
 
 
 #
@@ -1002,7 +992,7 @@ instance_usage_audit=True
 #
 
 # Default pool for floating ips (string value)
-<%= "default_floating_pool=floating" if node[:nova][:networking_backend] == "neutron" %>
+default_floating_pool=floating
 
 # Autoassigning floating ip to VM (boolean value)
 #auto_assign_floating_ip=false
@@ -1072,7 +1062,7 @@ instance_usage_audit=True
 #networks_path=$state_path/networks
 
 # Interface for public IP addresses (string value)
-<%= "public_interface=#{node[:nova][:network][:public_interface]}" if node[:nova][:networking_backend] == "nova-network" %>
+#public_interface=eth0
 
 # MTU setting for vlan (string value)
 #network_device_mtu=<None>
@@ -1107,9 +1097,7 @@ dhcpbridge=<%= @dhcpbridge %>
 #dnsmasq_config_file=
 
 # Driver used to create ethernet devices. (string value)
-<% if node[:nova][:networking_backend] == "neutron" -%>
 linuxnet_interface_driver=""
-<% end -%>
 
 
 # Name of Open vSwitch bridge used with linuxnet (string
@@ -1154,29 +1142,28 @@ linuxnet_interface_driver=""
 # Options defined in nova.network.manager
 #
 
-<% if node[:nova][:networking_backend] != "neutron" -%>
 # Bridge for simple network instances (string value)
-<%= "flat_network_bridge=#{node[:nova][:network][:flat_network_bridge]}" if !node[:nova][:network][:tenant_vlans] %>
+#flat_network_bridge=<None>
 
 # Dns for simple network (string value)
-<%= "flat_network_dns=#{@dns_server_public_ip}" if !node[:nova][:network][:tenant_vlans] %>
+#flat_network_dns=8.8.4.4
 
 # Whether to attempt to inject network setup into guest
 # (boolean value)
-<%= "flat_injected=True" if !node[:nova][:network][:dhcp_enabled] && ! node[:nova][:network][:tenant_vlans] %>
+#flat_injected=false
 
 # FlatDhcp will bridge into this interface if set (string
 # value)
-<%= "flat_interface=#{node[:nova][:network][:flat_interface]}" if !node[:nova][:network][:tenant_vlans] %>
+#flat_interface=<None>
 
 # First VLAN for private networks (integer value)
-<%= "vlan_start=#{node[:nova][:network][:vlan_start]}" if node[:nova][:network][:tenant_vlans] %>
+#vlan_start=100
 
 # vlans will bridge into this interface if set (string value)
-<%= "vlan_interface=#{node[:nova][:network][:vlan_interface]}" if node[:nova][:network][:tenant_vlans] %>
+#vlan_interface=<None>
 
 # Number of networks to support (integer value)
-num_networks=<%= node[:nova][:network][:num_networks] %>
+#num_networks=1
 
 # Public IP for the cloudpipe VPN servers (string value)
 #vpn_ip=$my_ip
@@ -1185,7 +1172,7 @@ num_networks=<%= node[:nova][:network][:num_networks] %>
 #vpn_start=1000
 
 # Number of addresses in each private subnet (integer value)
-network_size=<%= node[:nova][:network][:network_size] %>
+#network_size=256
 
 # Fixed IPv6 address block (string value)
 #fixed_range_v6=fd00::/48
@@ -1244,7 +1231,6 @@ network_size=<%= node[:nova][:network][:network_size] %>
 
 # Indicates underlying L3 management library (string value)
 #l3_lib=nova.network.l3.LinuxNetL3
-<% end -%>
 
 #
 # Options defined in nova.network.neutronv2.api
@@ -1318,7 +1304,7 @@ neutron_api_insecure=<%= @neutron_insecure ? 'True' : 'False' %>
 #
 
 # The full class name of the security API class (string value)
-<% if node[:nova][:networking_backend] == "neutron" %>security_group_api=neutron<% end %>
+security_group_api=neutron
 
 # The full class name of the security group handler class
 # (string value)
@@ -1963,11 +1949,11 @@ use_cow_images=false
 
 # Firewall driver (defaults to hypervisor specific iptables
 # driver) (string value)
-<%= "firewall_driver=nova.virt.firewall.NoopFirewallDriver" if node[:nova][:networking_backend] == "neutron" %>
+firewall_driver=nova.virt.firewall.NoopFirewallDriver
 
 # Whether to allow network traffic from same network (boolean
 # value)
-allow_same_net_traffic=<%= node[:nova][:network][:allow_same_net_traffic] ? "True" : "False" %>
+#allow_same_net_traffic=true
 
 
 #
@@ -2050,12 +2036,10 @@ block_migration_flag=VIR_MIGRATE_UNDEFINE_SOURCE, VIR_MIGRATE_PEER2PEER, VIR_MIG
 #snapshot_image_format=<None>
 
 # The libvirt VIF driver to configure the VIFs. (string value)
-<% if node[:nova][:networking_backend] == "neutron" -%>
-<%   if @neutron_networking_plugin == "openvswitch" or @neutron_networking_plugin == "cisco" -%>
+<% if @neutron_networking_plugin == "openvswitch" or @neutron_networking_plugin == "cisco" -%>
 libvirt_vif_driver=nova.virt.libvirt.vif.LibvirtHybridOVSBridgeDriver
-<%   elsif @neutron_networking_plugin == "linuxbridge" -%>
+<% elsif @neutron_networking_plugin == "linuxbridge" -%>
 libvirt_vif_driver=nova.virt.libvirt.vif.LibvirtGenericVIFDriver
-<%   end -%>
 <% end -%>
 
 # Libvirt handlers for remote volumes. (list value)
