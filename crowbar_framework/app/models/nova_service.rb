@@ -16,8 +16,8 @@
 class NovaService < ServiceObject
 
   def initialize(thelogger)
+    super(thelogger)
     @bc_name = "nova"
-    @logger = thelogger
   end
 
 # Turn off multi proposal support till it really works and people ask for it.
@@ -284,22 +284,17 @@ class NovaService < ServiceObject
   end
 
   def validate_proposal_after_save proposal
-    super
+    validate_one_for_role proposal, "nova-multi-controller"
 
     if proposal["attributes"][@bc_name]["use_gitrepo"]
-      gitService = GitService.new(@logger)
-      gits = gitService.list_active[1].to_a
-      if not gits.include?proposal["attributes"][@bc_name]["git_instance"]
-        raise(I18n.t('model.service.dependency_missing', :name => @bc_name, :dependson => "git"))
-      end
+      validate_dep_proposal_is_active "git", proposal["attributes"][@bc_name]["git_instance"]
     end
 
-    errors = []
     elements = proposal["deployment"]["nova"]["elements"]
     nodes = Hash.new(0)
 
     unless elements["nova-multi-compute-hyperv"].empty? || hyperv_available?
-      errors << "Hyper-V support is not available."
+      validation_error("Hyper-V support is not available.")
     end
 
     elements["nova-multi-compute-hyperv"].each do |n|
@@ -314,14 +309,11 @@ class NovaService < ServiceObject
 
     nodes.each do |key,value|
         if value > 1
-            errors << "Node #{key} has been already assigned to nova-multi-compute role twice"
+            validation_error("Node #{key} has been already assigned to nova-multi-compute role twice")
         end
     end unless nodes.nil?
 
-    if errors.length > 0
-      raise Chef::Exceptions::ValidationFailed.new(errors.join("\n"))
-    end
-
+    super
   end
 
   private
