@@ -69,13 +69,16 @@ class NovaService < ServiceObject
     hyperv = nodes.select { |n| n if n[:target_platform] =~ /^(windows-|hyperv-)/ }
     non_hyperv = nodes - hyperv
     kvm = non_hyperv.select { |n| n if n[:cpu]['0'][:flags].include?("vmx") or n[:cpu]['0'][:flags].include?("svm") }
-    qemu = non_hyperv - kvm
+    non_kvm = non_hyperv - kvm
+    xen = non_kvm.select { |n| n unless n[:block_device].include?('vda') }
+    qemu = non_kvm - xen
 
     base["deployment"]["nova"]["elements"] = {
       "nova-multi-controller" => [ controller.name ],
       "nova-multi-compute-hyperv" => hyperv.map { |x| x.name },
       "nova-multi-compute-kvm" => kvm.map { |x| x.name },
-      "nova-multi-compute-qemu" => qemu.map { |x| x.name }  
+      "nova-multi-compute-qemu" => qemu.map { |x| x.name },
+      "nova-multi-compute-xen" => xen.map { |x| x.name }
     }
 
     base["attributes"][@bc_name]["git_instance"] = find_dep_proposal("git", true)
@@ -178,6 +181,9 @@ class NovaService < ServiceObject
     elements["nova-multi-compute-qemu"].each do |n|
         nodes[n] += 1
     end unless elements["nova-multi-compute-qemu"].nil?
+    elements["nova-multi-compute-xen"].each do |n|
+        nodes[n] += 1
+    end unless elements["nova-multi-compute-xen"].nil?
 
     nodes.each do |key,value|
         if value > 1
