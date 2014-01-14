@@ -42,6 +42,10 @@ class NovaService < ServiceObject
     answer
   end
 
+  def node_platform_supports_xen(node)
+    node[:platform] == "suse"
+  end
+
   #
   # Lots of enhancements here.  Like:
   #    * Don't reuse machines
@@ -70,7 +74,7 @@ class NovaService < ServiceObject
     non_hyperv = nodes - hyperv
     kvm = non_hyperv.select { |n| n if n[:cpu]['0'][:flags].include?("vmx") or n[:cpu]['0'][:flags].include?("svm") }
     non_kvm = non_hyperv - kvm
-    xen = non_kvm.select { |n| n unless n[:block_device].include?('vda') }
+    xen = non_kvm.select { |n| n unless n[:block_device].include?('vda') or !node_platform_supports_xen(n) }
     qemu = non_kvm - xen
 
     base["deployment"]["nova"]["elements"] = {
@@ -183,6 +187,10 @@ class NovaService < ServiceObject
     end unless elements["nova-multi-compute-qemu"].nil?
     elements["nova-multi-compute-xen"].each do |n|
         nodes[n] += 1
+        node = NodeObject.find_node_by_name(n)
+        unless node.nil? || node_platform_supports_xen(node)
+            validation_error("Platform of node #{n} (#{node[:platform]}-#{node[:platform_version]}) does not support Xen.")
+        end
     end unless elements["nova-multi-compute-xen"].nil?
 
     nodes.each do |key,value|
