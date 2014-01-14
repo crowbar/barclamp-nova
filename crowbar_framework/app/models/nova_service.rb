@@ -195,7 +195,7 @@ class NovaService < ServiceObject
 
     nodes.each do |key,value|
         if value > 1
-            validation_error("Node #{key} has been already assigned to nova-multi-compute role twice")
+            validation_error("Node #{key} has been assigned to a nova-multi-compute role more than once")
         end
     end unless nodes.nil?
 
