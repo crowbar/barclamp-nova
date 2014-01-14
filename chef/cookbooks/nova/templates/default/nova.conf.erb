@@ -1006,6 +1006,7 @@ instance_usage_audit=True
 
 # Autoassigning floating ip to VM (boolean value)
 #auto_assign_floating_ip=false
+<%= "auto_assign_floating_ip=true" if node[:nova][:auto_assign_floating_ip] %>
 
 # full class name for the DNS Manager for floating IPs (string
 # value)
