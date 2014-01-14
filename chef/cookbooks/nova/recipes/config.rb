@@ -218,11 +218,22 @@ else
   node.set[:nova][:network][:vlan_start] = fixed_net["vlan"]
 end
 
-  package("libvirt-bin")
+  case node[:platform]
+  when "ubuntu", "debian"
+    package("libvirt-bin")
+  when "centos", "rhel"
+    package("libvirt")
+  end
 
   create_user_and_dirs "nova" do
     opt_dirs [node[:nova][:instances_path]]
-    user_gid "libvirtd"
+    case node[:platform]
+    when "ubuntu", "debian"
+      user_gid "libvirtd"
+    when "centos", "rhel"
+      # TODO: need more appropriate group for this
+      user_gid "root"
+    end
   end
 
   # This account needs to be ssh'able, so must have a login shell

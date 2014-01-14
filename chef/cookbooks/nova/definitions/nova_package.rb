@@ -52,7 +52,12 @@ define :nova_package, :enable => true do
         # start will happen after reboot, and potentially even fail before
         # reboot (ie. on installing kernel-xen + expecting libvirt to already
         # use xen before)
-        action [:enable]
+        unless %w(redhat centos).include?(node.platform)
+          action [:enable]
+        else
+          #needed until https://bugs.launchpad.net/oslo/+bug/1177184 is solved
+          action [:enable, :start]
+        end
       end
     end
 
