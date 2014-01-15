@@ -86,7 +86,7 @@ rabbit_settings = {
 }
 
 apis = search_env_filtered(:node, "recipes:nova\\:\\:api")
-if apis.length > 0 and !node[:nova][:network][:ha_enabled]
+if apis.length > 0
   api = apis[0]
   api = node if api.name == node.name
 else
@@ -185,41 +185,6 @@ def mask_to_bits(mask)
   count
 end
 
-# build the public_interface for the fixed net
-public_net = node["network"]["networks"]["public"]
-fixed_net = node["network"]["networks"]["nova_fixed"]
-nova_floating = node[:network][:networks]["nova_floating"]
-
-node.set[:nova][:network][:fixed_range] = "#{fixed_net["subnet"]}/#{mask_to_bits(fixed_net["netmask"])}"
-node.set[:nova][:network][:floating_range] = "#{nova_floating["subnet"]}/#{mask_to_bits(nova_floating["netmask"])}"
-
-fip = Chef::Recipe::Barclamp::Inventory.get_network_by_type(node, "nova_fixed")
-if fip
-  fixed_interface = fip.interface
-else
-  fixed_interface = nil
-end
-pip = Chef::Recipe::Barclamp::Inventory.get_network_by_type(node, "public")
-if pip
-  public_interface = pip.interface
-else
-  public_interface = nil
-end
-
-flat_network_bridge = fixed_net["use_vlan"] ? "br#{fixed_net["vlan"]}" : "br#{fixed_interface}"
-
-node.set[:nova][:network][:public_interface] = public_interface
-if !node[:nova][:network][:dhcp_enabled]
-  node.set[:nova][:network][:flat_network_bridge] = flat_network_bridge
-  node.set[:nova][:network][:flat_interface] = fixed_interface
-elsif !node[:nova][:network][:tenant_vlans]
-  node.set[:nova][:network][:flat_network_bridge] = flat_network_bridge
-  node.set[:nova][:network][:flat_interface] = fixed_interface
-else
-  node.set[:nova][:network][:vlan_interface] = fip.interface rescue nil
-  node.set[:nova][:network][:vlan_start] = fixed_net["vlan"]
-end
-
 if node[:nova][:use_gitrepo]
   package("libvirt-bin")
 
@@ -315,11 +280,6 @@ if neutron_servers.length > 0
   neutron_insecure = neutron_protocol == 'https' && neutron_server[:neutron][:ssl][:insecure]
   neutron_service_user = neutron_server[:neutron][:service_user]
   neutron_service_password = neutron_server[:neutron][:service_password]
-  if neutron_server[:neutron][:networking_mode] != 'local'
-    per_tenant_vlan=true
-  else
-    per_tenant_vlan=false
-  end
   neutron_networking_plugin = neutron_server[:neutron][:networking_plugin]
   neutron_networking_mode = neutron_server[:neutron][:networking_mode]
 else

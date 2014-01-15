@@ -74,29 +74,7 @@ end
 default[:nova][:home_dir] = '/var/lib/nova'
 default[:nova][:instances_path] = '/var/lib/nova/instances'
 
-#
-# General network parameters
-#
-
-default[:nova][:networking_backend] = "neutron"
-default[:nova][:network][:ha_enabled] = true
-default[:nova][:network][:dhcp_enabled] = true
-default[:nova][:network][:tenant_vlans] = true
-default[:nova][:network][:allow_same_net_traffic] = true
-default[:nova][:public_interface] = "eth0"
-default[:nova][:routing_source_ip] = ipaddress
-default[:nova][:fixed_range] = "10.0.0.0/8"
-default[:nova][:floating_range] = "4.4.4.0/24"
-default[:nova][:num_networks] = 1
-default[:nova][:network_size] = 256
 default[:nova][:neutron_metadata_proxy_shared_secret] = ""
-#
-default[:nova][:network][:flat_network_bridge] = "br100"
-default[:nova][:network][:flat_injected] = true
-default[:nova][:network][:flat_dns] = "8.8.4.4"
-default[:nova][:network][:flat_interface] = "eth0"
-default[:nova][:network][:vlan_interface] = "eth1"
-default[:nova][:network][:vlan_start] = 100
 
 default[:nova][:service_user] = "nova"
 default[:nova][:service_password] = "nova"

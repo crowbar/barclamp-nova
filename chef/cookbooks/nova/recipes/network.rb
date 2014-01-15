@@ -20,16 +20,6 @@
 
 include_recipe "nova::config" 
 
-if node[:nova][:networking_backend]=="nova-network"
-  nova_package("network")
-end
-
-# Crowbar uses the network node as the gateway in flat non-dhcp modes, add the
-# firewall rule for UEC images to be able to fetch metadata info
-unless node[:nova][:network][:dhcp_enabled]
-  execute "iptables -t nat -A PREROUTING -d 169.254.169.254/32 -p tcp -m tcp --dport 80 -j DNAT --to-destination #{node[:nova][:my_ip]}:8773"
-end
-
 # To make floating ip works, turn on routing.
 bash "turn on routing" do
   code <<-'EOH'

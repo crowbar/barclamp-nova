@@ -32,32 +32,12 @@
             "git_instance": { "type": "str", "required": true },
             "itxt_instance": { "type": "str", "required": true },
             "git_refspec": { "type": "str", "required": true },
-            "networking_backend": { "type": "str", "required": true },
             "use_gitrepo": { "type": "bool", "required": true },
             "use_gitbarclamp": { "type": "bool", "required": true },
             "use_pip_cache": { "type": "bool", "required": true },
             "use_virtualenv": { "type": "bool", "required": true },
             "pfs_deps": { "type": "seq", "required": true, "sequence": [ { "type": "str" } ] },
             "neutron_metadata_proxy_shared_secret": { "type": "str" },
-            "network": {
-              "type": "map",
-              "required": true,
-              "mapping": {
-                "ha_enabled": { "type": "bool", "required": true },
-                "tenant_vlans": { "type": "bool", "required": true },
-                "dhcp_enabled": { "type": "bool", "required": true },
-                "allow_same_net_traffic": { "type": "bool", "required": true },
-                "public_interface": { "type": "str" },
-                "floating_range": { "type": "str" },
-                "fixed_range": { "type": "str" },
-                "num_networks": { "type": "int" },
-                "network_size": { "type": "int" },
-                "routing_source_ip": { "type": "str" },
-                "flat_network_bridge": { "type": "str" },
-                "flat_interface": { "type": "str" },
-                "vlan_start": { "type": "int" }
-              }
-            },
             "scheduler": {
               "type": "map",
               "mapping": {

@@ -22,75 +22,6 @@
 include_recipe "nova::database"
 include_recipe "nova::config"
 
-# ha_enabled activates Nova High Availability (HA) networking.
-# The nova "network" and "api" recipes need to be included on the compute nodes and
-# we must specify the --multi_host=T switch on "nova-manage network create".
-if node[:nova][:networking_backend]=="nova-network"
-cmd = "nova-manage network create --fixed_range_v4=#{node[:nova][:network][:fixed_range]} --num_networks=#{node[:nova][:network][:num_networks]} --network_size=#{node[:nova][:network][:network_size]} --label private"
-cmd << " --multi_host=T" if node[:nova][:network][:ha_enabled]
-execute cmd do
-  user node[:nova][:user] if node.platform != "suse" and not node[:nova][:use_gitrepo]
-  not_if "nova-manage network list | grep '#{node[:nova][:network][:fixed_range].split("/")[0]}'"
-end
-
-# Add private network one day.
-
-base_ip = node[:nova][:network][:floating_range].split("/")[0]
-grep_ip = base_ip[0..-2] + (base_ip[-1].chr.to_i+1).to_s
-
-execute "nova-manage floating create --ip_range=#{node[:nova][:network][:floating_range]}" do
-  user node[:nova][:user] if node.platform != "suse" and not node[:nova][:use_gitrepo]
-  not_if "nova-manage floating list | grep '#{grep_ip}'"
-end
-
-unless node[:nova][:network][:tenant_vlans]
-  db_server = search_env_filtered(:node, "roles:database-server")[0]
-  db_server = node if db_server.name == node.name
-  backend_name = Chef::Recipe::Database::Util.get_backend_name(db_server)
-
-  execute "sql-fix-ranges-fixed" do
-    case backend_name
-      when "mysql"
-        command "/usr/bin/mysql -u #{node[:nova][:db][:user]} -h #{db_server[:database][:api_bind_host]} -p#{node[:nova][:db][:password]} #{node[:nova][:db][:database]} < /etc/nova/nova-fixed-range.sql"
-      when "postgresql"
-        command "PGPASSWORD=#{node[:nova][:db][:password]} psql -h #{db_server[:database][:api_bind_host]} -U #{node[:nova][:db][:user]} #{node[:nova][:db][:database]} < /etc/nova/nova-fixed-range.sql"
-    end
-    action :nothing
-  end
-
-  fixed_net = node[:network][:networks]["nova_fixed"]
-  rangeH = fixed_net["ranges"]["dhcp"]
-  netmask = fixed_net["netmask"]
-  subnet = fixed_net["subnet"]
-
-  index = IPAddr.new(rangeH["start"]) & ~IPAddr.new(netmask)
-  index = index.to_i
-  stop_address = IPAddr.new(rangeH["end"]) & ~IPAddr.new(netmask)
-  stop_address = IPAddr.new(subnet) | (stop_address.to_i + 1)
-  address = IPAddr.new(subnet) | index
-
-  network_list = []
-  while address != stop_address
-    network_list << address.to_s
-    index = index + 1
-    address = IPAddr.new(subnet) | index
-  end
-  network_list << address.to_s
-
-  template "/etc/nova/nova-fixed-range.sql" do
-    path "/etc/nova/nova-fixed-range.sql"
-    source "fixed-range.sql.erb"
-    owner "root"
-    group "root"
-    mode "0600"
-    variables(
-      :network => network_list
-    )
-    notifies :run, resources(:execute => "sql-fix-ranges-fixed"), :immediately
-  end
-end
-end
-
 # Setup administrator credentials file
 keystones = search_env_filtered(:node, "recipes:keystone\\:\\:server")
 if keystones.length > 0
@@ -120,7 +51,7 @@ keystone_service_port = keystone["keystone"]["api"]["service_port"] rescue nil
 Chef::Log.info("Keystone server found at #{public_keystone_host}")
 
 apis = search_env_filtered(:node, "recipes:nova\\:\\:api")
-if apis.length > 0 and !node[:nova][:network][:ha_enabled]
+if apis.length > 0
   api = apis[0]
   api = node if api.name == node.name
 else

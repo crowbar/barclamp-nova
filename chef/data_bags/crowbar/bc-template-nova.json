@@ -26,7 +26,6 @@
       "use_gitbarclamp": true,
       "use_pip_cache": true,
       "use_virtualenv": true,
-      "networking_backend": "neutron",
       "pfs_deps": [
           "python-libvirt",
           "python-routes",
@@ -57,14 +56,6 @@
           "pip://MySQL-python",
           "pip://python-novaclient"
       ],
-      "network": {
-        "ha_enabled": true,
-        "tenant_vlans": false,
-        "dhcp_enabled": true,
-        "allow_same_net_traffic": false,
-        "num_networks": 1,
-        "network_size": 256
-      },
       "scheduler": {
         "ram_allocation_ratio": 1.0,
         "cpu_allocation_ratio": 16.0
@@ -109,7 +100,7 @@
   "deployment": {
     "nova": {
       "crowbar-revision": 0,
-      "schema-revision": 4,
+      "schema-revision": 5,
       "element_states": {
         "nova-multi-controller": [ "readying", "ready", "applying" ],
         "nova-multi-compute-hyperv": [ "readying", "ready", "applying" ],

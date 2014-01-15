@@ -22,20 +22,17 @@
 # Nova scale data holder
 nova_scale = {
   :computes => [],
-  :networks => [],
   :schedulers => [],
   :apis => []
 }
 
 search_env_filtered(:node, "roles:nova-single-machine") do |n|
   nova_scale[:computes] << n
-  nova_scale[:networks] << n
   nova_scale[:schedulers] << n
   nova_scale[:apis] << n
 end
 
 search_env_filtered(:node, "roles:nova-multi-controller") do |n|
-  nova_scale[:networks] << n
   nova_scale[:schedulers] << n
   nova_scale[:apis] << n
 end

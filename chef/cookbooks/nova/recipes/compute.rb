@@ -18,20 +18,7 @@
 # limitations under the License.
 #
 
-if node[:nova][:networking_backend]=="neutron"
-#unless node[:nova][:use_gitrepo]
-#  package "neutron" do
-#    action :install
-#  end
-#else
-  include_recipe "nova::neutron"
-#  pfs_and_install_deps "neutron" do
-#    cookbook "neutron"
-#    cnode neutron
-#  end
-#end
-end
-
+include_recipe "nova::neutron"
 include_recipe "nova::config"
 
 def set_boot_kernel_and_trigger_reboot(flavor='default')
@@ -206,15 +193,6 @@ end
 
 nova_package("compute")
 
-# ha_enabled activates Nova High Availability (HA) networking.
-# The nova "network" and "api" recipes need to be included on the compute nodes and
-# we must specify the --multi_host=T switch on "nova-manage network create".
-
-if node[:nova][:network][:ha_enabled] and node[:nova][:networking_backend]=='nova-network'
-  include_recipe "nova::api"
-  include_recipe "nova::network"
-end
-
 cookbook_file "/etc/nova/nova-compute.conf" do
   source "nova-compute.conf"
   owner "root"
@@ -328,7 +306,7 @@ execute "set vhost_net module" do
   command "grep -q 'vhost_net' /etc/modules || echo 'vhost_net' >> /etc/modules"
 end
 
-if node[:nova][:networking_backend]=="neutron" and not %w(redhat centos suse).include?(node.platform)
+unless %w(redhat centos suse).include?(node.platform)
   #since using native ovs we have to gain acess to lower networking functions
   service "libvirt-bin" do
     action :nothing
