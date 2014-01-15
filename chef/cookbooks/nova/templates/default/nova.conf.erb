@@ -2204,10 +2204,12 @@ libvirt_ovs_bridge=br-int
 # the RADOS client name for accessing rbd volumes (string
 # value)
 #rbd_user=<None>
+<%= "rbd_user=#{@ceph_user}" if @ceph_user %>
 
 # the libvirt uuid of the secret for the rbd_uservolumes
 # (string value)
 #rbd_secret_uuid=<None>
+<%= "rbd_secret_uuid=#{@ceph_uuid}" if @ceph_uuid %>
 
 # Dir where the nfs volume is mounted on the compute node
 # (string value)
