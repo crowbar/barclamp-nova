@@ -21,6 +21,14 @@ en:
         kvm_header: KVM Options
         kvm:
           ksm_enabled: Enable Kernel Samepage Merging
+        vmware_header: VMWare vCenter configuration
+        vcenter:
+          host: vCenter IP Address
+          user: vCenter Username
+          password: vCenter Password
+          clusters: Cluster Names
+          interface: VLAN Interface
+        vmware_cluster_hint: A comma-separated list of cluster names
         ssl_header: SSL Support
         ssl:
           enabled: Protocol

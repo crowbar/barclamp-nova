@@ -185,6 +185,9 @@ class NovaService < ServiceObject
     elements["nova-multi-compute-qemu"].each do |n|
         nodes[n] += 1
     end unless elements["nova-multi-compute-qemu"].nil?
+    elements["nova-multi-compute-vmware"].each do |n|
+        nodes[n] += 1
+    end unless elements["nova-multi-compute-vmware"].nil?
     elements["nova-multi-compute-xen"].each do |n|
         nodes[n] += 1
         node = NodeObject.find_node_by_name(n)

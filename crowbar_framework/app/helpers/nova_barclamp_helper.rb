@@ -31,6 +31,10 @@ module NovaBarclampHelper
       "nova-multi-compute-qemu" => {
         "unique" => false,
         "count" => -1
+      },
+      "nova-multi-compute-vmware" => {
+        "unique" => false,
+        "count" => 1
       }
     }
   end

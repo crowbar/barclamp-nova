@@ -66,8 +66,8 @@
         "network_size": 256
       },
       "scheduler": {
-	"ram_allocation_ratio": 1.0,
-	"cpu_allocation_ratio": 16.0
+        "ram_allocation_ratio": 1.0,
+        "cpu_allocation_ratio": 16.0
       },
       "db": {
         "password": "",
@@ -80,6 +80,13 @@
       },
       "kvm": {
         "ksm_enabled": false
+      },
+      "vcenter": {
+        "host": "",
+        "user": "",
+        "password": "",
+        "clusters": [],
+        "interface": "vmnic0"
       },
       "ssl": {
         "enabled": false,
@@ -102,12 +109,13 @@
   "deployment": {
     "nova": {
       "crowbar-revision": 0,
-      "schema-revision": 3,
+      "schema-revision": 4,
       "element_states": {
         "nova-multi-controller": [ "readying", "ready", "applying" ],
         "nova-multi-compute-hyperv": [ "readying", "ready", "applying" ],
         "nova-multi-compute-kvm": [ "readying", "ready", "applying" ],
         "nova-multi-compute-qemu": [ "readying", "ready", "applying" ],
+        "nova-multi-compute-vmware": [ "readying", "ready", "applying" ],
         "nova-multi-compute-xen": [ "readying", "ready", "applying" ]
       },
       "elements": {},
@@ -116,6 +124,7 @@
         [ "nova-multi-compute-hyperv" ],
         [ "nova-multi-compute-kvm" ],
         [ "nova-multi-compute-qemu" ],
+        [ "nova-multi-compute-vmware" ],
         [ "nova-multi-compute-xen" ]
       ],
       "element_run_list_order": {
@@ -123,6 +132,7 @@
         "nova-multi-compute-hyperv": 97,
         "nova-multi-compute-kvm": 97,
         "nova-multi-compute-qemu": 97,
+        "nova-multi-compute-vmware": 97,
         "nova-multi-compute-xen": 97
       },
       "config": {

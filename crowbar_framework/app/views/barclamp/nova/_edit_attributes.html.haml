@@ -38,6 +38,18 @@
 
     %fieldset
       %legend
+        = t(".vmware_header")
+
+      = string_field %w(vcenter host)
+      = string_field %w(vcenter user)
+      = password_field %w(vcenter password)
+      = array_string_field %w(vcenter clusters)
+      %span.help-block
+        = t('.vmware_cluster_hint')
+      = string_field %w(vcenter interface)
+
+    %fieldset
+      %legend
         = t(".ssl_header")
 
       = boolean_field %w(ssl enabled), :collection => :ssl_protocols_for_nova, "data-sslprefix" => "ssl", "data-sslcert" => "/etc/nova/ssl/certs/signing_cert.pem", "data-sslkey" => "/etc/nova/ssl/private/signing_key.pem"

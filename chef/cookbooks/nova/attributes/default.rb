@@ -43,6 +43,15 @@ default[:nova][:libvirt_type] = "kvm"
 
 default[:nova][:kvm][:ksm_enabled] = false
 
+#
+# VMWare Settings
+#
+
+default[:nova][:vcenter][:host] = ""
+default[:nova][:vcenter][:user] = ""
+default[:nova][:vcenter][:password] = ""
+default[:nova][:vcenter][:clusters] = []
+default[:nova][:vcenter][:interface] = ""
 
 #
 # Scheduler Settings

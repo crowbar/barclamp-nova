@@ -1935,7 +1935,11 @@ ram_allocation_ratio=<%= node[:nova][:scheduler][:ram_allocation_ratio] %>
 # fake.FakeDriver, baremetal.BareMetalDriver,
 # vmwareapi.VMwareESXDriver, vmwareapi.VMwareVCDriver (string
 # value)
+<% if @libvirt_type.eql?('vmware') -%>
+compute_driver=vmwareapi.VMwareVCDriver
+<% else -%>
 compute_driver=libvirt.LibvirtDriver
+<% end -%>
 
 # The default format an ephemeral_volume will be formatted
 # with on creation. (string value)
@@ -1987,6 +1991,7 @@ allow_same_net_traffic=<%= node[:nova][:network][:allow_same_net_traffic] ? "Tru
 # Rescue ari image (string value)
 #rescue_ramdisk_id=<None>
 
+<% if !@libvirt_type.eql?('vmware') -%>
 # Libvirt domain type (valid options are: kvm, lxc, qemu, uml,
 # xen) (string value)
 libvirt_type=<%= @libvirt_type %>
@@ -2010,6 +2015,7 @@ libvirt_inject_key=false
 # Sync virtual and real mouse cursors in Windows VMs (boolean
 # value)
 #use_usb_tablet=true
+<% end -%>
 
 <% if @libvirt_type.eql?('xen') -%>
 <% if @libvirt_migration and @shared_instances -%>
@@ -3299,20 +3305,28 @@ connection=<%= @database_connection %>
 # compute_driver is vmwareapi.VMwareESXDriver or
 # vmwareapi.VMwareVCDriver. (string value)
 #host_ip=<None>
+<%= "host_ip=#{node[:nova][:vcenter][:host]}" if @libvirt_type.eql?('vmware') %>
 
 # Username for connection to VMware ESX/VC host. Used only if
 # compute_driver is vmwareapi.VMwareESXDriver or
 # vmwareapi.VMwareVCDriver. (string value)
 #host_username=<None>
+<%= "host_username=#{node[:nova][:vcenter][:user]}" if @libvirt_type.eql?('vmware') %>
 
 # Password for connection to VMware ESX/VC host. Used only if
 # compute_driver is vmwareapi.VMwareESXDriver or
 # vmwareapi.VMwareVCDriver. (string value)
 #host_password=<None>
+<%= "host_password=#{node[:nova][:vcenter][:password]}" if @libvirt_type.eql?('vmware') %>
 
 # Name of a VMware Cluster ComputeResource. Used only if
 # compute_driver is vmwareapi.VMwareVCDriver. (multi valued)
 #cluster_name=<None>
+<% if @libvirt_type.eql?('vmware') -%>
+ <% node[:nova][:vcenter][:clusters].each do |cluster| -%>
+cluster_name=<%= cluster %>
+ <% end -%>
+<% end -%>
 
 # Regex to match the name of a datastore. Used only if
 # compute_driver is vmwareapi.VMwareVCDriver. (string value)
@@ -3352,7 +3366,7 @@ connection=<%= @database_connection %>
 # Physical ethernet adapter name for vlan networking (string
 # value)
 #vlan_interface=vmnic0
-
+<%= "vlan_interface=#{node[:nova][:vcenter][:interface]}" if @libvirt_type.eql?('vmware') %>
 
 #
 # Options defined in nova.virt.vmwareapi.vim
