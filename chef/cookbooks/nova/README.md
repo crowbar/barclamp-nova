@@ -41,10 +41,6 @@ mysql
 -----
 Installs and configures MySQL for use by Nova.
 
-network
--------
-Installs the `nova-network` service.
-
 project
 -------
 Configures the Nova project, network and permissions.
