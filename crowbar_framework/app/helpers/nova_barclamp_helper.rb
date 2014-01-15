@@ -35,6 +35,10 @@ module NovaBarclampHelper
       "nova-multi-compute-vmware" => {
         "unique" => false,
         "count" => 1
+      },
+      "nova-multi-compute-xen" => {
+        "unique" => false,
+        "count" => -1
       }
     }
   end
