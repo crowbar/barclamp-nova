@@ -122,7 +122,7 @@ def random_name(basis, length=6):
 if target_availability_zone:
     debug_print("Goal: move %s to availability zone \'%s\'" % (target_host_name, target_availability_zone))
 else:
-    debug_print("Goal: move %s to default availability zone" % target_host_name)
+    debug_print("Goal: move %s to default availability zone (or leave in non-Crowbar-owned availability zone)" % target_host_name)
 
 # Find host
 try:
@@ -155,7 +155,8 @@ for aggregate in aggregates:
         old_aggregate = aggregate
 
 
-if old_aggregate is None and not target_availability_zone:
+# If no target availability zone, then we don't do anything if node is in the default AZ or in a AZ not by created by crowbar
+if not target_availability_zone and (old_aggregate is None or not old_aggregate.name.startswith('crowbar-')):
     sys.exit(0)
 
 
