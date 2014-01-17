@@ -156,14 +156,14 @@ for aggregate in aggregates:
 
 
 # If no target availability zone, then we don't do anything if node is in the default AZ or in a AZ not by created by crowbar
-if not target_availability_zone and (old_aggregate is None or not old_aggregate.name.startswith('crowbar-')):
+if not target_availability_zone and (old_aggregate is None or not old_aggregate.name.startswith('crowbar-AZ-')):
     sys.exit(0)
 
 
 # Create target aggregate if it doesn't exist yet
 if target_aggregate is None and target_availability_zone:
     debug_print("No aggregate existing for availability zone \'%s\'; creating one..." % target_availability_zone)
-    name = 'crowbar-%s' % random_name(target_availability_zone)
+    name = 'crowbar-AZ-%s' % random_name(target_availability_zone)
     try:
         target_aggregate = c.aggregates.create(name, target_availability_zone)
     except Exception as e:
@@ -183,7 +183,7 @@ else:
         sys.exit(1)
 
     # remove aggregate if empty and created by crowbar
-    if old_aggregate.name.startswith('crowbar-') and len(old_aggregate.hosts) == 0:
+    if old_aggregate.name.startswith('crowbar-AZ-') and len(old_aggregate.hosts) == 0:
         debug_print("Removing empty aggregate for availability zone \'%s\'..." % old_aggregate.availability_zone)
         try:
             c.aggregates.delete(old_aggregate.id)
