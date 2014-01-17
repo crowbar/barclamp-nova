@@ -27,11 +27,12 @@ cleanup() {
         trap '' QUIT TERM
         local instance_name
         for instance_name in "${instances[@]}"; do
-            nova console-log $instance_name > "$LOGDIR/nova-$instance_name.console.log"
-            nova delete $instance_name
+            instance_id=$(nova list | grep "$instance_name" | awk {'print $2'})
+            [[ $instance_id ]] && nova console-log $instance_name > "$LOGDIR/nova-$instance_name.console.log"
+            [[ $instance_id ]] && nova delete $instance_name
             ssh-keygen -f "/root/.ssh/known_hosts" -R "${floating_ips[$instance_name]}" &>/dev/null
             nova floating-ip-delete "${floating_ips[$instance_name]}"
-            while nova list |grep -q $instance_name; do sleep 1; done
+            [[ $instance_id ]] && while nova list | grep -q $instance_id; do sleep 1; done
         done
         nova keypair-delete smoketest
         ssh-agent -k
@@ -631,7 +632,7 @@ if (($(bc <<< "$cinder_version>$cinder_broken_ver"))); then
 
     if [[ $ssh_ok = true  ]]; then
         echo -e "\n\n\nTests complete\n\n\n Cleaning up: instance_name: $b_device-test and volume: $b_device_id"
-        nova delete $b_device-test 
+        nova delete $in_id
         sleep 10
         for ((i=1; i<=5; i++)); do
           removed_instance_id=$(nova list | grep "$b_device-test")
@@ -639,7 +640,9 @@ if (($(bc <<< "$cinder_version>$cinder_broken_ver"))); then
           [[ ! $removed_instance_id ]] && cleanup_ok_instance=true && break || sleep 5 && continue
         done
 
-        nova volume-delete $b_device_id
+        blk_dev_id=$(nova volume-list | grep "$b_device_id" | awk {'print $2'})
+        [[ $blk_dev_id ]] && nova volume-delete $blk_dev_id
+
         sleep 10
         for ((i=1; i<=5; i++)); do
             removed_volume_id=$(nova volume-list | grep "$b_device_id")
