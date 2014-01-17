@@ -28,7 +28,7 @@ barclamp:
   requires:
     - '@crowbar'
     - database
-    - rabbitmq
+    - messaging
     - glance
     - keystone
     - cinder
