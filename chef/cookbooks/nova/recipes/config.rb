@@ -158,14 +158,6 @@ directory "/etc/nova" do
    action :create
 end
 
-cookbook_file "/etc/default/nova-common" do
-  source "nova-common"
-  owner node[:nova][:user]
-  group "root"
-  mode 0640
-  action :nothing
-end
-
 def mask_to_bits(mask)
   octets = mask.split(".")
   count = 0
