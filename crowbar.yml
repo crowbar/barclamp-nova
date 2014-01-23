@@ -142,7 +142,13 @@ rpms:
   centos-6.4:
     repos:
       - bare os-havana 50 http://repos.fedorapeople.org/repos/openstack/openstack-havana/epel-6
+  centos-6.5:
+    repos:
+      - bare os-havana 50 http://repos.fedorapeople.org/repos/openstack/openstack-havana/epel-6
   redhat-6.4:
+    repos:
+      - bare os-havana 50 http://repos.fedorapeople.org/repos/openstack/openstack-havana/epel-6
+  redhat-6.5:
     repos:
       - bare os-havana 50 http://repos.fedorapeople.org/repos/openstack/openstack-havana/epel-6
   pkgs:
