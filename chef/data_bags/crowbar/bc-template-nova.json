@@ -112,11 +112,13 @@
       "elements": {},
       "element_order": [
         [ "nova-multi-controller" ],
-        [ "nova-multi-compute-hyperv" ],
-        [ "nova-multi-compute-kvm" ],
-        [ "nova-multi-compute-qemu" ],
-        [ "nova-multi-compute-vmware" ],
-        [ "nova-multi-compute-xen" ]
+        [
+          "nova-multi-compute-hyperv",
+          "nova-multi-compute-kvm",
+          "nova-multi-compute-qemu",
+          "nova-multi-compute-vmware",
+          "nova-multi-compute-xen"
+        ]
       ],
       "element_run_list_order": {
         "nova-multi-controller": 95,
