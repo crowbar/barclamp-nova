@@ -54,12 +54,6 @@
                 "database": { "type": "str", "required": true }
               }
             },
-            "rbd": {
-              "type": "map", "required": false, "mapping": {
-                "user": { "type": "str", "required": true },
-                "secret_uuid": { "type": "str", "required": true }
-              }  
-            },
             "kvm": {
               "type": "map", "required": true, "mapping": {
                 "ksm_enabled": { "type": "bool", "required": true }

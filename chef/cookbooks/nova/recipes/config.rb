@@ -244,22 +244,23 @@ keystone_service_password = node[:nova][:service_password]
 Chef::Log.info("Keystone server found at #{keystone_host}")
 
 cinder_servers = search(:node, "roles:cinder-controller") || []
+cinder_insecure = false
 if cinder_servers.length > 0
   cinder_server = cinder_servers[0]
   cinder_insecure = cinder_server[:cinder][:api][:protocol] == 'https' && cinder_server[:cinder][:ssl][:insecure]
+
   if cinder_server[:cinder][:volume][:volume_type] == "rbd" and node[:nova][:libvirt_type] == "kvm"
     ceph_env_filter = " AND ceph_config_environment:ceph-config-default"
     ceph_servers = search(:node, "roles:ceph-osd#{ceph_env_filter}") || []
     if ceph_servers.length > 0
       include_recipe('ceph::nova')
+      rbd_user = node['ceph']['nova-user']
+      rbd_secret_uuid = node['ceph']['nova-uuid']
+    else
+      rbd_user = cinder_server[:cinder][:volume][:rbd][:user]
+      rbd_secret_uuid = "client.#{cinder_server[:cinder][:volume][:rbd][:pool]}"
     end
-    ceph_user = node['ceph']['nova-user']
-    ceph_uuid = node['ceph']['nova-uuid']
-  end #Ceph section
-else
-  cinder_insecure = false
-  ceph_user = node[:nova][:rbd][:user]
-  ceph_uuid = node[:nova][:rbd][:secret_uuid]
+  end
 end
 
 neutron_servers = search_env_filtered(:node, "roles:neutron-server")
@@ -423,8 +424,8 @@ template "/etc/nova/nova.conf" do
             :keystone_host => keystone_host,
             :keystone_admin_port => keystone_admin_port,
             :cinder_insecure => cinder_insecure,
-            :ceph_user => ceph_user,
-            :ceph_uuid => ceph_uuid,
+            :rbd_user => rbd_user,
+            :rbd_secret_uuid => rbd_secret_uuid,
             :ssl_enabled => api[:nova][:ssl][:enabled],
             :ssl_cert_file => api[:nova][:ssl][:certfile],
             :ssl_key_file => api[:nova][:ssl][:keyfile],

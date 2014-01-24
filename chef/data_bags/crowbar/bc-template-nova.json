@@ -65,10 +65,6 @@
         "user": "nova",
         "database": "nova"
       },
-      "rbd": {
-        "user": "",
-        "secret_uuid": ""
-      },
       "kvm": {
         "ksm_enabled": false
       },
@@ -101,7 +97,7 @@
   "deployment": {
     "nova": {
       "crowbar-revision": 0,
-      "schema-revision": 6,
+      "schema-revision": 7,
       "element_states": {
         "nova-multi-controller": [ "readying", "ready", "applying" ],
         "nova-multi-compute-hyperv": [ "readying", "ready", "applying" ],
