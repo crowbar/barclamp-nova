@@ -46,4 +46,4 @@ en:
             certfile: SSL Certificate File
             keyfile: SSL (Private) Key File
         logging_header: Logging
-        verbose: Verbose
+        verbose: Verbose Logging
