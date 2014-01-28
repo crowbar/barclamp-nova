@@ -60,7 +60,10 @@ def set_boot_kernel_and_trigger_reboot(flavor='default')
 end
 
 if %w(redhat centos suse).include?(node.platform)
-  package "libvirt"
+  # make sure that the libvirt package is present before other actions try to access /etc/qemu.conf
+  package "libvirt" do
+    action :nothing
+  end.run_action(:install)
 
   template "/etc/libvirt/libvirtd.conf" do
     source "libvirtd.conf.erb"
@@ -133,11 +136,10 @@ if %w(redhat centos suse).include?(node.platform)
       end
   end
 
-  libvirt_restart_needed = false
 
   # change libvirt to run qemu as user qemu
   unless %w(redhat centos).include?(node.platform)
-    ruby_block "edit qemu config" do
+    ruby_block "change qemu user used by libvirt" do
       block do
         rc = Chef::Util::FileEdit.new("/etc/libvirt/qemu.conf")
 
@@ -153,7 +155,8 @@ if %w(redhat centos suse).include?(node.platform)
 
         if rc.file_edited?
           rc.write_file
-          libvirt_restart_needed = true
+          # manually restart libvirtd; we can't do that with a notification to the libvirtd service because we're in a ruby_block
+          %x{rclibvirtd restart}
         end
       end
     end
@@ -164,10 +167,6 @@ if %w(redhat centos suse).include?(node.platform)
     else
       libvirt_user = "root"
       libvirt_group = "root"
-    end
-
-    service "libvirtd" do
-      action [:enable, :start]
     end
 
     bash "edit qemu config" do
@@ -182,12 +181,6 @@ if %w(redhat centos suse).include?(node.platform)
 
   service "libvirtd" do
     action [:enable, :start]
-  end
-
-  if libvirt_restart_needed
-    service "libvirtd" do
-      action [:restart], :delayed
-    end
   end
 end
 
