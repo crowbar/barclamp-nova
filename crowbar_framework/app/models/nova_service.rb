@@ -67,7 +67,7 @@ class NovaService < ServiceObject
       "nova-multi-controller" => [ head.name ],
       "nova-multi-compute-hyperv" => hyperv.map { |x| x.name },
       "nova-multi-compute-kvm" => kvm.map { |x| x.name },
-      "nova-multi-compute-qemu" => qemu.map { |x| x.name }  
+      "nova-multi-compute-qemu" => qemu.map { |x| x.name }
     }
 
     base["attributes"][@bc_name]["git_instance"] = ""
@@ -295,6 +295,9 @@ class NovaService < ServiceObject
     elements["nova-multi-compute-qemu"].each do |n|
         nodes[n] += 1
     end unless elements["nova-multi-compute-qemu"].nil?
+    elements["nova-multi-compute-esxi"].each do |n|
+        nodes[n] += 1
+    end unless elements["nova-multi-compute-esxi"].nil?
 
     nodes.each do |key,value|
         if value > 1

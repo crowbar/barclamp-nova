@@ -132,6 +132,10 @@ if %w(redhat centos suse).include?(node.platform)
       end
 
       set_boot_kernel_and_trigger_reboot('xen')
+    when "esxi"
+      package "python-suds" do
+        action :install
+      end
     when "qemu"
       package "kvm"
     when "lxc"

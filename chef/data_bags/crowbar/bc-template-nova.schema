@@ -78,6 +78,16 @@
                 "ksm_enabled": { "type": "bool", "required": true }
               }
             },
+            "esxi": {
+              "type": "map", "required": true, "mapping": {
+                "host": { "type": "str", "required": true },
+                "login": { "type": "str", "required": true },
+                "password": { "type": "str", "required": true },
+                "cluster": { "type": "str", "required": true },
+                "datastore": { "type": "str", "required": true },
+                "interface": { "type": "str", "required": true }
+              }
+            },
             "ssl": {
               "type": "map", "required": true, "mapping": {
                 "enabled": { "type" : "bool", "required" : true },
@@ -117,6 +127,7 @@
             "crowbar-status": { "type": "str" },
             "crowbar-failed": { "type": "str" },
             "crowbar-queued": { "type": "bool" },
+            "schema-revision": { "type": "int" },
             "element_states": {
               "type": "map",
               "mapping": {

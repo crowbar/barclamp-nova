@@ -69,6 +69,13 @@ locale_additions:
           live_migration: Live Migration
           kvm: KVM Options
           kvm_ksm: Enable Kernel Samepage Merging
+          esxi_header: VMware Support Configuration
+          esxi_host: vCenter Host IP
+          esxi_login: vCenter Username
+          esxi_password: vCenter Password
+          esxi_cluster: Cluster Name
+          esxi_datastore: Datastore Name
+          esxi_interface: VLAN Interface
           ssl_header: SSL Support
           protocol: Protocol
           ssl_insecure: SSL Certificate is insecure (for instance, self-signed)
@@ -138,6 +145,7 @@ debs:
     - mysql-client
     - socat
     - python-mox
+    - python-suds
 rpms:
   centos-6.4:
     repos:
