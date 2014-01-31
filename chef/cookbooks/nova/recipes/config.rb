@@ -298,13 +298,6 @@ else
   oat_server = node
 end
 
-
-directory "/var/lock/nova" do
-  action :create
-  owner node[:nova][:user]
-  group "root"
-end
-
 # only require certs for nova controller
 if api == node and api[:nova][:ssl][:enabled] and node["roles"].include?("nova-multi-controller")
   if api[:nova][:ssl][:generate_certs]
