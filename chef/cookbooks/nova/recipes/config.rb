@@ -251,10 +251,9 @@ if cinder_servers.length > 0
     ceph_env_filter = " AND ceph_config_environment:ceph-config-default"
     ceph_servers = search(:node, "roles:ceph-osd#{ceph_env_filter}") || []
     if ceph_servers.length > 0
-      include_recipe('ceph::nova')
+      ceph_uuid = ceph_servers[0][:ceph][:config][:fsid]
+      ceph_user = 'nova'
     end
-    ceph_user = node['ceph']['nova-user']
-    ceph_uuid = node['ceph']['nova-uuid']
   end #Ceph section
 else
   cinder_insecure = false
