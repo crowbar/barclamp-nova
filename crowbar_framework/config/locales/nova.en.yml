@@ -27,6 +27,7 @@ en:
           user: vCenter Username
           password: vCenter Password
           clusters: Cluster Names
+          datastore: Datastore Name
           interface: VLAN Interface
         vmware_cluster_hint: A comma-separated list of cluster names
         ssl_header: SSL Support
