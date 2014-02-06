@@ -2036,11 +2036,7 @@ block_migration_flag=VIR_MIGRATE_UNDEFINE_SOURCE, VIR_MIGRATE_PEER2PEER, VIR_MIG
 #snapshot_image_format=<None>
 
 # The libvirt VIF driver to configure the VIFs. (string value)
-<% if @neutron_networking_plugin == "openvswitch" or @neutron_networking_plugin == "cisco" -%>
-libvirt_vif_driver=nova.virt.libvirt.vif.LibvirtHybridOVSBridgeDriver
-<% elsif @neutron_networking_plugin == "linuxbridge" -%>
 libvirt_vif_driver=nova.virt.libvirt.vif.LibvirtGenericVIFDriver
-<% end -%>
 
 # Libvirt handlers for remote volumes. (list value)
 #libvirt_volume_drivers=iscsi=nova.virt.libvirt.volume.LibvirtISCSIVolumeDriver,iser=nova.virt.libvirt.volume.LibvirtISERVolumeDriver,local=nova.virt.libvirt.volume.LibvirtVolumeDriver,fake=nova.virt.libvirt.volume.LibvirtFakeVolumeDriver,rbd=nova.virt.libvirt.volume.LibvirtNetVolumeDriver,sheepdog=nova.virt.libvirt.volume.LibvirtNetVolumeDriver,nfs=nova.virt.libvirt.volume.LibvirtNFSVolumeDriver,aoe=nova.virt.libvirt.volume.LibvirtAOEVolumeDriver,glusterfs=nova.virt.libvirt.volume.LibvirtGlusterfsVolumeDriver,fibre_channel=nova.virt.libvirt.volume.LibvirtFibreChannelVolumeDriver,scality=nova.virt.libvirt.volume.LibvirtScalityVolumeDriver
