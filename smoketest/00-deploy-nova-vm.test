@@ -190,7 +190,7 @@ for ((idx=0; idx <= 2; idx++)); do
       fi
       sleep 10
     done
-    [[ "$(nova list | grep "$instance_name" | awk {'print $6'})" = "ERROR" ]] && die "Instance: $i_id failed to boot"
+    [[ "$(nova list | grep "$instance_name" | awk {'print $6'})" = "ERROR" ]] && die 1 "Instance: $i_id failed to boot"
 done
 wait
 
@@ -487,7 +487,7 @@ if [[ $img_ready = true ]];  then
       fi
       sleep 10
     done
-    [[ "$(nova list | grep "$in_id" | awk {'print $6'})" = "ERROR" ]] && die "Instance: $in_id failed to boot"
+    [[ "$(nova list | grep "$in_id" | awk {'print $6'})" = "ERROR" ]] && die 1 "Instance: $in_id failed to boot"
     instances=("${instances[@]}" "$isc_name") && in_ready=true
     f_ip=$(nova floating-ip-create | grep "floating" | awk {'print $2'}) || die 1 "Failed to create floating IP for instance: $in_id"
     nova add-floating-ip $in_id $f_ip || die 1 "Failed to attach floating IP: $f_ip  to instance: $in_id"
@@ -519,7 +519,7 @@ if [[ $reachable = true ]];  then
        echo -e "Checking if instance snapshot: $image_id exists attempt #$i"
        [[ "$(nova image-list | grep '$image_id')" != *$image_id* ]] && isnapshot_removed=true && break || sleep 20 && continue
     done
-    [[ $isnapshot_removed = true ]] && echo -e "\n\n\n Snapshot: $image_id of instance: $in_id deletion status:		SUCCESS\n\n\n" || die "\n\n\nERROR: snapshot: $image_id of instance: $in_id deletion failed\n\n\n"
+    [[ $isnapshot_removed = true ]] && echo -e "\n\n\n Snapshot: $image_id of instance: $in_id deletion status:		SUCCESS\n\n\n" || die 1 "\n\n\nERROR: snapshot: $image_id of instance: $in_id deletion failed\n\n\n"
 else
     echo -e "\n\n\nERROR: Instance tests stage - Instance: $in_id on floating_ip: $f_ip is not responding to ping \n\n\n"
     exit 1
