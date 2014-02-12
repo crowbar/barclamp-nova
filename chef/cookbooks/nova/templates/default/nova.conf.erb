@@ -3311,6 +3311,7 @@ cluster_name=<%= cluster %>
 # Regex to match the name of a datastore. Used only if
 # compute_driver is vmwareapi.VMwareVCDriver. (string value)
 #datastore_regex=<None>
+<%= "datastore_regex=#{node[:nova][:vcenter][:datastore]}" if @libvirt_type.eql?('vmware') %>
 
 # The interval used for polling of remote tasks. Used only if
 # compute_driver is vmwareapi.VMwareESXDriver or
