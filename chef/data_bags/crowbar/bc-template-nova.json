@@ -77,6 +77,7 @@
         "user": "",
         "password": "",
         "clusters": [],
+        "datastore": "",
         "interface": "vmnic0"
       },
       "ssl": {
@@ -100,7 +101,7 @@
   "deployment": {
     "nova": {
       "crowbar-revision": 0,
-      "schema-revision": 5,
+      "schema-revision": 6,
       "element_states": {
         "nova-multi-controller": [ "readying", "ready", "applying" ],
         "nova-multi-compute-hyperv": [ "readying", "ready", "applying" ],
