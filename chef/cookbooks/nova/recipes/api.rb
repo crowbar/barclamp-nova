@@ -47,24 +47,6 @@ keystone_service_user = node["nova"]["service_user"]
 keystone_service_password = node["nova"]["service_password"]
 Chef::Log.info("Keystone server found at #{keystone_host}")
 
-template "/etc/nova/api-paste.ini" do
-  source "api-paste.ini.erb"
-  owner node[:nova][:user]
-  group "root"
-  mode "0640"
-  variables(
-    :keystone_protocol => keystone_protocol,
-    :keystone_host => keystone_host,
-    :keystone_admin_token => keystone_token,
-    :keystone_service_port => keystone_service_port,
-    :keystone_service_tenant => keystone_service_tenant,
-    :keystone_service_user => keystone_service_user,
-    :keystone_service_password => keystone_service_password,
-    :keystone_admin_port => keystone_admin_port
-  )
-  notifies :restart, resources(:service => "nova-api"), :immediately
-end
-
 apis = search_env_filtered(:node, "recipes:nova\\:\\:api")
 if apis.length > 0
   api = apis[0]
