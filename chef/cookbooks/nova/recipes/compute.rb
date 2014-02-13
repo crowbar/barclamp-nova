@@ -65,12 +65,19 @@ if %w(redhat centos suse).include?(node.platform)
     action :nothing
   end.run_action(:install)
 
+  # Generate a UUID, as DMI's system uuid is unreliable
+  if node[:nova][:host_uuid].nil?
+    node.normal[:nova][:host_uuid] = `uuidgen`.strip
+    node.save
+  end
+
   template "/etc/libvirt/libvirtd.conf" do
     source "libvirtd.conf.erb"
     group "root"
     owner "root"
     mode 0644
     variables(
+      :libvirtd_host_uuid => node[:nova][:host_uuid],
       :libvirtd_listen_tcp => node[:nova]["use_migration"] ? 1 : 0,
       :libvirtd_listen_addr => Chef::Recipe::Barclamp::Inventory.get_network_by_type(node, "admin").address,
       :libvirtd_auth_tcp => node[:nova]["use_migration"] ? "none" : "sasl"
