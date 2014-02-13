@@ -367,7 +367,7 @@ auth_tcp = "<%= @libvirtd_auth_tcp %>"
 # NB This default all-zeros UUID will not work. Replace
 # it with the output of the 'uuidgen' command and then
 # uncomment this entry
-#host_uuid = "00000000-0000-0000-0000-000000000000"
+host_uuid = "<%= @libvirtd_host_uuid %>"
 
 ###################################################################
 # Keepalive protocol:
