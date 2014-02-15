@@ -232,6 +232,16 @@ if node[:nova][:use_gitrepo]
 end
 
 # Create and distribute ssh keys for nova user on all compute nodes
+
+# if for some reason, we only have one of the two keys, we recreate the keys
+# (no need to check the case where public key doesn't exist, as the execute
+# resource deals with that)
+if ::File.exist?("#{node[:nova][:home_dir]}/.ssh/id_rsa.pub") and !::File.exist?("#{node[:nova][:home_dir]}/.ssh/id_rsa")
+  file "#{node[:nova][:home_dir]}/.ssh/id_rsa.pub" do
+    action :delete
+  end
+end
+
 execute "Create Nova SSH key" do
   command "su #{node[:nova][:user]} -c \"ssh-keygen -q -t rsa  -P '' -f '#{node[:nova][:home_dir]}/.ssh/id_rsa'\""
   creates "#{node[:nova][:home_dir]}/.ssh/id_rsa.pub"
