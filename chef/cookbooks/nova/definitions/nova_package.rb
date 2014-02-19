@@ -62,6 +62,7 @@ define :nova_package, :enable => true do
     end
 
     subscribes :restart, resources(:template => "/etc/nova/nova.conf")
+    subscribes :restart, resources("template[/etc/ceph/ceph.conf]")
   end
 
 end
