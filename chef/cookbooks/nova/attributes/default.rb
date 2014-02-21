@@ -64,13 +64,8 @@ default[:nova][:scheduler][:cpu_allocation_ratio] = 16.0
 #
 default[:nova][:hostname] = "nova"
 default[:nova][:my_ip] = ipaddress
-unless %w(suse).include?(node.platform)
-    default[:nova][:user] = "nova"
-    default[:nova][:group] = "nova"
-else
-    default[:nova][:user] = "openstack-nova"
-    default[:nova][:group] = "openstack-nova"
-end
+default[:nova][:user] = "nova"
+default[:nova][:group] = "nova"
 default[:nova][:home_dir] = '/var/lib/nova'
 default[:nova][:instances_path] = '/var/lib/nova/instances'
 
