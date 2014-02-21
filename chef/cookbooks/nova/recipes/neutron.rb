@@ -14,5 +14,5 @@
 #
 
 node.set[:cookbook] = cookbook_name
-include_recipe "neutron::common_install"
+include_recipe "neutron::common_agent"
 node.delete(:cookbook)
