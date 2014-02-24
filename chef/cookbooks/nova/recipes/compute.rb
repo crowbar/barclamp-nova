@@ -239,19 +239,31 @@ if node[:nova][:use_gitrepo]
 end
 
 # Create and distribute ssh keys for nova user on all compute nodes
-ruby_block "nova_read_ssh_public_key" do
-  block do
-    node.set[:nova][:service_ssh_key] = File.read("#{node[:nova][:home_dir]}/.ssh/id_rsa.pub")
-    node.save
+
+# if for some reason, we only have one of the two keys, we recreate the keys
+# (no need to check the case where public key doesn't exist, as the execute
+# resource deals with that)
+if ::File.exist?("#{node[:nova][:home_dir]}/.ssh/id_rsa.pub") and !::File.exist?("#{node[:nova][:home_dir]}/.ssh/id_rsa")
+  file "#{node[:nova][:home_dir]}/.ssh/id_rsa.pub" do
+    action :delete
   end
-  action :nothing
 end
 
 execute "Create Nova SSH key" do
   command "su #{node[:nova][:user]} -c \"ssh-keygen -q -t rsa  -P '' -f '#{node[:nova][:home_dir]}/.ssh/id_rsa'\""
   creates "#{node[:nova][:home_dir]}/.ssh/id_rsa.pub"
   only_if { ::File.exist?(node[:nova][:home_dir]) }
-  notifies :create, "ruby_block[nova_read_ssh_public_key]"
+end
+
+ruby_block "nova_read_ssh_public_key" do
+  block do
+    service_ssh_key = File.read("#{node[:nova][:home_dir]}/.ssh/id_rsa.pub")
+    if node[:nova][:service_ssh_key] != service_ssh_key
+      node.set[:nova][:service_ssh_key] = service_ssh_key
+      node.save
+    end
+  end
+  only_if { ::File.exist?("#{node[:nova][:home_dir]}/.ssh/id_rsa.pub") }
 end
 
 ssh_auth_keys = ""
