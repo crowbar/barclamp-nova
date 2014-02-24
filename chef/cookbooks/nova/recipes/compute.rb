@@ -256,6 +256,7 @@ ruby_block "nova_read_ssh_public_key" do
       node.save
     end
   end
+  only_if { ::File.exist?("#{node[:nova][:home_dir]}/.ssh/id_rsa.pub") }
 end
 
 ssh_auth_keys = ""
