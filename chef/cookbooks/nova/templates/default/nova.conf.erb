@@ -1227,7 +1227,7 @@ linuxnet_interface_driver=""
 #dns_update_periodic_interval=-1
 
 # domain to use for building the hostnames (string value)
-#dhcp_domain=novalocal
+dhcp_domain=<%= @neutron_dhcp_domain %>
 
 # Indicates underlying L3 management library (string value)
 #l3_lib=nova.network.l3.LinuxNetL3
