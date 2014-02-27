@@ -1,3 +1,4 @@
+# -*- encoding : utf-8 -*-
 if node[:nova][:trusted_flavors]
  flavors={11=>
    {"name"=>"m1.trusted.large",
