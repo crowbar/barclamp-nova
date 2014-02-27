@@ -1,0 +1,67 @@
+#
+# Copyright 2011-2013, Dell
+# Copyright 2013-2014, SUSE LINUX Products GmbH
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#   http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+#
+
+en:
+  barclamp:
+    nova:
+      edit_attributes:
+        database_instance: 'Database'
+        rabbitmq_instance: 'RabbitMQ'
+        keystone_instance: 'Keystone'
+        glance_instance: 'Glance'
+        neutron_instance: 'Neutron'
+        cinder_instance: 'Cinder'
+        itxt_instance: 'Intel TXT'
+        trusted_flavors: 'Create Trusted Flavors'
+        use_novnc: 'Use NoVNC (otherwise VPN-VNC)'
+        scheduler_header: 'Scheduler Options'
+        scheduler:
+          ram_allocation_ratio: 'Virtual RAM to Physical RAM allocation ratio'
+          cpu_allocation_ratio: 'Virtual CPU to Physical CPU allocation ratio'
+        live_migration_header: 'Live Migration Support'
+        use_shared_instance_storage: 'Set up Shared Storage on nova-multi-controller for Nova instances'
+        use_migration: 'Enable Libvirt Migration'
+        kvm_header: 'KVM Options'
+        kvm:
+          ksm_enabled: 'Enable Kernel Samepage Merging'
+        vmware_header: 'VMWare vCenter Settings'
+        vcenter:
+          host: 'vCenter IP Address'
+          user: 'vCenter Username'
+          password: 'vCenter Password'
+          clusters: 'Cluster Names'
+          datastore: 'Datastore Name'
+          interface: 'VLAN Interface'
+        vmware_cluster_hint: 'A comma-separated list of cluster names'
+        ssl_header: 'SSL Support'
+        ssl:
+          enabled: 'Protocol'
+          insecure: 'SSL Certificate is insecure (for instance, self-signed)'
+          certfile: 'SSL Certificate File'
+          keyfile: 'SSL (Private) Key File'
+          generate_certs: 'Generate (self-signed) certificates (implies insecure)'
+          cert_required: 'Require Client Certificate'
+          ca_certs: 'SSL CA Certificates File'
+        novnc_ssl_header: 'SSL Support for noVNC'
+        novnc_ssl_hint: 'If no specific files are configured, the SSL certificate and key will be taken from the global Nova SSL configuration.'
+        novnc:
+          ssl:
+            enabled: 'Protocol'
+            certfile: 'SSL Certificate File'
+            keyfile: 'SSL (Private) Key File'
+        logging_header: 'Logging'
+        verbose: 'Verbose Logging'
