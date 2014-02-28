@@ -250,7 +250,7 @@ if ::File.exist?("#{node[:nova][:home_dir]}/.ssh/id_rsa.pub") and !::File.exist?
 end
 
 execute "Create Nova SSH key" do
-  command "su #{node[:nova][:user]} -c \"ssh-keygen -q -t rsa  -P '' -f '#{node[:nova][:home_dir]}/.ssh/id_rsa'\""
+  command "su #{node[:nova][:user]} -s /bin/bash -c \"ssh-keygen -q -t rsa  -P '' -f '#{node[:nova][:home_dir]}/.ssh/id_rsa'\""
   creates "#{node[:nova][:home_dir]}/.ssh/id_rsa.pub"
   only_if { ::File.exist?(node[:nova][:home_dir]) }
 end
