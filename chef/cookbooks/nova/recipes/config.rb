@@ -158,6 +158,22 @@ directory "/etc/nova" do
    action :create
 end
 
+directory "/var/cache/nova" do
+   mode 0755
+   owner node[:nova][:user]
+   group node[:nova][:group]
+   action :create
+   only_if { node[:platform] == "ubuntu" }
+end
+
+directory "/var/lib/nova/.ssh" do
+   mode 0755
+   owner node[:nova][:user]
+   group node[:nova][:group]
+   action :create
+   only_if { node[:platform] == "ubuntu" }
+end
+
 def mask_to_bits(mask)
   octets = mask.split(".")
   count = 0
