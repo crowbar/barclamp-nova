@@ -194,19 +194,19 @@ state_path=/var/lib/nova
 enabled_ssl_apis = <%= @ssl_enabled ? "ec2,osapi_compute" : "" %>
 
 # IP address for EC2 API to listen (string value)
-#ec2_listen=0.0.0.0
+ec2_listen=<%= @bind_host %>
 
 # port for ec2 api to listen (integer value)
-#ec2_listen_port=8773
+ec2_listen_port=<%= @bind_port_api_ec2 %>
 
 # Number of workers for EC2 API service (integer value)
 #ec2_workers=<None>
 
 # IP address for OpenStack API to listen (string value)
-#osapi_compute_listen=0.0.0.0
+osapi_compute_listen=<%= @bind_host %>
 
 # list port for osapi compute (integer value)
-#osapi_compute_listen_port=8774
+osapi_compute_listen_port=<%= @bind_port_api %>
 
 # Number of workers for OpenStack API service (integer value)
 #osapi_compute_workers=<None>
@@ -218,7 +218,7 @@ enabled_ssl_apis = <%= @ssl_enabled ? "ec2,osapi_compute" : "" %>
 metadata_listen = <%= @metadata_bind_address %>
 
 # port for metadata api to listen (integer value)
-#metadata_listen_port=8775
+metadata_listen_port=<%= @bind_port_metadata %>
 
 # Number of workers for metadata service (integer value)
 #metadata_workers=<None>
@@ -578,11 +578,11 @@ key=<%= @vncproxy_key_file %>
 #
 
 # Host on which to listen for incoming requests (string value)
-#novncproxy_host=0.0.0.0
+novncproxy_host=<%= @bind_host %>
 
 # Port on which to listen for incoming requests (integer
 # value)
-#novncproxy_port=6080
+novncproxy_port=<%= @bind_port_novncproxy %>
 
 
 #
@@ -1320,10 +1320,10 @@ security_group_api=neutron
 #buckets_path=$state_path/buckets
 
 # IP address for S3 API to listen (string value)
-#s3_listen=0.0.0.0
+s3_listen=<%= @bind_host %>
 
 # port for s3 api to listen (integer value)
-#s3_listen_port=3333
+s3_listen_port=<%= @bind_port_objectstore %>
 
 
 #
@@ -2498,7 +2498,7 @@ xvpvncproxy_base_url=http://<%= @vncproxy_public_host %>:6081/console
 
 # IP address on which instance vncservers should listen
 # (string value)
-vncserver_listen=0.0.0.0
+vncserver_listen=<%= @bind_host %>
 
 # the address to which proxy clients (like nova-xvpvncproxy)
 # should connect (string value)
@@ -2516,10 +2516,10 @@ vncserver_proxyclient_address=<%= node[:nova][:my_ip] %>
 #
 
 # Port that the XCP VNC proxy should bind to (integer value)
-#xvpvncproxy_port=6081
+xvpvncproxy_port=<%= @bind_port_xvpvncproxy %>
 
 # Address that the XCP VNC proxy should bind to (string value)
-#xvpvncproxy_host=0.0.0.0
+xvpvncproxy_host=<%= @bind_host %>
 
 
 #

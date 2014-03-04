@@ -50,9 +50,9 @@ else
   api = node
 end
 
-ha_enabled = false
-admin_api_host = CrowbarHelper.get_host_for_admin_url(api, ha_enabled)
-public_api_host = CrowbarHelper.get_host_for_public_url(api, api[:nova][:ssl][:enabled], ha_enabled)
+api_ha_enabled = api[:nova][:ha][:enabled]
+admin_api_host = CrowbarHelper.get_host_for_admin_url(api, api_ha_enabled)
+public_api_host = CrowbarHelper.get_host_for_public_url(api, api[:nova][:ssl][:enabled], api_ha_enabled)
 
 api_protocol = api[:nova][:ssl][:enabled] ? 'https' : 'http'
 

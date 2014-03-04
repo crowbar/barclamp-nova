@@ -13,7 +13,7 @@
 # limitations under the License. 
 # 
 
-class NovaService < ServiceObject
+class NovaService < PacemakerServiceObject
 
   def initialize(thelogger)
     super(thelogger)
@@ -30,7 +30,8 @@ class NovaService < ServiceObject
       {
         "nova-multi-controller" => {
           "unique" => false,
-          "count" => 1
+          "count" => 1,
+          "cluster" => true
         },
         "nova-multi-compute-hyperv" => {
           "unique" => false,
@@ -139,18 +140,22 @@ class NovaService < ServiceObject
       role.override_attributes["nova"]["elements"]["nova-multi-compute-hyperv"] = []
     end
 
-    # Handle addressing
-    #
-    # Make sure that the front-end pieces have public ip addreses.
-    #   - if we are in HA mode, then that is all nodes.
-    #
-    # if tenants are enabled, we don't manage interfaces on nova-fixed.
-    #
+    controller_elements, controller_nodes, ha_enabled = role_expand_elements(role, "nova-multi-controller")
+
+    vip_networks = ["admin", "public"]
+
+    dirty = false
+    dirty = prepare_role_for_ha_with_haproxy(role, ["nova", "ha", "enabled"], ha_enabled, vip_networks)
+    role.save if dirty
+
     net_svc = NetworkService.new @logger
-    tnodes = role.override_attributes["nova"]["elements"]["nova-multi-controller"]
-    tnodes.each do |n|
-      net_svc.allocate_ip "default","public","host",n
-    end unless tnodes.nil?
+    # All nodes must have a public IP, even if part of a cluster; otherwise
+    # the VIP can't be moved to the nodes
+    controller_nodes.each do |n|
+      net_svc.allocate_ip "default", "public", "host", n
+    end
+
+    allocate_virtual_ips_for_any_cluster_in_networks_and_sync_dns(controller_elements, vip_networks)
 
     neutron = ProposalObject.find_proposal("neutron",role.default_attributes["nova"]["neutron_instance"])
 

@@ -34,8 +34,8 @@ else
 end
 api_protocol = api[:nova][:ssl][:enabled] ? 'https' : 'http'
 
-ha_enabled = false
-public_api_host = CrowbarHelper.get_host_for_public_url(api, api[:nova][:ssl][:enabled], ha_enabled)
+api_ha_enabled = api[:nova][:ha][:enabled]
+public_api_host = CrowbarHelper.get_host_for_public_url(api, api[:nova][:ssl][:enabled], api_ha_enabled)
 Chef::Log.info("API server found at #{public_api_host}")
 
 if not node[:nova][:use_gitrepo]
