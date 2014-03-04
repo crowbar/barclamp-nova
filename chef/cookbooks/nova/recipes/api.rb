@@ -49,18 +49,11 @@ if apis.length > 0
 else
   api = node
 end
-admin_api_host = api[:fqdn]
-# For the public endpoint, we prefer the public name. If not set, then we
-# use the IP address except for SSL, where we always prefer a hostname
-# (for certificate validation).
-public_api_host = api[:crowbar][:public_name]
-if public_api_host.nil? or public_api_host.empty?
-  unless api[:nova][:ssl][:enabled]
-    public_api_host = Chef::Recipe::Barclamp::Inventory.get_network_by_type(api, "public").address
-  else
-    public_api_host = 'public.'+api[:fqdn]
-  end
-end
+
+ha_enabled = false
+admin_api_host = CrowbarHelper.get_host_for_admin_url(api, ha_enabled)
+public_api_host = CrowbarHelper.get_host_for_public_url(api, api[:nova][:ssl][:enabled], ha_enabled)
+
 api_protocol = api[:nova][:ssl][:enabled] ? 'https' : 'http'
 
 keystone_register "nova api wakeup keystone" do

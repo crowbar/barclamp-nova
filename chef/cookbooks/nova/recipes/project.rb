@@ -33,17 +33,9 @@ else
   api = node
 end
 api_protocol = api[:nova][:ssl][:enabled] ? 'https' : 'http'
-# For the public endpoint, we prefer the public name. If not set, then we
-# use the IP address except for SSL, where we always prefer a hostname
-# (for certificate validation).
-public_api_host = api[:crowbar][:public_name]
-if public_api_host.nil? or public_api_host.empty?
-  unless api_protocol == 'https'
-    public_api_host = Chef::Recipe::Barclamp::Inventory.get_network_by_type(api, "public").address
-  else
-    public_api_host = 'public.'+api[:fqdn]
-  end
-end
+
+ha_enabled = false
+public_api_host = CrowbarHelper.get_host_for_public_url(api, api[:nova][:ssl][:enabled], ha_enabled)
 Chef::Log.info("API server found at #{public_api_host}")
 
 if not node[:nova][:use_gitrepo]
