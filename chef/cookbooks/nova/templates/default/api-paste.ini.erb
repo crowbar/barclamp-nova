@@ -114,16 +114,16 @@ paste.filter_factory = nova.api.auth:NovaKeystoneContext.factory
 
 [filter:authtoken]
 paste.filter_factory = keystoneclient.middleware.auth_token:filter_factory
-service_protocol = <%= @keystone_protocol %>
-service_host = <%= @keystone_host %>
-service_port = <%= @keystone_service_port %>
-auth_host = <%= @keystone_host %>
-auth_port = <%= @keystone_admin_port %>
-auth_protocol = <%= @keystone_protocol %>
-auth_uri = <%= @keystone_protocol %>://<%= @keystone_host %>:<%= @keystone_service_port %>/
-admin_user = <%= @keystone_service_user %>
-admin_password = <%= @keystone_service_password %>
-admin_tenant_name = <%= @keystone_service_tenant %>
+service_protocol = <%= @keystone_settings['protocol'] %>
+service_host = <%= @keystone_settings['internal_url_host'] %>
+service_port = <%= @keystone_settings['service_port'] %>
+auth_host = <%= @keystone_settings['internal_url_host'] %>
+auth_port = <%= @keystone_settings['admin_port'] %>
+auth_protocol = <%= @keystone_settings['protocol'] %>
+auth_uri = <%= @keystone_settings['internal_auth_url'] %>
+admin_user = <%= @keystone_settings['service_user'] %>
+admin_password = <%= @keystone_settings['service_password'] %>
+admin_tenant_name = <%= @keystone_settings['service_tenant'] %>
 # signing_dir is configurable, but the default behavior of the authtoken
 # middleware should be sufficient.  It will create a temporary directory
 # in the home directory for the user the nova process is running as.

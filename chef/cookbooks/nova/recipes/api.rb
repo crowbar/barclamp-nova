@@ -22,13 +22,7 @@ include_recipe "nova::config"
 nova_path = "/opt/nova"
 venv_path = node[:nova][:use_virtualenv] ? "#{nova_path}/.venv" : nil
 
-keystones = search_env_filtered(:node, "recipes:keystone\\:\\:server")
-if keystones.length > 0
-  keystone = keystones[0]
-  keystone = node if keystone.name == node.name
-else
-  keystone = node
-end
+keystone_settings = NovaHelper.keystone_settings(node)
 
 unless node[:nova][:use_gitrepo]
   package "python-novaclient"
@@ -37,30 +31,13 @@ end
 nova_package("api")
 nova_package("objectstore")
 
-keystone_host = keystone[:fqdn]
-keystone_protocol = keystone["keystone"]["api"]["protocol"]
-keystone_token = keystone["keystone"]["service"]["token"]
-keystone_service_port = keystone["keystone"]["api"]["service_port"]
-keystone_admin_port = keystone["keystone"]["api"]["admin_port"]
-keystone_service_tenant = keystone["keystone"]["service"]["tenant"]
-keystone_service_user = node["nova"]["service_user"]
-keystone_service_password = node["nova"]["service_password"]
-Chef::Log.info("Keystone server found at #{keystone_host}")
-
 template "/etc/nova/api-paste.ini" do
   source "api-paste.ini.erb"
   owner node[:nova][:user]
   group "root"
   mode "0640"
   variables(
-    :keystone_protocol => keystone_protocol,
-    :keystone_host => keystone_host,
-    :keystone_admin_token => keystone_token,
-    :keystone_service_port => keystone_service_port,
-    :keystone_service_tenant => keystone_service_tenant,
-    :keystone_service_user => keystone_service_user,
-    :keystone_service_password => keystone_service_password,
-    :keystone_admin_port => keystone_admin_port
+    :keystone_settings => keystone_settings
   )
   notifies :restart, resources(:service => "nova-api"), :immediately
 end
@@ -87,40 +64,40 @@ end
 api_protocol = api[:nova][:ssl][:enabled] ? 'https' : 'http'
 
 keystone_register "nova api wakeup keystone" do
-  protocol keystone_protocol
-  host keystone_host
-  port keystone_admin_port
-  token keystone_token
+  protocol keystone_settings['protocol']
+  host keystone_settings['internal_url_host']
+  port keystone_settings['admin_port']
+  token keystone_settings['admin_token']
   action :wakeup
 end
 
 keystone_register "register nova user" do
-  protocol keystone_protocol
-  host keystone_host
-  port keystone_admin_port
-  token keystone_token
-  user_name keystone_service_user
-  user_password keystone_service_password
-  tenant_name keystone_service_tenant
+  protocol keystone_settings['protocol']
+  host keystone_settings['internal_url_host']
+  port keystone_settings['admin_port']
+  token keystone_settings['admin_token']
+  user_name keystone_settings['service_user']
+  user_password keystone_settings['service_password']
+  tenant_name keystone_settings['service_tenant']
   action :add_user
 end
 
 keystone_register "give nova user access" do
-  protocol keystone_protocol
-  host keystone_host
-  port keystone_admin_port
-  token keystone_token
-  user_name keystone_service_user
-  tenant_name keystone_service_tenant
+  protocol keystone_settings['protocol']
+  host keystone_settings['internal_url_host']
+  port keystone_settings['admin_port']
+  token keystone_settings['admin_token']
+  user_name keystone_settings['service_user']
+  tenant_name keystone_settings['service_tenant']
   role_name "admin"
   action :add_access
 end
 
 keystone_register "register nova service" do
-  protocol keystone_protocol
-  host keystone_host
-  port keystone_admin_port
-  token keystone_token
+  protocol keystone_settings['protocol']
+  host keystone_settings['internal_url_host']
+  port keystone_settings['admin_port']
+  token keystone_settings['admin_token']
   service_name "nova"
   service_type "compute"
   service_description "Openstack Nova Service"
@@ -128,10 +105,10 @@ keystone_register "register nova service" do
 end
 
 keystone_register "register ec2 service" do
-  protocol keystone_protocol
-  host keystone_host
-  port keystone_admin_port
-  token keystone_token
+  protocol keystone_settings['protocol']
+  host keystone_settings['internal_url_host']
+  port keystone_settings['admin_port']
+  token keystone_settings['admin_token']
   service_name "ec2"
   service_type "ec2"
   service_description "EC2 Compatibility Layer"
@@ -139,10 +116,10 @@ keystone_register "register ec2 service" do
 end
 
 keystone_register "register nova endpoint" do
-  protocol keystone_protocol
-  host keystone_host
-  port keystone_admin_port
-  token keystone_token
+  protocol keystone_settings['protocol']
+  host keystone_settings['internal_url_host']
+  port keystone_settings['admin_port']
+  token keystone_settings['admin_token']
   endpoint_service "nova"
   endpoint_region "RegionOne"
   endpoint_publicURL "#{api_protocol}://#{public_api_host}:8774/v2/$(tenant_id)s"
@@ -154,10 +131,10 @@ keystone_register "register nova endpoint" do
 end
 
 keystone_register "register nova ec2 endpoint" do
-  protocol keystone_protocol
-  host keystone_host
-  port keystone_admin_port
-  token keystone_token
+  protocol keystone_settings['protocol']
+  host keystone_settings['internal_url_host']
+  port keystone_settings['admin_port']
+  token keystone_settings['admin_token']
   endpoint_service "ec2"
   endpoint_region "RegionOne"
   endpoint_publicURL "#{api_protocol}://#{public_api_host}:8773/services/Cloud"

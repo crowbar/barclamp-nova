@@ -225,23 +225,7 @@ if node[:nova][:use_gitrepo]
   end
 end
 
-keystones = search_env_filtered(:node, "recipes:keystone\\:\\:server")
-if keystones.length > 0
-  keystone = keystones[0]
-  keystone = node if keystone.name == node.name
-else
-  keystone = node
-end
-
-keystone_host = keystone[:fqdn]
-keystone_protocol = keystone["keystone"]["api"]["protocol"]
-keystone_token = keystone["keystone"]["service"]["token"]
-keystone_service_port = keystone["keystone"]["api"]["service_port"]
-keystone_admin_port = keystone["keystone"]["api"]["admin_port"]
-keystone_service_tenant = keystone["keystone"]["service"]["tenant"]
-keystone_service_user = node[:nova][:service_user]
-keystone_service_password = node[:nova][:service_password]
-Chef::Log.info("Keystone server found at #{keystone_host}")
+keystone_settings = NovaHelper.keystone_settings(node)
 
 cinder_servers = search(:node, "roles:cinder-controller") || []
 if cinder_servers.length > 0
@@ -421,10 +405,7 @@ template "/etc/nova/nova.conf" do
             :neutron_service_password => neutron_service_password,
             :neutron_networking_plugin => neutron_networking_plugin,
             :neutron_dhcp_domain => neutron_dhcp_domain,
-            :keystone_service_tenant => keystone_service_tenant,
-            :keystone_protocol => keystone_protocol,
-            :keystone_host => keystone_host,
-            :keystone_admin_port => keystone_admin_port,
+            :keystone_settings => keystone_settings,
             :cinder_insecure => cinder_insecure,
             :ceph_user => ceph_user,
             :ceph_uuid => ceph_uuid,
