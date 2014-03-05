@@ -191,6 +191,15 @@ class NovaService < PacemakerServiceObject
     elements = proposal["deployment"]["nova"]["elements"]
     nodes = Hash.new(0)
 
+    if proposal["attributes"][@bc_name]["use_shared_instance_storage"]
+      elements["nova-multi-controller"].each do |element|
+        if is_cluster? element
+          validation_error("Shared storage cannot be automatically setup when a cluster has the nova-multi-controller role. Please consider using the NFS Client barclamp instead.")
+          break
+        end
+      end unless elements["nova-multi-controller"].nil?
+    end
+
     unless elements["nova-multi-compute-hyperv"].empty? || hyperv_available?
       validation_error("Hyper-V support is not available.")
     end
