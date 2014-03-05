@@ -8,4 +8,4 @@ export OS_AUTH_STRATEGY=keystone
 # EUCA2OOLs ENV VARIABLES
 export EC2_ACCESS_KEY=${OS_USERNAME}
 export EC2_SECRET_KEY=${OS_PASSWORD}
-export EC2_URL=<%= @nova_api_protocol %>://<%= @nova_api_host %>:8773/services/Cloud
+export EC2_URL=<%= @nova_api_protocol %>://<%= @nova_api_host %>:<%= @nova_api_ec2_port %>/services/Cloud

@@ -27,7 +27,7 @@ cluster_admin_ip = admin_net_db["allocated_by_name"]["#{cluster_vhostname}.#{nod
 
 haproxy_loadbalancer "nova-api" do
   address "0.0.0.0"
-  port 8774
+  port node[:nova][:ports][:api]
   use_ssl node[:nova][:ssl][:enabled]
   servers CrowbarPacemakerHelper.haproxy_servers_for_service(node, "nova", "nova-multi-controller", "api")
   action :nothing
@@ -35,7 +35,7 @@ end.run_action(:create)
 
 haproxy_loadbalancer "nova-api-ec2" do
   address "0.0.0.0"
-  port 8773
+  port node[:nova][:ports][:api_ec2]
   use_ssl node[:nova][:ssl][:enabled]
   servers CrowbarPacemakerHelper.haproxy_servers_for_service(node, "nova", "nova-multi-controller", "api_ec2")
   action :nothing
@@ -43,7 +43,7 @@ end.run_action(:create)
 
 haproxy_loadbalancer "nova-metadata" do
   address cluster_admin_ip
-  port 8775
+  port node[:nova][:ports][:metadata]
   use_ssl false
   servers CrowbarPacemakerHelper.haproxy_servers_for_service(node, "nova", "nova-multi-controller", "metadata")
   action :nothing
@@ -51,7 +51,7 @@ end.run_action(:create)
 
 haproxy_loadbalancer "nova-objectstore" do
   address "0.0.0.0"
-  port 3333
+  port node[:nova][:ports][:objectstore]
   use_ssl false
   servers CrowbarPacemakerHelper.haproxy_servers_for_service(node, "nova", "nova-multi-controller", "objectstore")
   action :nothing
@@ -61,7 +61,7 @@ end.run_action(:create)
 if node[:nova][:use_novnc]
   haproxy_loadbalancer "nova-novncproxy" do
     address "0.0.0.0"
-    port 6080
+    port node[:nova][:ports][:novncproxy]
     use_ssl node[:nova][:novnc][:ssl][:enabled]
     servers CrowbarPacemakerHelper.haproxy_servers_for_service(node, "nova", "nova-multi-controller", "novncproxy")
     action :nothing
@@ -69,7 +69,7 @@ if node[:nova][:use_novnc]
 else
   haproxy_loadbalancer "nova-xvpvncproxy" do
     address "0.0.0.0"
-    port 6081
+    port node[:nova][:ports][:xvpvncproxy]
     use_ssl false
     servers CrowbarPacemakerHelper.haproxy_servers_for_service(node, "nova", "nova-multi-controller", "xvpvncproxy")
     action :nothing

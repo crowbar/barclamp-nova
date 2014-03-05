@@ -53,6 +53,8 @@ end
 api_ha_enabled = api[:nova][:ha][:enabled]
 admin_api_host = CrowbarHelper.get_host_for_admin_url(api, api_ha_enabled)
 public_api_host = CrowbarHelper.get_host_for_public_url(api, api[:nova][:ssl][:enabled], api_ha_enabled)
+api_port = api[:nova][:ports][:api]
+api_ec2_port = api[:nova][:ports][:api_ec2]
 
 api_protocol = api[:nova][:ssl][:enabled] ? 'https' : 'http'
 
@@ -115,9 +117,9 @@ keystone_register "register nova endpoint" do
   token keystone_settings['admin_token']
   endpoint_service "nova"
   endpoint_region "RegionOne"
-  endpoint_publicURL "#{api_protocol}://#{public_api_host}:8774/v2/$(tenant_id)s"
-  endpoint_adminURL "#{api_protocol}://#{admin_api_host}:8774/v2/$(tenant_id)s"
-  endpoint_internalURL "#{api_protocol}://#{admin_api_host}:8774/v2/$(tenant_id)s"
+  endpoint_publicURL "#{api_protocol}://#{public_api_host}:#{api_port}/v2/$(tenant_id)s"
+  endpoint_adminURL "#{api_protocol}://#{admin_api_host}:#{api_port}/v2/$(tenant_id)s"
+  endpoint_internalURL "#{api_protocol}://#{admin_api_host}:#{api_port}/v2/$(tenant_id)s"
 #  endpoint_global true
 #  endpoint_enabled true
   action :add_endpoint_template
@@ -130,9 +132,9 @@ keystone_register "register nova ec2 endpoint" do
   token keystone_settings['admin_token']
   endpoint_service "ec2"
   endpoint_region "RegionOne"
-  endpoint_publicURL "#{api_protocol}://#{public_api_host}:8773/services/Cloud"
-  endpoint_adminURL "#{api_protocol}://#{admin_api_host}:8773/services/Admin"
-  endpoint_internalURL "#{api_protocol}://#{admin_api_host}:8773/services/Cloud"
+  endpoint_publicURL "#{api_protocol}://#{public_api_host}:#{api_ec2_port}/services/Cloud"
+  endpoint_adminURL "#{api_protocol}://#{admin_api_host}:#{api_ec2_port}/services/Admin"
+  endpoint_internalURL "#{api_protocol}://#{admin_api_host}:#{api_ec2_port}/services/Cloud"
 #  endpoint_global true
 #  endpoint_enabled true
   action :add_endpoint_template

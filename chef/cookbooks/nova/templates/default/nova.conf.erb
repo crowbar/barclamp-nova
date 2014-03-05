@@ -2490,11 +2490,11 @@ libvirt_ovs_bridge=br-int
 
 # location of vnc console proxy, in the form
 # "http://127.0.0.1:6080/vnc_auto.html" (string value)
-novncproxy_base_url=<%= @vncproxy_ssl_enabled ? "https" : "http" %>://<%= @vncproxy_public_host %>:6080/vnc_auto.html
+novncproxy_base_url=<%= @vncproxy_ssl_enabled ? "https" : "http" %>://<%= @vncproxy_public_host %>:<%= node[:nova][:ports][:novncproxy] %>/vnc_auto.html
 
 # location of nova xvp vnc console proxy, in the form
 # "http://127.0.0.1:6081/console" (string value)
-xvpvncproxy_base_url=http://<%= @vncproxy_public_host %>:6081/console
+xvpvncproxy_base_url=http://<%= @vncproxy_public_host %>:<%= node[:nova][:ports][:xvpvncproxy] %>/console
 
 # IP address on which instance vncservers should listen
 # (string value)

@@ -99,6 +99,13 @@ default[:nova][:novnc][:ssl][:keyfile] = ""
 default[:nova][:hugepage][:tranparent_hugepage_enabled] = "always"
 default[:nova][:hugepage][:tranparent_hugepage_defrag] = "always"
 
+default[:nova][:ports][:api_ec2] = 8773
+default[:nova][:ports][:api] = 8774
+default[:nova][:ports][:metadata] = 8775
+default[:nova][:ports][:objectstore] = 3333
+default[:nova][:ports][:novncproxy] = 6080
+default[:nova][:ports][:xvpvncproxy] = 6081
+
 default[:nova][:ha][:enabled] = false
 # Ports to bind to when haproxy is used for the real ports
 default[:nova][:ha][:ports][:api_ec2] = 5550

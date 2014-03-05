@@ -349,12 +349,12 @@ if node[:nova][:ha][:enabled]
   bind_port_xvpvncproxy = node[:nova][:ha][:ports][:xvpvncproxy]
 else
   bind_host = "0.0.0.0"
-  bind_port_api = 8774
-  bind_port_api_ec2 = 8773
-  bind_port_metadata = 8775
-  bind_port_objectstore = 3333
-  bind_port_novncproxy = 6080
-  bind_port_xvpvncproxy = 6081
+  bind_port_api = node[:nova][:ports][:api]
+  bind_port_api_ec2 = node[:nova][:ports][:api_ec2]
+  bind_port_metadata = node[:nova][:ports][:metadata]
+  bind_port_objectstore = node[:nova][:ports][:objectstore]
+  bind_port_novncproxy = node[:nova][:ports][:novncproxy]
+  bind_port_xvpvncproxy = node[:nova][:ports][:xvpvncproxy]
 end
 
 template "/etc/nova/nova.conf" do

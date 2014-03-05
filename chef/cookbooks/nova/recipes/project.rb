@@ -33,6 +33,7 @@ else
   api = node
 end
 api_protocol = api[:nova][:ssl][:enabled] ? 'https' : 'http'
+api_ec2_port = api[:nova][:ports][:api_ec2]
 
 api_ha_enabled = api[:nova][:ha][:enabled]
 public_api_host = CrowbarHelper.get_host_for_public_url(api, api[:nova][:ssl][:enabled], api_ha_enabled)
@@ -54,8 +55,9 @@ template "/root/.openrc" do
   mode 0600
   variables(
     :keystone_settings => keystone_settings,
+    :nova_api_protocol => api_protocol,
     :nova_api_host => public_api_host,
-    :nova_api_protocol => api_protocol
+    :nova_api_ec2_port => api_ec2_port
   )
 end
 
