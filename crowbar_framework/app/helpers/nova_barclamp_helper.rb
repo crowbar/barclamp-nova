@@ -14,35 +14,6 @@
 #
 
 module NovaBarclampHelper
-  def nova_role_contraints
-    {
-      "nova-multi-controller" => {
-        "unique" => false,
-        "count" => 1
-      },
-      "nova-multi-compute-hyperv" => {
-        "unique" => false,
-        "count" => -1
-      },
-      "nova-multi-compute-kvm" => {
-        "unique" => false,
-        "count" => -1
-      },
-      "nova-multi-compute-qemu" => {
-        "unique" => false,
-        "count" => -1
-      },
-      "nova-multi-compute-vmware" => {
-        "unique" => false,
-        "count" => 1
-      },
-      "nova-multi-compute-xen" => {
-        "unique" => false,
-        "count" => -1
-      }
-    }
-  end
-
   def ssl_protocols_for_nova(selected)
     options_for_select(
       [
