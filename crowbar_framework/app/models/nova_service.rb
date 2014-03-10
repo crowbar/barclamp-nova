@@ -27,34 +27,32 @@ class NovaService < ServiceObject
 
   class << self
     def role_constraints
-      @role_constraints ||= begin
-        {
-          "nova-multi-controller" => {
-            "unique" => false,
-            "count" => 1
-          },
-          "nova-multi-compute-hyperv" => {
-            "unique" => false,
-            "count" => -1
-          },
-          "nova-multi-compute-kvm" => {
-            "unique" => false,
-            "count" => -1
-          },
-          "nova-multi-compute-qemu" => {
-            "unique" => false,
-            "count" => -1
-          },
-          "nova-multi-compute-vmware" => {
-            "unique" => false,
-            "count" => 1
-          },
-          "nova-multi-compute-xen" => {
-            "unique" => false,
-            "count" => -1
-          }
+      {
+        "nova-multi-controller" => {
+          "unique" => false,
+          "count" => 1
+        },
+        "nova-multi-compute-hyperv" => {
+          "unique" => false,
+          "count" => -1
+        },
+        "nova-multi-compute-kvm" => {
+          "unique" => false,
+          "count" => -1
+        },
+        "nova-multi-compute-qemu" => {
+          "unique" => false,
+          "count" => -1
+        },
+        "nova-multi-compute-vmware" => {
+          "unique" => false,
+          "count" => 1
+        },
+        "nova-multi-compute-xen" => {
+          "unique" => false,
+          "count" => -1
         }
-      end
+      }
     end
   end
 
