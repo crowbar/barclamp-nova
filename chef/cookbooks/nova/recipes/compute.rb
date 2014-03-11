@@ -239,8 +239,8 @@ if node[:nova][:use_gitrepo]
 end
 
 directory "#{node[:nova][:home_dir]}" do
-  owner neutron[:nova][:user]
-  group neutron[:nova][:group]
+  owner node[:nova][:user]
+  group node[:nova][:group]
   mode 0700
   action :create
   only_if { node[:platform] == "ubuntu" }
