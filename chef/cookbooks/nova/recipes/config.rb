@@ -274,11 +274,13 @@ if neutron_servers.length > 0
   neutron_service_password = neutron_server[:neutron][:service_password]
   neutron_networking_plugin = neutron_server[:neutron][:networking_plugin]
   neutron_networking_mode = neutron_server[:neutron][:networking_mode]
+  neutron_dhcp_domain = neutron_server[:neutron][:dhcp_domain]
 else
   neutron_server_host = nil
   neutron_server_port = nil
   neutron_service_user = nil
   neutron_service_password = nil
+  neutron_dhcp_domain = "novalocal"
 end
 Chef::Log.info("Neutron server at #{neutron_server_host}")
 
@@ -418,6 +420,7 @@ template "/etc/nova/nova.conf" do
             :neutron_service_user => neutron_service_user,
             :neutron_service_password => neutron_service_password,
             :neutron_networking_plugin => neutron_networking_plugin,
+            :neutron_dhcp_domain => neutron_dhcp_domain,
             :keystone_admin_port => keystone_admin_port,
             :keystone_host => keystone_host,
             :keystone_protocol => keystone_protocol,
