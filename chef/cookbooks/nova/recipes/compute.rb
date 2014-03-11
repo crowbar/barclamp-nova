@@ -238,6 +238,13 @@ if node[:nova][:use_gitrepo]
   end
 end
 
+directory "#{node[:nova][:home_dir]}" do
+  owner neutron[:nova][:user]
+  group neutron[:nova][:group]
+  mode 0700
+  action :create
+  only_if { node[:platform] == "ubuntu" }
+end
 # Create and distribute ssh keys for nova user on all compute nodes
 
 # if for some reason, we only have one of the two keys, we recreate the keys
