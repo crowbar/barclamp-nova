@@ -238,7 +238,7 @@ if node[:nova][:use_gitrepo]
   end
 end
 
-directory "#{node[:nova][:home_dir]}" do
+directory "#{node[:nova][:home_dir]}/.ssh" do
   owner node[:nova][:user]
   group node[:nova][:group]
   mode 0700
