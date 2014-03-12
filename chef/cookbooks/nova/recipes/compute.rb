@@ -238,13 +238,6 @@ if node[:nova][:use_gitrepo]
   end
 end
 
-directory "#{node[:nova][:home_dir]}/.ssh" do
-  owner node[:nova][:user]
-  group node[:nova][:group]
-  mode 0700
-  action :create
-  only_if { node[:platform] == "ubuntu" }
-end
 # To let the ssh key generation, user should have a defined shell
 user "nova" do
   shell "/bin/bash"
