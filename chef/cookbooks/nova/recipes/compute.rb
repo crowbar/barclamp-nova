@@ -211,8 +211,9 @@ end
 env_filter = " AND nova_config_environment:#{node[:nova][:config][:environment]}"
 nova_controller = search(:node, "roles:nova-multi-controller#{env_filter}")
 
+# Note: since we do not allow shared storage with a cluster, we know that the
+# first controller is the right one to use (ie, the only one)
 if !nova_controller.nil? and nova_controller.length > 0 and nova_controller[0].name != node.name
-
   nova_controller_ip =  Chef::Recipe::Barclamp::Inventory.get_network_by_type(nova_controller[0], "admin").address
   mount node[:nova][:instances_path] do
     action node[:nova]["use_shared_instance_storage"] ? [:mount, :enable] : [:umount, :disable]

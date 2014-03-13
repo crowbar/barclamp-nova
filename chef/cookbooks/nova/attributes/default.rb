@@ -18,8 +18,6 @@
 # limitations under the License.
 #
 
-::Chef::Node.send(:include, Opscode::OpenSSL::Password)
-
 default[:nova][:debug] = false
 
 #
@@ -100,3 +98,19 @@ default[:nova][:novnc][:ssl][:keyfile] = ""
 #
 default[:nova][:hugepage][:tranparent_hugepage_enabled] = "always"
 default[:nova][:hugepage][:tranparent_hugepage_defrag] = "always"
+
+default[:nova][:ports][:api_ec2] = 8773
+default[:nova][:ports][:api] = 8774
+default[:nova][:ports][:metadata] = 8775
+default[:nova][:ports][:objectstore] = 3333
+default[:nova][:ports][:novncproxy] = 6080
+default[:nova][:ports][:xvpvncproxy] = 6081
+
+default[:nova][:ha][:enabled] = false
+# Ports to bind to when haproxy is used for the real ports
+default[:nova][:ha][:ports][:api_ec2] = 5550
+default[:nova][:ha][:ports][:api] = 5551
+default[:nova][:ha][:ports][:metadata] = 5552
+default[:nova][:ha][:ports][:objectstore] = 5553
+default[:nova][:ha][:ports][:novncproxy] = 5554
+default[:nova][:ha][:ports][:xvpvncproxy] = 5555

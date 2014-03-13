@@ -1,11 +1,11 @@
 # OPENSTACK ENV VARIABLES
-export OS_USERNAME=<%= @admin_username %>
-export OS_PASSWORD=<%= @admin_password %>
-export OS_TENANT_NAME=<%= @default_tenant %>
-export OS_AUTH_URL=<%= @keystone_protocol %>://<%= @keystone_host %>:<%= @keystone_service_port %>/v2.0/
+export OS_USERNAME=<%= @keystone_settings['admin_user'] %>
+export OS_PASSWORD=<%= @keystone_settings['admin_password'] %>
+export OS_TENANT_NAME=<%= @keystone_settings['default_tenant'] %>
+export OS_AUTH_URL=<%= @keystone_settings['public_auth_url'] %>
 export OS_AUTH_STRATEGY=keystone
 
 # EUCA2OOLs ENV VARIABLES
 export EC2_ACCESS_KEY=${OS_USERNAME}
 export EC2_SECRET_KEY=${OS_PASSWORD}
-export EC2_URL=<%= @nova_api_protocol %>://<%= @nova_api_host %>:8773/services/Cloud
+export EC2_URL=<%= @nova_api_protocol %>://<%= @nova_api_host %>:<%= @nova_api_ec2_port %>/services/Cloud
