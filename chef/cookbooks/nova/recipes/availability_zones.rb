@@ -23,35 +23,20 @@ cookbook_file "crowbar-nova-set-availability-zone" do
   mode "0755"
 end
 
-keystones = search_env_filtered(:node, "recipes:keystone\\:\\:server")
-if keystones.length > 0
-  keystone = keystones[0]
-  keystone = node if keystone.name == node.name
-else
-  keystone = node
-end
-
-keystone_protocol = keystone["keystone"]["api"]["protocol"]
-keystone_host = keystone[:fqdn]
-keystone_service_port = keystone["keystone"]["api"]["service_port"]
-keystone_insecure = keystone_protocol == 'https' && keystone[:keystone][:ssl][:insecure]
+keystone_settings = NovaHelper.keystone_settings(node)
 
 nova_insecure = node[:nova][:ssl][:enabled] && node[:nova][:ssl][:insecure]
 
-admin_username = keystone["keystone"]["admin"]["username"]
-admin_password = keystone["keystone"]["admin"]["password"]
-default_tenant = keystone["keystone"]["default"]["tenant"]
-
 command = [ "/usr/bin/crowbar-nova-set-availability-zone" ]
 command << "--os-username"
-command << admin_username
+command << keystone_settings['admin_user']
 command << "--os-password"
-command << admin_password
+command << keystone_settings['admin_password']
 command << "--os-tenant-name"
-command << default_tenant
+command << keystone_settings['default_tenant']
 command << "--os-auth-url"
-command << "#{keystone_protocol}://#{keystone_host}:#{keystone_service_port}/v2.0/"
-if keystone_insecure || nova_insecure
+command << keystone_settings['internal_auth_url']
+if keystone_settings['insecure'] || nova_insecure
   command << "--insecure"
 end
 
