@@ -236,14 +236,14 @@ if node[:nova][:use_gitrepo]
     home node[:nova][:home_dir]
     gid "libvirtd"
   end
-  else
-    # To let the ssh key generation, user should have a defined shell
-    user node[:nova][:user] do
-      shell "/bin/bash"
-      action :modify
-      only_if { node[:platform] == "ubuntu" }
-    end 
 end
+
+i# To let the ssh key generation, user should have a defined shell
+user node[:nova][:user] do
+  shell "/bin/bash"
+  action :modify
+  only_if { node[:platform] == "ubuntu" }
+end 
 
 # Create and distribute ssh keys for nova user on all compute nodes
 
