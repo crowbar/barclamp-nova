@@ -4,6 +4,7 @@
 #
 # Copyright 2010, 2011 Opscode, Inc.
 # Copyright 2011 Dell, Inc.
+# Copyright 2014, SUSE Linux Products GmbH
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -134,6 +135,19 @@ end
 vncproxy_ha_enabled = vncproxy[:nova][:ha][:enabled]
 vncproxy_public_host = CrowbarHelper.get_host_for_public_url(vncproxy, vncproxy[:nova][:novnc][:ssl][:enabled], vncproxy_ha_enabled)
 Chef::Log.info("VNCProxy server at #{vncproxy_public_host}")
+
+# use memcached as a cache backend for nova-novncproxy
+if vncproxy_ha_enabled
+  memcached_nodes = CrowbarPacemakerHelper.cluster_nodes(node, "nova-multi-controller")
+  memcached_servers = memcached_nodes.map do |n|
+    node_admin_ip = Chef::Recipe::Barclamp::Inventory.get_network_by_type(n, "admin").address
+    "#{node_admin_ip}:#{n[:memcached][:port] rescue node[:memcached][:port]}"
+  end
+else
+  node_admin_ip = Chef::Recipe::Barclamp::Inventory.get_network_by_type(node, "admin").address
+  memcached_servers = ["#{node_admin_ip}:#{node[:memcached][:port]}"]
+end
+
 
 directory "/etc/nova" do
    mode 0755
@@ -388,6 +402,7 @@ template "/etc/nova/nova.conf" do
             :vncproxy_ssl_enabled => api[:nova][:novnc][:ssl][:enabled],
             :vncproxy_cert_file => api_novnc_ssl_certfile,
             :vncproxy_key_file => api_novnc_ssl_keyfile,
+            :memcached_servers => memcached_servers,
             :neutron_protocol => neutron_protocol,
             :neutron_server_host => neutron_server_host,
             :neutron_server_port => neutron_server_port,

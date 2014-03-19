@@ -1449,7 +1449,7 @@ use_syslog=<%= node[:nova][:use_syslog] ? 'True' : 'False' %>
 #
 
 # Memcached servers or None for in process cache. (list value)
-#memcached_servers=<None>
+memcached_servers=<%= @memcached_servers.join(',') %>
 
 
 #
