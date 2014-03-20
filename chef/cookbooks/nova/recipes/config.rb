@@ -46,20 +46,14 @@ end
 
 include_recipe "database::client"
 
-sqls = search_env_filtered(:node, "roles:database-server")
-if sqls.length > 0
-  sql = sqls[0]
-  sql = node if sql.name == node.name
-else
-  sql = node
-end
+sql = get_instance('roles:database-server')
 backend_name = Chef::Recipe::Database::Util.get_backend_name(sql)
 
 include_recipe "#{backend_name}::client"
 include_recipe "#{backend_name}::python-client"
 
-database_address = Chef::Recipe::Barclamp::Inventory.get_network_by_type(sql, "admin").address if database_address.nil?
-Chef::Log.info("database server found at #{database_address}")
+database_address = CrowbarDatabaseHelper.get_listen_address(sql)
+Chef::Log.info("Database server found at #{database_address}")
 db_conn_scheme = backend_name
 if node[:platform] == "suse" && backend_name == "mysql"
   # The C-extensions (python-mysql) can't be monkey-patched by eventlet. Therefore, when only one nova-conductor is present,
@@ -68,17 +62,10 @@ if node[:platform] == "suse" && backend_name == "mysql"
 end
 database_connection = "#{db_conn_scheme}://#{node[:nova][:db][:user]}:#{node[:nova][:db][:password]}@#{database_address}/#{node[:nova][:db][:database]}"
 
-rabbits = search_env_filtered(:node, "roles:rabbitmq-server")
-if rabbits.length > 0
-  rabbit = rabbits[0]
-  rabbit = node if rabbit.name == node.name
-else
-  rabbit = node
-end
-rabbit_address = Chef::Recipe::Barclamp::Inventory.get_network_by_type(rabbit, "admin").address
-Chef::Log.info("Rabbit server found at #{rabbit_address}")
+rabbit = get_instance('roles:rabbitmq-server')
+Chef::Log.info("Rabbit server found at #{rabbit[:rabbitmq][:address]}")
 rabbit_settings = {
-  :address => rabbit_address,
+  :address => rabbit[:rabbitmq][:address],
   :port => rabbit[:rabbitmq][:port],
   :user => rabbit[:rabbitmq][:user],
   :password => rabbit[:rabbitmq][:password],

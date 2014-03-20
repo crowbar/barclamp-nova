@@ -21,19 +21,11 @@
 
 include_recipe "database::client"
 
-# find sql server
-sqls = search_env_filtered(:node, "roles:database-server")
-# if we found ourself, then use us.
-if sqls.length > 0
-    sql = sqls[0]
-    sql = node if sql.name == node.name
-else
-    sql = node
-end
+sql = get_instance('roles:database-server')
+sql_address = CrowbarDatabaseHelper.get_listen_address(sql)
+Chef::Log.info("Database server found at #{sql_address}")
 
-log "DBServer: #{sql["database"].api_bind_host}"
-
-db_conn = { :host => sql["database"]['api_bind_host'],
+db_conn = { :host => sql_address,
             :username => "db_maker",
             :password => sql["database"]['db_maker_password'] }
 
