@@ -92,19 +92,10 @@ if apis.length > 0
 else
   api = node
 end
-admin_api_ip = Chef::Recipe::Barclamp::Inventory.get_network_by_type(api, "admin").address
-admin_api_host = api[:fqdn]
-# For the public endpoint, we prefer the public name. If not set, then we
-# use the IP address except for SSL, where we always prefer a hostname
-# (for certificate validation).
-public_api_host = api[:crowbar][:public_name]
-if public_api_host.nil? or public_api_host.empty?
-  unless api[:nova][:ssl][:enabled]
-    public_api_host = Chef::Recipe::Barclamp::Inventory.get_network_by_type(api, "public").address
-  else
-    public_api_host = 'public.'+api[:fqdn]
-  end
-end
+
+api_ha_enabled = api[:nova][:ha][:enabled]
+admin_api_host = CrowbarHelper.get_host_for_admin_url(api, api_ha_enabled)
+public_api_host = CrowbarHelper.get_host_for_public_url(api, api[:nova][:ssl][:enabled], api_ha_enabled)
 Chef::Log.info("Api server found at #{admin_api_host} #{public_api_host}")
 
 dns_servers = search_env_filtered(:node, "roles:dns-server")
@@ -121,7 +112,7 @@ glance_servers = search_env_filtered(:node, "roles:glance-server")
 if glance_servers.length > 0
   glance_server = glance_servers[0]
   glance_server = node if glance_server.name == node.name
-  glance_server_host = glance_server[:fqdn]
+  glance_server_host = CrowbarHelper.get_host_for_admin_url(glance_server, (glance_server[:glance][:ha][:enabled] rescue false))
   glance_server_port = glance_server[:glance][:api][:bind_port]
   glance_server_protocol = glance_server[:glance][:api][:protocol]
   glance_server_insecure = glance_server_protocol == 'https' && glance_server[:glance][:ssl][:insecure]
@@ -140,41 +131,13 @@ if vncproxies.length > 0
 else
   vncproxy = node
 end
-# For the public endpoint, we prefer the public name. If not set, then we
-# use the IP address except for SSL, where we always prefer a hostname
-# (for certificate validation).
-vncproxy_public_host = vncproxy[:crowbar][:public_name]
-if vncproxy_public_host.nil? or vncproxy_public_host.empty?
-  unless vncproxy[:nova][:novnc][:ssl][:enabled]
-    vncproxy_public_host = Chef::Recipe::Barclamp::Inventory.get_network_by_type(vncproxy, "public").address
-  else
-    vncproxy_public_host = 'public.'+vncproxy[:fqdn]
-  end
-end
+vncproxy_ha_enabled = vncproxy[:nova][:ha][:enabled]
+vncproxy_public_host = CrowbarHelper.get_host_for_public_url(vncproxy, vncproxy[:nova][:novnc][:ssl][:enabled], vncproxy_ha_enabled)
 Chef::Log.info("VNCProxy server at #{vncproxy_public_host}")
 
 directory "/etc/nova" do
    mode 0755
    action :create
-end
-
-def mask_to_bits(mask)
-  octets = mask.split(".")
-  count = 0
-  octets.each do |octet|
-    break if octet == "0"
-    c = 1 if octet == "128"
-    c = 2 if octet == "192"
-    c = 3 if octet == "224"
-    c = 4 if octet == "240"
-    c = 5 if octet == "248"
-    c = 6 if octet == "252"
-    c = 7 if octet == "254"
-    c = 8 if octet == "255"
-    count = count + c
-  end
-
-  count
 end
 
 if node[:nova][:use_gitrepo]
@@ -225,23 +188,7 @@ if node[:nova][:use_gitrepo]
   end
 end
 
-keystones = search_env_filtered(:node, "recipes:keystone\\:\\:server")
-if keystones.length > 0
-  keystone = keystones[0]
-  keystone = node if keystone.name == node.name
-else
-  keystone = node
-end
-
-keystone_host = keystone[:fqdn]
-keystone_protocol = keystone["keystone"]["api"]["protocol"]
-keystone_token = keystone["keystone"]["service"]["token"]
-keystone_service_port = keystone["keystone"]["api"]["service_port"]
-keystone_admin_port = keystone["keystone"]["api"]["admin_port"]
-keystone_service_tenant = keystone["keystone"]["service"]["tenant"]
-keystone_service_user = node[:nova][:service_user]
-keystone_service_password = node[:nova][:service_password]
-Chef::Log.info("Keystone server found at #{keystone_host}")
+keystone_settings = NovaHelper.keystone_settings(node)
 
 cinder_servers = search(:node, "roles:cinder-controller") || []
 if cinder_servers.length > 0
@@ -267,7 +214,7 @@ if neutron_servers.length > 0
   neutron_server = neutron_servers[0]
   neutron_server = node if neutron_server.name == node.name
   neutron_protocol = neutron_server[:neutron][:api][:protocol]
-  neutron_server_host = neutron_server[:fqdn]
+  neutron_server_host = CrowbarHelper.get_host_for_admin_url(neutron_server, (neutron_server[:neutron][:ha][:enabled] rescue false))
   neutron_server_port = neutron_server[:neutron][:api][:service_port]
   neutron_insecure = neutron_protocol == 'https' && neutron_server[:neutron][:ssl][:insecure]
   neutron_service_user = neutron_server[:neutron][:service_user]
@@ -389,12 +336,40 @@ if api == node and api[:nova][:novnc][:ssl][:enabled]
   end
 end
 
+admin_address = Chef::Recipe::Barclamp::Inventory.get_network_by_type(node, "admin").address
+metadata_bind_address = admin_address
+
+if node[:nova][:ha][:enabled]
+  bind_host = admin_address
+  bind_port_api = node[:nova][:ha][:ports][:api]
+  bind_port_api_ec2 = node[:nova][:ha][:ports][:api_ec2]
+  bind_port_metadata = node[:nova][:ha][:ports][:metadata]
+  bind_port_objectstore = node[:nova][:ha][:ports][:objectstore]
+  bind_port_novncproxy = node[:nova][:ha][:ports][:novncproxy]
+  bind_port_xvpvncproxy = node[:nova][:ha][:ports][:xvpvncproxy]
+else
+  bind_host = "0.0.0.0"
+  bind_port_api = node[:nova][:ports][:api]
+  bind_port_api_ec2 = node[:nova][:ports][:api_ec2]
+  bind_port_metadata = node[:nova][:ports][:metadata]
+  bind_port_objectstore = node[:nova][:ports][:objectstore]
+  bind_port_novncproxy = node[:nova][:ports][:novncproxy]
+  bind_port_xvpvncproxy = node[:nova][:ports][:xvpvncproxy]
+end
+
 template "/etc/nova/nova.conf" do
   source "nova.conf.erb"
   owner node[:nova][:user]
   group "root"
   mode 0640
   variables(
+            :bind_host => bind_host,
+            :bind_port_api => bind_port_api,
+            :bind_port_api_ec2 => bind_port_api_ec2,
+            :bind_port_metadata => bind_port_metadata,
+            :bind_port_objectstore => bind_port_objectstore,
+            :bind_port_novncproxy => bind_port_novncproxy,
+            :bind_port_xvpvncproxy => bind_port_xvpvncproxy,
             :dhcpbridge => "#{node[:nova][:use_gitrepo] ? nova_path:"/usr"}/bin/nova-dhcpbridge",
             :database_connection => database_connection,
             :rabbit_settings => rabbit_settings,
@@ -408,7 +383,7 @@ template "/etc/nova/nova.conf" do
             :glance_server_host => glance_server_host,
             :glance_server_port => glance_server_port,
             :glance_server_insecure => glance_server_insecure,
-            :metadata_bind_address => admin_api_ip,
+            :metadata_bind_address => metadata_bind_address,
             :vncproxy_public_host => vncproxy_public_host,
             :vncproxy_ssl_enabled => api[:nova][:novnc][:ssl][:enabled],
             :vncproxy_cert_file => api_novnc_ssl_certfile,
@@ -421,13 +396,7 @@ template "/etc/nova/nova.conf" do
             :neutron_service_password => neutron_service_password,
             :neutron_networking_plugin => neutron_networking_plugin,
             :neutron_dhcp_domain => neutron_dhcp_domain,
-            :keystone_admin_port => keystone_admin_port,
-            :keystone_host => keystone_host,
-            :keystone_protocol => keystone_protocol,
-            :keystone_service_password => keystone_service_password,
-            :keystone_service_port => keystone_service_port,
-            :keystone_service_tenant => keystone_service_tenant,
-            :keystone_service_user => keystone_service_user,
+            :keystone_settings => keystone_settings,
             :cinder_insecure => cinder_insecure,
             :ceph_user => ceph_user,
             :ceph_uuid => ceph_uuid,

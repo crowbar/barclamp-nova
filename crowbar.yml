@@ -22,6 +22,7 @@ barclamp:
   version: 0
   requires:
     - '@crowbar'
+    - pacemaker
     - database
     - rabbitmq
     - glance
