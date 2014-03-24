@@ -58,6 +58,8 @@ api_ec2_port = api[:nova][:ports][:api_ec2]
 
 api_protocol = api[:nova][:ssl][:enabled] ? 'https' : 'http'
 
+crowbar_pacemaker_sync_mark "wait-nova_register"
+
 keystone_register "nova api wakeup keystone" do
   protocol keystone_settings['protocol']
   host keystone_settings['internal_url_host']
@@ -140,3 +142,4 @@ keystone_register "register nova ec2 endpoint" do
   action :add_endpoint_template
 end
 
+crowbar_pacemaker_sync_mark "create-nova_register"
