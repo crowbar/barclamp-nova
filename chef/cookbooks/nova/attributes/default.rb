@@ -107,6 +107,7 @@ default[:nova][:ports][:novncproxy] = 6080
 default[:nova][:ports][:xvpvncproxy] = 6081
 
 default[:nova][:ha][:enabled] = false
+default[:nova][:ha][:op][:monitor][:interval] = "10s"
 # Ports to bind to when haproxy is used for the real ports
 default[:nova][:ha][:ports][:api_ec2] = 5550
 default[:nova][:ha][:ports][:api] = 5551

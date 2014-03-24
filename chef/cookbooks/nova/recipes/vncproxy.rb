@@ -58,6 +58,7 @@ unless node[:nova][:use_gitrepo]
       supports :status => true, :restart => true
       action [:enable, :start]
       subscribes :restart, resources(:template => "/etc/nova/nova.conf"), :delayed
+      provider Chef::Provider::CrowbarPacemakerService if node[:nova][:ha][:enabled]
     end
   end
   service "nova-consoleauth" do
@@ -65,6 +66,7 @@ unless node[:nova][:use_gitrepo]
     supports :status => true, :restart => true
     action [:enable, :start]
     subscribes :restart, resources(:template => "/etc/nova/nova.conf"), :delayed
+    provider Chef::Provider::CrowbarPacemakerService if node[:nova][:ha][:enabled]
   end
 else
   nova_package("console")
@@ -119,6 +121,7 @@ else
       supports :status => true, :restart => true
       action [:enable, :start]
       subscribes :restart, resources(:template => "/etc/nova/nova.conf"), :delayed
+      provider Chef::Provider::CrowbarPacemakerService if node[:nova][:ha][:enabled]
     end
   end
 end

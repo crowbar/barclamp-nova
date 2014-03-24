@@ -28,8 +28,12 @@ unless node[:nova][:use_gitrepo]
   package "python-novaclient"
 end
 
-nova_package("api")
-nova_package("objectstore")
+nova_package "api" do
+  use_pacemaker_provider node[:nova][:ha][:enabled]
+end
+nova_package "objectstore" do
+  use_pacemaker_provider node[:nova][:ha][:enabled]
+end
 
 template "/etc/nova/api-paste.ini" do
   source "api-paste.ini.erb"
