@@ -215,7 +215,7 @@ if neutron_servers.length > 0
   neutron_server = neutron_servers[0]
   neutron_server = node if neutron_server.name == node.name
   neutron_protocol = neutron_server[:neutron][:api][:protocol]
-  neutron_server_host = CrowbarHelper.get_host_for_admin_url(neutron_server, (neutron_server[:neutron][:ha][:enabled] rescue false))
+  neutron_server_host = CrowbarHelper.get_host_for_admin_url(neutron_server, (neutron_server[:neutron][:ha][:server][:enabled] rescue false))
   neutron_server_port = neutron_server[:neutron][:api][:service_port]
   neutron_insecure = neutron_protocol == 'https' && neutron_server[:neutron][:ssl][:insecure]
   neutron_service_user = neutron_server[:neutron][:service_user]
