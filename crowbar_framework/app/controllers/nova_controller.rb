@@ -17,7 +17,10 @@
 #
 
 class NovaController < BarclampController
-  def initialize
+
+  protected
+
+  def initialize_service
     @service_object = NovaService.new logger
   end
 end
