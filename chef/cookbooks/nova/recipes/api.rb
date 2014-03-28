@@ -28,8 +28,12 @@ unless node[:nova][:use_gitrepo]
   package "python-novaclient"
 end
 
-nova_package("api")
-nova_package("objectstore")
+nova_package "api" do
+  use_pacemaker_provider node[:nova][:ha][:enabled]
+end
+nova_package "objectstore" do
+  use_pacemaker_provider node[:nova][:ha][:enabled]
+end
 
 template "/etc/nova/api-paste.ini" do
   source "api-paste.ini.erb"
@@ -57,6 +61,8 @@ api_port = api[:nova][:ports][:api]
 api_ec2_port = api[:nova][:ports][:api_ec2]
 
 api_protocol = api[:nova][:ssl][:enabled] ? 'https' : 'http'
+
+crowbar_pacemaker_sync_mark "wait-nova_register"
 
 keystone_register "nova api wakeup keystone" do
   protocol keystone_settings['protocol']
@@ -140,3 +146,4 @@ keystone_register "register nova ec2 endpoint" do
   action :add_endpoint_template
 end
 
+crowbar_pacemaker_sync_mark "create-nova_register"

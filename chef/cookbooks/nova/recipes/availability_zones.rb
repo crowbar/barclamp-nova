@@ -40,6 +40,8 @@ if keystone_settings['insecure'] || nova_insecure
   command << "--insecure"
 end
 
+crowbar_pacemaker_sync_mark "wait-nova_set_az"
+
 search_env_filtered(:node, "roles:nova-multi-compute-*") do |n|
   availability_zone = ""
   unless n[:crowbar_wall].nil? or n[:crowbar_wall][:openstack].nil?
@@ -59,3 +61,5 @@ search_env_filtered(:node, "roles:nova-multi-compute-*") do |n|
     returns [0, 68]
   end
 end
+
+crowbar_pacemaker_sync_mark "create-nova_set_az"

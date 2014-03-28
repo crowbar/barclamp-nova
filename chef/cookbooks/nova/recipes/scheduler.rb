@@ -19,5 +19,9 @@
 
 include_recipe "nova::config"
 
-nova_package("scheduler")
-nova_package("conductor")
+nova_package "scheduler" do
+  use_pacemaker_provider node[:nova][:ha][:enabled]
+end
+nova_package "conductor" do
+  use_pacemaker_provider node[:nova][:ha][:enabled]
+end
