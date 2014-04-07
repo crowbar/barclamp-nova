@@ -112,10 +112,6 @@ group_name = "g-nova-controller"
 
 pacemaker_group group_name do
   members primitives
-  meta ({
-    "is-managed" => true,
-    "target-role" => "started"
-  })
   action :create
 end
 
