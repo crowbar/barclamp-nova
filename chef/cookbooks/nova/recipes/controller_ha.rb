@@ -93,7 +93,7 @@ else
 end
 
 services.each do |service|
-  primitive_name = "nova-#{service}-service"
+  primitive_name = "nova-#{service}"
   if %w(redhat centos suse).include?(node.platform)
     primitive_ra = "lsb:openstack-nova-#{service}"
   else
@@ -108,7 +108,9 @@ services.each do |service|
   primitives << primitive_name
 end
 
-pacemaker_group "nova-controller-group" do
+group_name = "g-nova-controller"
+
+pacemaker_group group_name do
   members primitives
   meta ({
     "is-managed" => true,
@@ -117,8 +119,8 @@ pacemaker_group "nova-controller-group" do
   action :create
 end
 
-pacemaker_clone "clone-nova-controller" do
-  rsc "nova-controller-group"
+pacemaker_clone "cl-#{group_name}" do
+  rsc group_name
   action [:create, :start]
 end
 
