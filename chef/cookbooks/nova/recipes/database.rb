@@ -67,7 +67,10 @@ execute "nova-manage db sync" do
   group node[:nova][:group]
   command "nova-manage db sync"
   action :run
-end unless %w(suse).include? node.platform
+  # On SUSE, we only need this when HA is enabled as the init script is doing
+  # this (but that creates races with HA)
+  only_if { node.platform != "suse" || node[:nova][:ha][:enabled] }
+end
 
 crowbar_pacemaker_sync_mark "create-nova_database"
 
