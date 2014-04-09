@@ -33,7 +33,10 @@ db_provider = Chef::Recipe::Database::Util.get_database_provider(sql)
 db_user_provider = Chef::Recipe::Database::Util.get_user_provider(sql)
 privs = Chef::Recipe::Database::Util.get_default_priviledges(sql)
 
-crowbar_pacemaker_sync_mark "wait-nova_database"
+crowbar_pacemaker_sync_mark "wait-nova_database" do
+  # the db sync is very slow for nova
+  timeout 120
+end
 
 # Creates empty nova database
 database "create #{node[:nova][:db][:database]} database" do
