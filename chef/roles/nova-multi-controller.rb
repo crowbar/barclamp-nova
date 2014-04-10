@@ -9,6 +9,7 @@ run_list(
          "recipe[nova::instances]",
          "recipe[nova::scheduler]",
          "recipe[nova::vncproxy]",
+         "recipe[nova::memcached]",
          "recipe[nova::controller_ha]",
          "recipe[nova::project]",
          "recipe[nova::availability_zones]",

@@ -21,25 +21,19 @@
 
 include_recipe "database::client"
 
-# find sql server
-sqls = search_env_filtered(:node, "roles:database-server")
-# if we found ourself, then use us.
-if sqls.length > 0
-    sql = sqls[0]
-    sql = node if sql.name == node.name
-else
-    sql = node
-end
+sql = get_instance('roles:database-server')
+sql_address = CrowbarDatabaseHelper.get_listen_address(sql)
+Chef::Log.info("Database server found at #{sql_address}")
 
-log "DBServer: #{sql["database"].api_bind_host}"
-
-db_conn = { :host => sql["database"]['api_bind_host'],
+db_conn = { :host => sql_address,
             :username => "db_maker",
             :password => sql["database"]['db_maker_password'] }
 
 db_provider = Chef::Recipe::Database::Util.get_database_provider(sql)
 db_user_provider = Chef::Recipe::Database::Util.get_user_provider(sql)
 privs = Chef::Recipe::Database::Util.get_default_priviledges(sql)
+
+crowbar_pacemaker_sync_mark "wait-nova_database"
 
 # Creates empty nova database
 database "create #{node[:nova][:db][:database]} database" do
@@ -75,6 +69,7 @@ execute "nova-manage db sync" do
   action :run
 end unless %w(suse).include? node.platform
 
+crowbar_pacemaker_sync_mark "create-nova_database"
+
 # save data so it can be found by search
 node.save
-

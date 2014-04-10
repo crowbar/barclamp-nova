@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-define :nova_package, :enable => true do
+define :nova_package, :enable => true, :use_pacemaker_provider => false do
 
   nova_name="nova-#{params[:name]}"
 
@@ -62,6 +62,8 @@ define :nova_package, :enable => true do
     end
 
     subscribes :restart, resources(:template => "/etc/nova/nova.conf")
+
+    provider Chef::Provider::CrowbarPacemakerService if params[:use_pacemaker_provider]
   end
 
 end
