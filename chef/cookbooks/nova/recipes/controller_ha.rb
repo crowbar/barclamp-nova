@@ -57,7 +57,6 @@ haproxy_loadbalancer "nova-objectstore" do
   action :nothing
 end.run_action(:create)
 
-
 if node[:nova][:use_novnc]
   haproxy_loadbalancer "nova-novncproxy" do
     address "0.0.0.0"
@@ -75,3 +74,50 @@ else
     action :nothing
   end.run_action(:create)
 end
+
+# Wait for all nodes to reach this point so we know that all nodes will have
+# all the required packages installed before we create the pacemaker
+# resources
+crowbar_pacemaker_sync_mark "sync-nova_before_ha"
+
+# Avoid races when creating pacemaker resources
+crowbar_pacemaker_sync_mark "wait-nova_ha_resources"
+
+primitives = []
+
+services = %w(api cert conductor consoleauth objectstore scheduler)
+if node[:nova][:use_novnc]
+  services << "novncproxy"
+else
+  services << "xvpvncproxy"
+end
+
+services.each do |service|
+  primitive_name = "nova-#{service}"
+  if %w(redhat centos suse).include?(node.platform)
+    primitive_ra = "lsb:openstack-nova-#{service}"
+  else
+    primitive_ra = "lsb:nova-#{service}"
+  end
+
+  pacemaker_primitive primitive_name do
+    agent primitive_ra
+    op node[:nova][:ha][:op]
+    action :create
+  end
+  primitives << primitive_name
+end
+
+group_name = "g-nova-controller"
+
+pacemaker_group group_name do
+  members primitives
+  action :create
+end
+
+pacemaker_clone "cl-#{group_name}" do
+  rsc group_name
+  action [:create, :start]
+end
+
+crowbar_pacemaker_sync_mark "create-nova_ha_resources"

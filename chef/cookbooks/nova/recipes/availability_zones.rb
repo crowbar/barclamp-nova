@@ -57,5 +57,14 @@ search_env_filtered(:node, "roles:nova-multi-compute-*") do |n|
     command node_command
     timeout 15
     returns [0, 68]
+    action :nothing
+    subscribes :run, "execute[trigger-nova-az-config]", :delayed
   end
+end
+
+# This is to trigger all the above "execute" resources to run :delayed, so that
+# they run at the end of the chef-client run, after the nova service have been
+# restarted (in case of a config change)
+execute "trigger-nova-az-config" do
+  command "true"
 end

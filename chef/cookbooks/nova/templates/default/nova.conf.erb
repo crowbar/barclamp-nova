@@ -1449,7 +1449,7 @@ use_syslog=<%= node[:nova][:use_syslog] ? 'True' : 'False' %>
 #
 
 # Memcached servers or None for in process cache. (list value)
-#memcached_servers=<None>
+memcached_servers=<%= @memcached_servers.join(',') %>
 
 
 #
@@ -2802,7 +2802,7 @@ admin_tenant_name=<%= @keystone_settings['service_tenant'] %>
 #cafile=<None>
 
 # Verify HTTPS connections. (boolean value)
-#insecure=false
+insecure=<%= @keystone_settings['insecure'] %>
 
 # Directory used to cache files related to PKI tokens (string
 # value)

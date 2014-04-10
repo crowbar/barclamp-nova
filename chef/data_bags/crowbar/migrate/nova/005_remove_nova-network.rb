@@ -5,7 +5,7 @@ def upgrade ta, td, a, d
 end
 
 def downgrade ta, td, a, d
-  a[:networking_backend] = ta[:networking_backend]
-  a[:network] = ta[:network]
+  a['networking_backend'] = ta['networking_backend']
+  a['network'] = ta['network']
   return a, d
 end

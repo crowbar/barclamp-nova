@@ -19,4 +19,6 @@
 
 include_recipe "nova::config"
 
-nova_package("cert")
+nova_package "cert" do
+  use_pacemaker_provider node[:nova][:ha][:enabled]
+end
