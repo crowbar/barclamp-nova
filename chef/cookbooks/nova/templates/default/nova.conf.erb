@@ -2214,10 +2214,10 @@ libvirt_ovs_bridge=br-int
 #glusterfs_mount_point_base=$state_path/mnt
 
 # use multipath connection of the iSCSI volume (boolean value)
-#libvirt_iscsi_use_multipath=false
+<%= "libvirt_iscsi_use_multipath=true" if @libvirt_enable_multipath %>
 
 # use multipath connection of the iSER volume (boolean value)
-#libvirt_iser_use_multipath=false
+<%= "libvirt_iser_use_multipath=true" if @libvirt_enable_multipath %>
 
 # Path or URL to Scality SOFS configuration file (string
 # value)
