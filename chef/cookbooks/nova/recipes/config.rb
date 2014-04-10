@@ -134,6 +134,7 @@ else
   node_admin_ip = Chef::Recipe::Barclamp::Inventory.get_network_by_type(node, "admin").address
   memcached_servers = ["#{node_admin_ip}:#{node[:memcached][:port]}"]
 end
+memcached_servers.sort!
 
 
 directory "/etc/nova" do
