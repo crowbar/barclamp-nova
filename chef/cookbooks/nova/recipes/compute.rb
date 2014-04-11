@@ -319,6 +319,18 @@ execute "set vhost_net module" do
   command "grep -q 'vhost_net' /etc/modules || echo 'vhost_net' >> /etc/modules"
 end
 
+if node[:nova][:libvirt_use_multipath]
+  package "multipath-tools"
+
+  service "multipathd" do
+    action [:enable, :start]
+  end
+
+  service "boot.multipath" do
+    action [:enable]
+  end
+end
+
 unless %w(redhat centos suse).include?(node.platform)
   #since using native ovs we have to gain acess to lower networking functions
   service "libvirt-bin" do
