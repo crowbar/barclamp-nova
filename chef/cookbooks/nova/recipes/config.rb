@@ -379,7 +379,7 @@ template "/etc/nova/nova.conf" do
             :ec2_host => admin_api_host,
             :ec2_dmz_host => public_api_host,
             :libvirt_migration => node[:nova]["use_migration"],
-            :libvirt_enable_multipath => node[:nova][:libvirt_enable_multipath],
+            :libvirt_enable_multipath => node[:nova][:libvirt_use_multipath],
             :shared_instances => node[:nova]["use_shared_instance_storage"],
             :dns_server_public_ip => dns_server_public_ip,
             :glance_server_protocol => glance_server_protocol,
