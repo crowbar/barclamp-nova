@@ -33,7 +33,10 @@ db_provider = Chef::Recipe::Database::Util.get_database_provider(sql)
 db_user_provider = Chef::Recipe::Database::Util.get_user_provider(sql)
 privs = Chef::Recipe::Database::Util.get_default_priviledges(sql)
 
-crowbar_pacemaker_sync_mark "wait-nova_database"
+crowbar_pacemaker_sync_mark "wait-nova_database" do
+  # the db sync is very slow for nova
+  timeout 120
+end
 
 # Creates empty nova database
 database "create #{node[:nova][:db][:database]} database" do
@@ -67,7 +70,23 @@ execute "nova-manage db sync" do
   group node[:nova][:group]
   command "nova-manage db sync"
   action :run
-end unless %w(suse).include? node.platform
+  # We only do the sync the first time, and only if we're not doing HA or if we
+  # are the founder of the HA cluster (so that it's really only done once).
+  only_if { !node[:nova][:db_synced] && (!node[:nova][:ha][:enabled] || CrowbarPacemakerHelper.is_cluster_founder?(node)) }
+end
+
+# We want to keep a note that we've done db_sync, so we don't do it again.
+# If we were doing that outside a ruby_block, we would add the note in the
+# compile phase, before the actual db_sync is done (which is wrong, since it
+# could possibly not be reached in case of errors).
+ruby_block "mark node for nova db_sync" do
+  block do
+    node[:nova][:db_synced] = true
+    node.save
+  end
+  action :nothing
+  subscribes :create, "execute[nova-manage db sync]", :immediately
+end
 
 crowbar_pacemaker_sync_mark "create-nova_database"
 
