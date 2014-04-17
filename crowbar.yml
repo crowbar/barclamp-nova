@@ -48,8 +48,8 @@ crowbar:
 debs:
   ubuntu-12.04:
     repos:
-      - deb http://ubuntu-cloud.archive.canonical.com/ubuntu precise-updates/havana main
-      - deb http://ubuntu-cloud.archive.canonical.com/ubuntu precise-proposed/havana main
+      - deb http://ubuntu-cloud.archive.canonical.com/ubuntu precise-updates/icehouse main
+      - deb http://ubuntu-cloud.archive.canonical.com/ubuntu precise-proposed/icehouse main
     pkgs:
       - tgt
       - novnc
@@ -105,10 +105,10 @@ debs:
 rpms:
   centos-6.4:
     repos:
-      - bare openstack havana http://repos.fedorapeople.org/repos/openstack/openstack-havana/epel-6/
+      - bare openstack icehouse http://repos.fedorapeople.org/repos/openstack/openstack-icehouse/epel-6/
   redhat-6.4:
     repos:
-      - bare openstack havana http://repos.fedorapeople.org/repos/openstack/openstack-havana/epel-6/
+      - bare openstack icehouse http://repos.fedorapeople.org/repos/openstack/openstack-icehouse/epel-6/
   pkgs:
     - openstack-nova
     - openstack-nova-compute
@@ -127,5 +127,5 @@ rpms:
     - lxc
 
 git_repo:
-  - nova https://github.com/openstack/nova.git stable/havana
+  - nova https://github.com/openstack/nova.git stable/icehouse
   - novnc https://github.com/kanaka/noVNC.git master
