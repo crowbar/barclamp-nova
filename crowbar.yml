@@ -16,26 +16,21 @@
 #
 
 barclamp:
-  name: nova
-  display: Nova
+  name: 'nova'
+  display: 'Nova'
   description: 'OpenStack Compute: Provision and manage large network of virtual machines'
   version: 0
+  member:
+    - 'openstack'
   requires:
     - '@crowbar'
-    - pacemaker
-    - database
-    - rabbitmq
-    - glance
-    - keystone
-    - cinder
-    - neutron
-  member:
-    - openstack
-  os_support:
-    - ubuntu-12.04
-
-smoketest:
-  timeout: 2400
+    - 'pacemaker'
+    - 'database'
+    - 'rabbitmq'
+    - 'glance'
+    - 'keystone'
+    - 'cinder'
+    - 'neutron'
 
 crowbar:
   layout: 1
@@ -44,85 +39,88 @@ crowbar:
   chef_order: 95
   proposal_schema_version: 2
 
+smoketest:
+  timeout: 2400
+
 debs:
   ubuntu-12.04:
     repos:
-      - deb http://ubuntu-cloud.archive.canonical.com/ubuntu precise-updates/icehouse main
-      - deb http://ubuntu-cloud.archive.canonical.com/ubuntu precise-proposed/icehouse main
+      - 'deb http://ubuntu-cloud.archive.canonical.com/ubuntu precise-updates/icehouse main'
+      - 'deb http://ubuntu-cloud.archive.canonical.com/ubuntu precise-proposed/icehouse main'
     pkgs:
-      - tgt
-      - novnc
-      - nova-novncproxy
-      - nova-compute-lxc
-      - nova-compute-xen
-      - nova-novncproxy
-      - nova-xvpvncproxy
-      - nova-compute-xcp
-      - nova-compute-kvm
-      - nova-compute-uml
-      - nova-compute-qemu
-      - nova-api-os-compute
-      - nova-api-os-volume
-      - nova-api-ec2
-      - nova-api-metadata
-      - nova-doc
-      - nova-console
-      - nova-xcp-network
-      - python-numpy
-      - nova-consoleauth
-      - python-paramiko
+      - 'tgt'
+      - 'novnc'
+      - 'nova-novncproxy'
+      - 'nova-compute-lxc'
+      - 'nova-compute-xen'
+      - 'nova-novncproxy'
+      - 'nova-xvpvncproxy'
+      - 'nova-compute-xcp'
+      - 'nova-compute-kvm'
+      - 'nova-compute-uml'
+      - 'nova-compute-qemu'
+      - 'nova-api-os-compute'
+      - 'nova-api-os-volume'
+      - 'nova-api-ec2'
+      - 'nova-api-metadata'
+      - 'nova-doc'
+      - 'nova-console'
+      - 'nova-xcp-network'
+      - 'python-numpy'
+      - 'nova-consoleauth'
+      - 'python-paramiko'
   pkgs:
-    - euca2ools
-    - sysfsutils
-    - unzip
-    - iscsitarget
-    - nova-volume
-    - libvirt-bin
-    - nova-compute
-    - kvm
-    - nova-network
-    - nova-common
-    - python-mysqldb
-    - dnsmasq-base
-    - python-nova
-    - nova-api
-    - nova-cert
-    - nova-objectstore
-    - nova-volume
-    - nova-scheduler
-    - nova-doc
-    - nova-conductor
-    - nova-ajax-console-proxy
-    - python-eventlet
-    - bzr
-    - mysql-client
-    - socat
-    - python-mox
+    - 'euca2ools'
+    - 'sysfsutils'
+    - 'unzip'
+    - 'iscsitarget'
+    - 'nova-volume'
+    - 'libvirt-bin'
+    - 'nova-compute'
+    - 'kvm'
+    - 'nova-network'
+    - 'nova-common'
+    - 'python-mysqldb'
+    - 'dnsmasq-base'
+    - 'python-nova'
+    - 'nova-api'
+    - 'nova-cert'
+    - 'nova-objectstore'
+    - 'nova-volume'
+    - 'nova-scheduler'
+    - 'nova-doc'
+    - 'nova-conductor'
+    - 'nova-ajax-console-proxy'
+    - 'python-eventlet'
+    - 'bzr'
+    - 'mysql-client'
+    - 'socat'
+    - 'python-mox'
 
 rpms:
   centos-6.4:
     repos:
-      - bare openstack icehouse http://repos.fedorapeople.org/repos/openstack/openstack-icehouse/epel-6/
+      - 'bare openstack icehouse http://repos.fedorapeople.org/repos/openstack/openstack-icehouse/epel-6/'
   redhat-6.4:
     repos:
-      - bare openstack icehouse http://repos.fedorapeople.org/repos/openstack/openstack-icehouse/epel-6/
+      - 'bare openstack icehouse http://repos.fedorapeople.org/repos/openstack/openstack-icehouse/epel-6/'
   pkgs:
-    - openstack-nova
-    - openstack-nova-compute
-    - python-glanceclient
-    - python-novaclient
-    - openstack-nova-novncproxy
-    - openstack-nova-api
-    - openstack-nova-common
-    - openstack-nova-console
-    - openstack-nova-network
-    - openstack-nova-scheduler
-    - openstack-nova-conductor
-    - libvirt
-    - python-ceilometerclient
-    - kvm
-    - lxc
+    - 'openstack-nova'
+    - 'openstack-nova-compute'
+    - 'python-glanceclient'
+    - 'python-novaclient'
+    - 'openstack-nova-novncproxy'
+    - 'openstack-nova-api'
+    - 'openstack-nova-common'
+    - 'openstack-nova-console'
+    - 'openstack-nova-network'
+    - 'openstack-nova-scheduler'
+    - 'openstack-nova-conductor'
+    - 'libvirt'
+    - 'python-ceilometerclient'
+    - 'kvm'
+    - 'lxc'
 
 git_repo:
-  - nova https://github.com/openstack/nova.git stable/icehouse
-  - novnc https://github.com/kanaka/noVNC.git master
+  - 'nova https://github.com/openstack/nova.git stable/icehouse'
+  - 'novnc https://github.com/kanaka/noVNC.git master'

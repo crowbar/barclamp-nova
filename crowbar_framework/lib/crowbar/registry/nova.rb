@@ -7,7 +7,7 @@
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
 #
-#   http://www.apache.org/licenses/LICENSE-2.0
+#  http://www.apache.org/licenses/LICENSE-2.0
 #
 # Unless required by applicable law or agreed to in writing, software
 # distributed under the License is distributed on an "AS IS" BASIS,
@@ -16,14 +16,10 @@
 # limitations under the License.
 #
 
-module NovaBarclampHelper
-  def ssl_protocols_for_nova(selected)
-    options_for_select(
-      [
-        ["HTTP", "false"],
-        ["HTTPS", "true"]
-      ],
-      selected.to_s
-    )
+module Crowbar
+  module Registry
+    class Nova < Base
+
+    end
   end
 end
