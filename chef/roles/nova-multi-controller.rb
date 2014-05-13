@@ -1,3 +1,4 @@
+# -*- encoding : utf-8 -*-
 name "nova-multi-controller"
 
 description "Installs requirements to run the Controller node in a Nova cluster"

@@ -1,3 +1,4 @@
+# -*- encoding : utf-8 -*-
 
 def upgrade ta, td, a, d
   a['networking_backend'] = "neutron" if a['networking_backend'] == "quantum"

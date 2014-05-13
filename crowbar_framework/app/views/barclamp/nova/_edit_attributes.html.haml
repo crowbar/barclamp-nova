@@ -1,6 +1,6 @@
 = attributes_for @proposal do
   .panel-sub
-    = header @dep_raw, true
+    = header dep_raw, true
 
   .panel-body
     = instance_field :database
@@ -53,21 +53,21 @@
       %legend
         = t(".ssl_header")
 
-      = boolean_field %w(ssl enabled), :collection => :ssl_protocols_for_nova, "data-sslprefix" => "ssl", "data-sslcert" => "/etc/nova/ssl/certs/signing_cert.pem", "data-sslkey" => "/etc/nova/ssl/private/signing_key.pem"
+      = boolean_field %w(ssl enabled), collection: :ssl_protocols_for_nova, data: { sslprefix: "ssl", sslcert: "/etc/nova/ssl/certs/signing_cert.pem", sslkey: "/etc/nova/ssl/private/signing_key.pem" }
 
       #ssl_container
         = boolean_field %w(ssl generate_certs)
         = string_field %w(ssl certfile)
         = string_field %w(ssl keyfile)
         = boolean_field %w(ssl insecure)
-        = boolean_field %w(ssl cert_required), "data-enabler" => "true", "data-enabler-target" => "#ssl_ca_certs"
+        = boolean_field %w(ssl cert_required), data: { enabler: "true", enabler_target: "#ssl_ca_certs" }
         = string_field %w(ssl ca_certs)
 
     %fieldset
       %legend
         = t(".novnc_ssl_header")
 
-      = boolean_field %w(novnc ssl enabled), :collection => :ssl_protocols_for_nova, "data-sslprefix" => "novnc_ssl", "data-sslcert" => "", "data-sslkey" => ""
+      = boolean_field %w(novnc ssl enabled), collection: :ssl_protocols_for_nova, data: { sslprefix: "novnc_ssl", sslcert: "", sslkey: "" }
 
       #novnc_ssl_container
         .alert.alert-info

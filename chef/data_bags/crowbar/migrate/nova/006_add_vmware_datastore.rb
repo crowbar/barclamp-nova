@@ -1,3 +1,4 @@
+# -*- encoding : utf-8 -*-
 def upgrade ta, td, a, d
   a['vcenter']['datastore'] = ta['vcenter']['datastore']
   return a, d

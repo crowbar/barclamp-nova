@@ -1,4 +1,3 @@
-# -*- encoding : utf-8 -*-
 #
 # Copyright 2011-2013, Dell
 # Copyright 2013-2014, SUSE LINUX Products GmbH
@@ -16,15 +15,19 @@
 # limitations under the License.
 #
 
-class NovaController < BarclampController
+root:
+  topic_meta_data:
+    author: 'Multiple authors'
+    license: 'Apache 2'
+    copyright: '2014 by Dell, Inc'
+    date: 'June 1, 2012'
+    order: 'alpha'
+    url: '/crowbar/openstack/1.0'
+    format: 'markdown'
 
-  protected
-
-  def initialize_service
-    @service_object = NovaService.new logger
-  end
-
-  def permitted_params
-    params.require(:nova)
-  end
-end
+  barclamps:
+    nova:
+      topic_meta_data:
+        file: 'index'
+        url: '/crowbar/openstack/1.0?selected=nova'
+        order: 100

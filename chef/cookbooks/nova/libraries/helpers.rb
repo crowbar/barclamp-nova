@@ -1,3 +1,4 @@
+# -*- encoding : utf-8 -*-
 module NovaHelper
   class << self
     def keystone_settings(node)
