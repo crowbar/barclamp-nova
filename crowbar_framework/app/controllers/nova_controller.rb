@@ -23,4 +23,8 @@ class NovaController < BarclampController
   def initialize_service
     @service_object = NovaService.new logger
   end
+
+  def permitted_params
+    params.require(:nova)
+  end
 end
