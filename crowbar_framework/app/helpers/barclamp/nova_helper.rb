@@ -1,4 +1,6 @@
-# Copyright 2011, Dell
+#
+# Copyright 2011-2013, Dell
+# Copyright 2013-2014, SUSE LINUX Products GmbH
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -13,14 +15,16 @@
 # limitations under the License.
 #
 
-module NovaBarclampHelper
-  def ssl_protocols_for_nova(selected)
-    options_for_select(
-      [
-        ["HTTP", "false"],
-        ["HTTPS", "true"]
-      ],
-      selected.to_s
-    )
+module Barclamp
+  module NovaHelper
+    def ssl_protocols_for_nova(selected)
+      options_for_select(
+        [
+          ["HTTP", "false"],
+          ["HTTPS", "true"]
+        ],
+        selected.to_s
+      )
+    end
   end
 end
