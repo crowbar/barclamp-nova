@@ -38,6 +38,7 @@
             "use_virtualenv": { "type": "bool", "required": true },
             "pfs_deps": { "type": "seq", "required": true, "sequence": [ { "type": "str" } ] },
             "neutron_metadata_proxy_shared_secret": { "type": "str" },
+            "neutron_url_timeout": {"type": "int"},
             "scheduler": {
               "type": "map",
               "mapping": {

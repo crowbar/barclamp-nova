@@ -1241,7 +1241,7 @@ neutron_url=<%= @neutron_protocol %>://<%= @neutron_server_host %>:<%= @neutron_
 
 # timeout value for connecting to neutron in seconds (integer
 # value)
-#neutron_url_timeout=30
+neutron_url_timeout=<%= node[:nova][:neutron_url_timeout] %>
 
 # username for connecting to neutron in admin context (string
 # value)
