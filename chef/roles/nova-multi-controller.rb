@@ -11,7 +11,6 @@ run_list(
          "recipe[nova::vncproxy]",
          "recipe[nova::memcached]",
          "recipe[nova::controller_ha]",
-         "recipe[nova::project]",
          "recipe[nova::availability_zones]",
          "recipe[nova::trusted_flavors]",
          "recipe[nova::monitor]"
