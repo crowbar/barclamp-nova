@@ -23,7 +23,7 @@ cookbook_file "crowbar-nova-set-availability-zone" do
   mode "0755"
 end
 
-keystone_settings = NovaHelper.keystone_settings(node)
+keystone_settings = KeystoneHelper.keystone_settings(node, @cookbook_name)
 
 nova_insecure = node[:nova][:ssl][:enabled] && node[:nova][:ssl][:insecure]
 
