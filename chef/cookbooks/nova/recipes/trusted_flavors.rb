@@ -28,7 +28,7 @@ if node[:nova][:trusted_flavors]
 
 
   nova = node
-  keystone_settings = NovaHelper.keystone_settings(node)
+  keystone_settings = KeystoneHelper.keystone_settings(node, @cookbook_name)
 
   nova_insecure = node[:nova][:ssl][:insecure]
   ssl_insecure = keystone_settings['insecure'] || nova_insecure

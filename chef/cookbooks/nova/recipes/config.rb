@@ -190,7 +190,7 @@ if node[:nova][:use_gitrepo]
   end
 end
 
-keystone_settings = NovaHelper.keystone_settings(node)
+keystone_settings = KeystoneHelper.keystone_settings(node, @cookbook_name)
 
 cinder_servers = search(:node, "roles:cinder-controller") || []
 if cinder_servers.length > 0
