@@ -38,6 +38,8 @@ else
 
   pfs_and_install_deps "nova" do
     virtualenv venv_path
+    # enable access to system site packages only for this virtualenv
+    system_site true
     wrap_bins(["nova-rootwrap", "nova", "nova-manage"])
   end
 end
