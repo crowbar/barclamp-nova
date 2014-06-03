@@ -105,6 +105,17 @@ keystone_register "register ec2 service" do
   action :add_service
 end
 
+keystone_register "register computev3 service" do
+  protocol keystone_settings['protocol']
+  host keystone_settings['internal_url_host']
+  port keystone_settings['admin_port']
+  token keystone_settings['admin_token']
+  service_name "computev3"
+  service_type "computev3"
+  service_description "Openstack Nova Service V3"
+  action :add_service
+end
+
 keystone_register "register nova endpoint" do
   protocol keystone_settings['protocol']
   host keystone_settings['internal_url_host']
@@ -132,6 +143,19 @@ keystone_register "register nova ec2 endpoint" do
   endpoint_internalURL "#{api_protocol}://#{admin_api_host}:#{api_ec2_port}/services/Cloud"
 #  endpoint_global true
 #  endpoint_enabled true
+  action :add_endpoint_template
+end
+
+keystone_register "register computev3 endpoint" do
+  protocol keystone_settings['protocol']
+  host keystone_settings['internal_url_host']
+  port keystone_settings['admin_port']
+  token keystone_settings['admin_token']
+  endpoint_service "computev3"
+  endpoint_region "RegionOne"
+  endpoint_publicURL "#{api_protocol}://#{public_api_host}:#{api_port}/v3"
+  endpoint_adminURL "#{api_protocol}://#{admin_api_host}:#{api_port}/v3"
+  endpoint_internalURL "#{api_protocol}://#{admin_api_host}:#{api_port}/v3"
   action :add_endpoint_template
 end
 
