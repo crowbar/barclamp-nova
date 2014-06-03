@@ -26,6 +26,7 @@
       "use_gitbarclamp": true,
       "use_pip_cache": true,
       "use_virtualenv": true,
+      "neutron_url_timeout": 30,
       "pfs_deps": [
           "python-libvirt",
           "python-routes",
@@ -101,7 +102,7 @@
   "deployment": {
     "nova": {
       "crowbar-revision": 0,
-      "schema-revision": 6,
+      "schema-revision": 7,
       "element_states": {
         "nova-multi-controller": [ "readying", "ready", "applying" ],
         "nova-multi-compute-hyperv": [ "readying", "ready", "applying" ],
