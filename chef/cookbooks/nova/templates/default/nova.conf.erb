@@ -1261,7 +1261,7 @@ neutron_admin_tenant_name=<%= @keystone_settings['service_tenant'] %>
 
 # auth url for connecting to neutron in admin context (string
 # value)
-neutron_admin_auth_url=<%= @keystone_settings['admin_auth_url'] %>
+neutron_admin_auth_url=<%= @keystone_settings['internal_auth_url'] %>
 
 # if set, ignore any SSL validation issues (boolean value)
 neutron_api_insecure=<%= @neutron_insecure ? 'True' : 'False' %>
