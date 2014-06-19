@@ -398,6 +398,7 @@ template "/etc/nova/nova.conf" do
             :vncproxy_cert_file => api_novnc_ssl_certfile,
             :vncproxy_key_file => api_novnc_ssl_keyfile,
             :memcached_servers => memcached_servers,
+	    :neutron_metadata_proxy_shared_secret => node[:nova][:neutron_metadata_proxy_shared_secret],
             :neutron_protocol => neutron_protocol,
             :neutron_server_host => neutron_server_host,
             :neutron_server_port => neutron_server_port,
