@@ -102,6 +102,7 @@
   "deployment": {
     "nova": {
       "crowbar-revision": 0,
+      "crowbar-applied": false,
       "schema-revision": 7,
       "element_states": {
         "nova-multi-controller": [ "readying", "ready", "applying" ],
