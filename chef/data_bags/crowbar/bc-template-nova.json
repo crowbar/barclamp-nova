@@ -55,7 +55,8 @@
           "pip://setuptools-git",
           "pip://distribute==0.6.28",
           "pip://MySQL-python",
-          "pip://python-novaclient"
+          "pip://python-novaclient",
+          "pip://stevedore"
       ],
       "scheduler": {
         "ram_allocation_ratio": 1.0,
