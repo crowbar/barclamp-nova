@@ -125,8 +125,7 @@ class NovaService < PacemakerServiceObject
     base["attributes"][@bc_name]["cinder_instance"] = find_dep_proposal("cinder")
     base["attributes"][@bc_name]["neutron_instance"] = find_dep_proposal("neutron")
 
-    base["attributes"]["nova"]["service_password"] = '%012d' % rand(1e12)
-
+    base["attributes"]["nova"]["service_password"] = random_password
     base["attributes"]["nova"]["db"]["password"] = random_password
     base["attributes"]["nova"]["neutron_metadata_proxy_shared_secret"] = random_password
 
