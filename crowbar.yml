@@ -43,7 +43,7 @@ crowbar:
   order: 95
   run_order: 95
   chef_order: 95
-  proposal_schema_version: 2
+  proposal_schema_version: 3
 
 debs:
   ubuntu-12.04:

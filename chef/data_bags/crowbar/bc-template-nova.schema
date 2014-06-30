@@ -113,6 +113,7 @@
             "crowbar-revision": { "type": "int", "required": true },
             "schema-revision": { "type": "int" },
             "crowbar-committing": { "type": "bool" },
+            "crowbar-applied": { "type": "bool" },
             "crowbar-status": { "type": "str" },
             "crowbar-failed": { "type": "str" },
             "crowbar-queued": { "type": "bool" },
