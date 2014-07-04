@@ -90,6 +90,12 @@ if %w(redhat centos suse).include?(node.platform)
   service "open-iscsi" do
     supports :status => true, :start => true, :stop => true, :restart => true
     action [:enable, :start]
+    if node.platform == "suse"
+      # Workaround broken open-iscsi init scripts that return a failed code
+      # but start the service anyway. run a status command afterwards to
+      # see what the real status is (bnc#885834)
+      start_command "/etc/init.d/open-iscsi start; /etc/init.d/open-iscsi status"
+    end
   end
 
   case node[:nova][:libvirt_type]
