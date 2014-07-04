@@ -361,8 +361,8 @@ end
 
 template "/etc/nova/nova.conf" do
   source "nova.conf.erb"
-  owner node[:nova][:user]
-  group "root"
+  user "root"
+  group node[:nova][:group]
   mode 0640
   variables(
             :bind_host => bind_host,
