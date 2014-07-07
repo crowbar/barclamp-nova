@@ -26,6 +26,7 @@
       "use_gitbarclamp": true,
       "use_pip_cache": true,
       "use_virtualenv": true,
+      "enable_v3_api": false,
       "neutron_url_timeout": 30,
       "pfs_deps": [
           "python-libvirt",
@@ -103,7 +104,7 @@
     "nova": {
       "crowbar-revision": 0,
       "crowbar-applied": false,
-      "schema-revision": 7,
+      "schema-revision": 10,
       "element_states": {
         "nova-multi-controller": [ "readying", "ready", "applying" ],
         "nova-multi-compute-hyperv": [ "readying", "ready", "applying" ],

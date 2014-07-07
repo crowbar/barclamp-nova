@@ -27,6 +27,8 @@ default[:nova][:db][:password] = nil
 default[:nova][:db][:user] = "nova"
 default[:nova][:db][:database] = "nova"
 
+# Feature settings
+default[:nova][:enable_v3_api] = false
 default[:nova][:use_migration] = false
 default[:nova][:use_shared_instance_storage] = false
 
