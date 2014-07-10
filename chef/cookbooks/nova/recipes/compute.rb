@@ -52,10 +52,15 @@ def set_boot_kernel_and_trigger_reboot(flavor='default')
     %x[sed -i -e "s;^default.*;default #{default_boot};" /boot/grub/menu.lst]
   end
 
-  # trigger reboot through reboot_handler, if kernel-$flavor is not yet
-  # running
-  unless %x[uname -r].include?(flavor)
-    node.run_state[:reboot] = true
+  # trigger reboot managed by run_remote_chef_client() function if
+  # kernel-$flavor is not yet running
+  if %x[uname -r].include?(flavor)
+    node[:reboot] = ""
+    node.save
+  else
+    node[:reboot] = "require"
+    node.save
+    log "current kernel not the required flavor. reboot needed"
   end
 end
 
