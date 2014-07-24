@@ -200,7 +200,7 @@ if cinder_servers.length > 0
   cinder_server = cinder_servers[0]
   cinder_insecure = cinder_server[:cinder][:api][:protocol] == 'https' && cinder_server[:cinder][:ssl][:insecure]
 
-  if node[:nova][:libvirt_type] == "kvm"
+  if node.roles.include? "nova-multi-compute-kvm"
     include_ceph_recipe = false
 
     cinder_server[:cinder][:volumes].each do |volume|
