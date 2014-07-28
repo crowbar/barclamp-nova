@@ -85,6 +85,19 @@ if %w(redhat centos suse).include?(node.platform)
     notifies :restart, "service[libvirtd]", :delayed
   end
 
+  # Start open-iscsi daemon, since nova-compute is going to use it and stumble over the
+  # "starting daemon" messages otherwise
+  service "open-iscsi" do
+    supports :status => true, :start => true, :stop => true, :restart => true
+    action [:enable, :start]
+    if node.platform == "suse"
+      # Workaround broken open-iscsi init scripts that return a failed code
+      # but start the service anyway. run a status command afterwards to
+      # see what the real status is (bnc#885834)
+      start_command "/etc/init.d/open-iscsi start; /etc/init.d/open-iscsi status"
+    end
+  end
+
   case node[:nova][:libvirt_type]
     when "kvm"
       package "kvm"
