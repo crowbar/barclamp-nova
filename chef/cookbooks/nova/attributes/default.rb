@@ -81,6 +81,8 @@ default[:nova][:service_user] = "nova"
 default[:nova][:service_password] = "nova"
 default[:nova][:service_ssh_key] = ""
 
+default[:nova][:force_config_drive] = "always"
+
 default[:nova][:rbd][:user] = ""
 default[:nova][:rbd][:secret_uuid] = ""
 

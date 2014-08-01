@@ -1898,7 +1898,7 @@ ram_allocation_ratio=<%= node[:nova][:scheduler][:ram_allocation_ratio] %>
 
 # Set to force injection to take place on a config drive (if
 # set, valid options are: always) (string value)
-#force_config_drive=<None>
+force_config_drive=<%= node[:nova][:force_config_drive] %>
 
 # Name and optionally path of the tool used for ISO image
 # creation (string value)
