@@ -40,7 +40,7 @@ en:
           ksm_enabled: 'Enable Kernel Samepage Merging'
         vmware_header: 'VMWare vCenter Settings'
         vcenter:
-          host: 'vCenter IP Address'
+          host: 'vCenter Host/IP Address'
           user: 'vCenter Username'
           password: 'vCenter Password'
           clusters: 'Cluster Names'
