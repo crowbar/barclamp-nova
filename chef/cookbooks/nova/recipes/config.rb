@@ -180,6 +180,8 @@ keystone_settings = KeystoneHelper.keystone_settings(node, @cookbook_name)
 
 ceph_user = node[:nova][:rbd][:user]
 ceph_uuid = node[:nova][:rbd][:secret_uuid]
+use_ephemeral_rbd = false
+rbd_pool = "nova"
 
 cinder_servers = search(:node, "roles:cinder-controller") || []
 if cinder_servers.length > 0
@@ -206,6 +208,7 @@ if cinder_servers.length > 0
       include_recipe('ceph::nova')
       ceph_user = node['ceph']['nova-user']
       ceph_uuid = node['ceph']['nova-uuid']
+      use_ephemeral_rbd = true
     end
   end
 else
@@ -405,11 +408,13 @@ template "/etc/nova/nova.conf" do
             :cinder_insecure => cinder_insecure,
             :ceph_user => ceph_user,
             :ceph_uuid => ceph_uuid,
+            :rbd_pool => rbd_pool,
             :ssl_enabled => api[:nova][:ssl][:enabled],
             :ssl_cert_file => api[:nova][:ssl][:certfile],
             :ssl_key_file => api[:nova][:ssl][:keyfile],
             :ssl_cert_required => api[:nova][:ssl][:cert_required],
             :ssl_ca_file => api[:nova][:ssl][:ca_certs],
+            :use_ephemeral_rbd => use_ephemeral_rbd,
             :oat_appraiser_host => oat_server[:hostname],
             :oat_appraiser_port => "8443",
             :has_itxt => has_itxt
