@@ -19,6 +19,10 @@
 ####
 # if monitored by nagios, install the nrpe commands
 
+return unless node["roles"].include?("nagios-client")
+
+include_recipe "nagios::common"
+
 # Nova scale data holder
 nova_scale = {
   :computes => [],
@@ -57,27 +61,22 @@ search_env_filtered(:node, "roles:nova-multi-compute-xen") do |n|
   nova_scale[:computes] << n
 end
 
-if node["roles"].include?("nagios-client")    
-  include_recipe "nagios::common"
+nova_admin_ip = Chef::Recipe::Barclamp::Inventory.get_network_by_type(node, "admin").address
+template "/etc/nagios/nrpe.d/nova_nrpe.cfg" do
+  source "nova_nrpe.cfg.erb"
+  mode "0644"
+  group node[:nagios][:group]
+  owner node[:nagios][:user]
+  variables( {
+    :nova_scale => nova_scale,
+    :nova_admin_ip => nova_admin_ip
+  })
+  notifies :restart, "service[nagios-nrpe-server]"
+end
 
-  nova_admin_ip = Chef::Recipe::Barclamp::Inventory.get_network_by_type(node, "admin").address
-  template "/etc/nagios/nrpe.d/nova_nrpe.cfg" do
-    source "nova_nrpe.cfg.erb"
-    mode "0644"
-    group node[:nagios][:group]
-    owner node[:nagios][:user]
-    variables( {
-      :nova_scale => nova_scale,
-      :nova_admin_ip => nova_admin_ip
-    })    
-    notifies :restart, "service[nagios-nrpe-server]"
-  end 
-
-  template "/etc/sudoers.d/nagios_sudoers" do
-    source "nagios_sudoers.erb"
-    mode "0440"
-    group "root"
-    owner "root"
-  end
-
+template "/etc/sudoers.d/nagios_sudoers" do
+  source "nagios_sudoers.erb"
+  mode "0440"
+  group "root"
+  owner "root"
 end
