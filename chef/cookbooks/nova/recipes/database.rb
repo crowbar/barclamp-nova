@@ -21,17 +21,7 @@
 
 include_recipe "database::client"
 
-sql = get_instance('roles:database-server')
-sql_address = CrowbarDatabaseHelper.get_listen_address(sql)
-Chef::Log.info("Database server found at #{sql_address}")
-
-db_conn = { :host => sql_address,
-            :username => "db_maker",
-            :password => sql["database"]['db_maker_password'] }
-
-db_provider = Chef::Recipe::Database::Util.get_database_provider(sql)
-db_user_provider = Chef::Recipe::Database::Util.get_user_provider(sql)
-privs = Chef::Recipe::Database::Util.get_default_priviledges(sql)
+db_settings = fetch_database_settings
 
 crowbar_pacemaker_sync_mark "wait-nova_database" do
   # the db sync is very slow for nova
@@ -40,28 +30,28 @@ end
 
 # Creates empty nova database
 database "create #{node[:nova][:db][:database]} database" do
-  connection db_conn
+  connection db_settings[:connection]
   database_name node[:nova][:db][:database]
-  provider db_provider
+  provider db_settings[:provider]
   action :create
 end
 
 database_user "create nova database user" do
-  connection db_conn
+  connection db_settings[:connection]
   username node[:nova][:db][:user]
   password node[:nova][:db][:password]
-  provider db_user_provider
+  provider db_settings[:user_provider]
   action :create
 end
 
 database_user "grant privileges to the nova database user" do
-  connection db_conn
+  connection db_settings[:connection]
   database_name node[:nova][:db][:database]
   username node[:nova][:db][:user]
   password node[:nova][:db][:password]
   host '%'
-  privileges privs
-  provider db_user_provider
+  privileges db_settings[:privs]
+  provider db_settings[:user_provider]
   action :grant
 end
 
