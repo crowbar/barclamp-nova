@@ -24,6 +24,22 @@ venv_path = node[:nova][:use_virtualenv] ? "#{nova_path}/.venv" : nil
 
 keystone_settings = KeystoneHelper.keystone_settings(node, @cookbook_name)
 
+# XXX this is no different from the file provided in the package, but
+# since we used to have a configured template here, we need to make sure
+# that it gets overwritten specifically since it used to contain
+# auth_token configuration options which conflict with the ones in
+# nova.conf and the packages won't overwrite a modified file.
+# This block can be removed when either nova does not read auth_token
+# configuration from api-paste.ini or we are sure that the target
+# machine no longer has an api-paste.ini file with the auth_token settings
+cookbook_file "api-paste.ini" do
+  path "/etc/nova/api-paste.ini"
+  owner "root"
+  group node[:nova][:group]
+  mode "0640"
+  action :create
+end
+
 nova_package "api" do
   use_pacemaker_provider node[:nova][:ha][:enabled]
 end
