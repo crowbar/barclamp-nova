@@ -565,7 +565,7 @@ auth_strategy=keystone
 #lockout_window=15
 
 # URL to get token from ec2 request. (string value)
-#keystone_ec2_url=http://localhost:5000/v2.0/ec2tokens
+keystone_ec2_url=<%= @keystone_settings['internal_auth_url'] %>ec2tokens
 
 # Return the IP address as private dns hostname in describe
 # instances (boolean value)
