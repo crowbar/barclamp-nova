@@ -38,7 +38,7 @@ en:
         kvm_header: 'KVM Options'
         kvm:
           ksm_enabled: 'Enable Kernel Samepage Merging'
-        vmware_header: 'VMWare vCenter Settings'
+        vmware_header: 'VMware vCenter Settings'
         vcenter:
           host: 'vCenter Host/IP Address'
           user: 'vCenter Username'
