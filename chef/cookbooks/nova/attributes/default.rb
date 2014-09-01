@@ -49,7 +49,7 @@ end
 default[:nova][:kvm][:ksm_enabled] = false
 
 #
-# VMWare Settings
+# VMware Settings
 #
 
 default[:nova][:vcenter][:host] = ""
