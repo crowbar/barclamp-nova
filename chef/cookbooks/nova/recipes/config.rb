@@ -251,7 +251,7 @@ else
 end
 
 # only require certs for nova controller
-if api == node and api[:nova][:ssl][:enabled] and node["roles"].include?("nova-multi-controller")
+if (api_ha_enabled || vncproxy_ha_enabled || api == node) and api[:nova][:ssl][:enabled] and node["roles"].include?("nova-multi-controller")
   if api[:nova][:ssl][:generate_certs]
     package "openssl"
     ruby_block "generate_certs for nova" do
@@ -330,7 +330,7 @@ else
   api_novnc_ssl_keyfile = ''
 end
 
-if api == node and api[:nova][:novnc][:ssl][:enabled]
+if (api_ha_enabled || vncproxy_ha_enabled || api == node) and api[:nova][:novnc][:ssl][:enabled]
   # No check if we're using certificate info from nova-api
   unless ::File.exists? api_novnc_ssl_certfile or api[:nova][:novnc][:ssl][:certfile].empty?
     message = "Certificate \"#{api_novnc_ssl_certfile}\" is not present."
