@@ -66,10 +66,6 @@
         "user": "nova",
         "database": "nova"
       },
-      "rbd": {
-        "user": "",
-        "secret_uuid": ""
-      },
       "kvm": {
         "ksm_enabled": false
       },

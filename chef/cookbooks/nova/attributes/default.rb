@@ -79,8 +79,7 @@ default[:nova][:service_user] = "nova"
 default[:nova][:service_password] = "nova"
 default[:nova][:service_ssh_key] = ""
 
-default[:nova][:rbd][:user] = ""
-default[:nova][:rbd][:secret_uuid] = ""
+default[:nova][:rbd][:passphrase] = ""
 
 default[:nova][:ssl][:enabled] = false
 default[:nova][:ssl][:certfile] = "/etc/nova/ssl/certs/signing_cert.pem"

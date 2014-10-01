@@ -204,6 +204,43 @@ if %w(redhat centos suse).include?(node.platform)
   end
 end
 
+cinder_servers = search(:node, "roles:cinder-controller") || []
+if ['kvm','qemu'].include?(node[:nova][:libvirt_type]) and
+    cinder_servers.length > 0 and
+    cinder_servers[0][:cinder][:volume][:volume_type] == "rbd"
+
+  cinder_server = cinder_servers[0]
+  rbd_username = cinder_server[:cinder][:volume][:rbd][:user]
+
+  # install RBD support
+  if %w(suse).include?(node.platform)
+    package "kvm-rbd-plugin"
+    package "ceph"
+  end
+
+  ruby_block "Check if cinder volume secret is available" do
+    block do
+      if File.exists?("/etc/ceph/ceph.client.#{rbd_username}.keyring")
+        f = File.open("/etc/ceph/ceph.client.#{rbd_username}.keyring")
+        f.each {|line|
+          if match = line.match("key\s*=\s*(.+)")
+            node[:nova][:rbd][:passphrase] = match[1]
+            break
+          end
+        }
+        f.close
+      end
+    end
+  end
+
+  unless node[:nova][:rbd][:passphrase].empty?
+    virsh_secret "rbd_volumes" do
+      username rbd_username
+      passphrase node[:nova][:rbd][:passphrase]
+    end
+  end
+end
+
 nova_package("compute")
 
 cookbook_file "/etc/nova/nova-compute.conf" do
