@@ -36,6 +36,9 @@ command << "--os-tenant-name"
 command << keystone_settings['default_tenant']
 command << "--os-auth-url"
 command << keystone_settings['internal_auth_url']
+command << "--os-region-name"
+command << keystone_settings['endpoint_region']
+
 if keystone_settings['insecure'] || nova_insecure
   command << "--insecure"
 end
