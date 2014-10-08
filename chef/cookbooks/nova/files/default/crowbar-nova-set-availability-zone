@@ -63,6 +63,14 @@ parser.add_argument('--os-auth-url',
 parser.add_argument('--os_auth_url',
                     help=argparse.SUPPRESS)
 
+parser.add_argument('--os-region-name',
+                    metavar='<region-name>',
+                    default=os.environ.get('OS_REGION_NAME', None),
+                    help='Name of the region.')
+
+parser.add_argument('--os_region_name',
+                    help=argparse.SUPPRESS)
+
 parser.add_argument('--endpoint-type',
                     metavar='<endpoint-type>',
                     default='internalURL',
@@ -104,6 +112,7 @@ c = nova_client.Client(args.os_username,
                        args.os_password,
                        args.os_tenant_name,
                        auth_url=args.os_auth_url,
+                       region_name=args.os_region_name,
                        endpoint_type=args.endpoint_type,
                        insecure=args.insecure,
                        http_log_debug=args.debug)

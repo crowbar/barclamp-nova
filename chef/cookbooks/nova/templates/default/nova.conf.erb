@@ -1492,7 +1492,7 @@ neutron_admin_tenant_name=<%= @keystone_settings['service_tenant'] %>
 
 # Region name for connecting to neutron in admin context
 # (string value)
-#neutron_region_name=<None>
+neutron_region_name=<%= @keystone_settings['endpoint_region'] %>
 
 # Authorization URL for connecting to neutron in admin context
 # (string value)
@@ -2100,7 +2100,7 @@ cinder_catalog_info=volume:cinder:internalURL
 #cinder_endpoint_template=<None>
 
 # Region name of this node (string value)
-#os_region_name=<None>
+os_region_name=<%= @keystone_settings['endpoint_region'] %>
 
 # Location of ca certificates file to use for cinder client
 # requests. (string value)
