@@ -89,6 +89,7 @@ class NovaService < PacemakerServiceObject
 
     nodes = NodeObject.all
     nodes.delete_if { |n| n.nil? }
+    nodes.delete_if { |n| %w(failed building unready).include? n.status }
     nodes.delete_if { |n| n.admin? } if nodes.size > 1
     nodes.delete_if { |n| n.intended_role == "storage" }
 
