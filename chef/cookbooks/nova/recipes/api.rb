@@ -124,7 +124,7 @@ keystone_register "register nova endpoint" do
   port keystone_settings['admin_port']
   token keystone_settings['admin_token']
   endpoint_service "nova"
-  endpoint_region "RegionOne"
+  endpoint_region keystone_settings['endpoint_region']
   endpoint_publicURL "#{api_protocol}://#{public_api_host}:#{api_port}/v2/$(tenant_id)s"
   endpoint_adminURL "#{api_protocol}://#{admin_api_host}:#{api_port}/v2/$(tenant_id)s"
   endpoint_internalURL "#{api_protocol}://#{admin_api_host}:#{api_port}/v2/$(tenant_id)s"
@@ -139,7 +139,7 @@ keystone_register "register nova ec2 endpoint" do
   port keystone_settings['admin_port']
   token keystone_settings['admin_token']
   endpoint_service "ec2"
-  endpoint_region "RegionOne"
+  endpoint_region keystone_settings['endpoint_region']
   endpoint_publicURL "#{api_protocol}://#{public_api_host}:#{api_ec2_port}/services/Cloud"
   endpoint_adminURL "#{api_protocol}://#{admin_api_host}:#{api_ec2_port}/services/Admin"
   endpoint_internalURL "#{api_protocol}://#{admin_api_host}:#{api_ec2_port}/services/Cloud"
@@ -155,7 +155,7 @@ if api[:nova][:enable_v3_api]
     port keystone_settings['admin_port']
     token keystone_settings['admin_token']
     endpoint_service "computev3"
-    endpoint_region "RegionOne"
+    endpoint_region keystone_settings['endpoint_region']
     endpoint_publicURL "#{api_protocol}://#{public_api_host}:#{api_port}/v3"
     endpoint_adminURL "#{api_protocol}://#{admin_api_host}:#{api_port}/v3"
     endpoint_internalURL "#{api_protocol}://#{admin_api_host}:#{api_port}/v3"
