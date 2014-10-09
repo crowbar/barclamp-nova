@@ -105,17 +105,15 @@ keystone_register "register ec2 service" do
   action :add_service
 end
 
-if api[:nova][:enable_v3_api]
-  keystone_register "register computev3 service" do
-    protocol keystone_settings['protocol']
-    host keystone_settings['internal_url_host']
-    port keystone_settings['admin_port']
-    token keystone_settings['admin_token']
-    service_name "computev3"
-    service_type "computev3"
-    service_description "Openstack Nova Service V3"
-    action :add_service
-  end
+keystone_register "register computev21 service" do
+  protocol keystone_settings['protocol']
+  host keystone_settings['internal_url_host']
+  port keystone_settings['admin_port']
+  token keystone_settings['admin_token']
+  service_name "novav21"
+  service_type "computev21"
+  service_description "Openstack Nova Compute Service V2.1"
+  action :add_service
 end
 
 keystone_register "register nova endpoint" do
@@ -148,19 +146,17 @@ keystone_register "register nova ec2 endpoint" do
   action :add_endpoint_template
 end
 
-if api[:nova][:enable_v3_api]
-  keystone_register "register computev3 endpoint" do
-    protocol keystone_settings['protocol']
-    host keystone_settings['internal_url_host']
-    port keystone_settings['admin_port']
-    token keystone_settings['admin_token']
-    endpoint_service "computev3"
-    endpoint_region keystone_settings['endpoint_region']
-    endpoint_publicURL "#{api_protocol}://#{public_api_host}:#{api_port}/v3"
-    endpoint_adminURL "#{api_protocol}://#{admin_api_host}:#{api_port}/v3"
-    endpoint_internalURL "#{api_protocol}://#{admin_api_host}:#{api_port}/v3"
-    action :add_endpoint_template
-  end
+keystone_register "register computev21 endpoint" do
+  protocol keystone_settings['protocol']
+  host keystone_settings['internal_url_host']
+  port keystone_settings['admin_port']
+  token keystone_settings['admin_token']
+  endpoint_service "novav21"
+  endpoint_region keystone_settings['endpoint_region']
+  endpoint_publicURL "#{api_protocol}://#{public_api_host}:#{api_port}/v2.1/$(tenant_id)s"
+  endpoint_adminURL "#{api_protocol}://#{admin_api_host}:#{api_port}/v2.1/$(tenant_id)s"
+  endpoint_internalURL "#{api_protocol}://#{admin_api_host}:#{api_port}/v2.1/$(tenant_id)s"
+  action :add_endpoint_template
 end
 
 crowbar_pacemaker_sync_mark "create-nova_register"

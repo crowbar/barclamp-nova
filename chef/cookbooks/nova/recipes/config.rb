@@ -410,7 +410,6 @@ template "/etc/nova/nova.conf" do
             :ssl_key_file => api[:nova][:ssl][:keyfile],
             :ssl_cert_required => api[:nova][:ssl][:cert_required],
             :ssl_ca_file => api[:nova][:ssl][:ca_certs],
-            :enable_nova_v3_api => api[:nova][:enable_v3_api],
             :oat_appraiser_host => oat_server[:hostname],
             :oat_appraiser_port => "8443",
             :has_itxt => has_itxt
