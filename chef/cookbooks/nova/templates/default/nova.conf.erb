@@ -2052,7 +2052,7 @@ xvpvncproxy_base_url=http://<%= @vncproxy_public_host %>:<%= node[:nova][:ports]
 
 # IP address on which instance vncservers should listen
 # (string value)
-vncserver_listen=<%= @bind_host %>
+vncserver_listen="0.0.0.0"
 
 # The address to which proxy clients (like nova-xvpvncproxy)
 # should connect (string value)
