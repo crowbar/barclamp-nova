@@ -3348,7 +3348,7 @@ vif_driver=nova.virt.libvirt.vif.LibvirtGenericVIFDriver
 #cluster_name=<None>
 <% if @libvirt_type.eql?('vmware') -%>
  <% node[:nova][:vcenter][:clusters].each do |cluster| -%>
-cluster_name=<%= cluster %>
+cluster_name="<%= cluster %>"
  <% end -%>
 <% end -%>
 
