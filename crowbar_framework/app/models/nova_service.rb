@@ -77,6 +77,11 @@ class NovaService < PacemakerServiceObject
     node[:platform] == "suse"
   end
 
+  def node_supports_kvm(node)
+    return false if node[:cpu].nil? || node[:cpu]['0'].nil?
+    node[:cpu]['0'][:flags].include?("vmx") or node[:cpu]['0'][:flags].include?("svm")
+  end
+
   #
   # Lots of enhancements here.  Like:
   #    * Don't reuse machines
@@ -103,7 +108,7 @@ class NovaService < PacemakerServiceObject
 
     hyperv = nodes.select { |n| n if n[:target_platform] =~ /^(windows-|hyperv-)/ }
     non_hyperv = nodes - hyperv
-    kvm = non_hyperv.select { |n| n if n[:cpu]['0'][:flags].include?("vmx") or n[:cpu]['0'][:flags].include?("svm") }
+    kvm = non_hyperv.select { |n| n if node_supports_kvm(n) }
     non_kvm = non_hyperv - kvm
     xen = non_kvm.select { |n| n unless n[:block_device].include?('vda') or !node_platform_supports_xen(n) }
     qemu = non_kvm - xen
