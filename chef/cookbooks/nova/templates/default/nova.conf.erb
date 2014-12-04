@@ -407,6 +407,7 @@ ec2_listen_port=<%= @bind_port_api_ec2 %>
 # Number of workers for EC2 API service. The default will be
 # equal to the number of CPUs available. (integer value)
 #ec2_workers=<None>
+ec2_workers=<%= [node["cpu"]["total"], 2, 4].sort[1] %>
 
 # The IP address on which the OpenStack API will listen.
 # (string value)
@@ -421,6 +422,7 @@ osapi_compute_listen_port=<%= @bind_port_api %>
 # Number of workers for OpenStack API service. The default
 # will be the number of CPUs available. (integer value)
 #osapi_compute_workers=<None>
+osapi_compute_workers=<%= [node["cpu"]["total"], 2, 4].sort[1] %>
 
 # OpenStack metadata service manager (string value)
 #metadata_manager=nova.api.manager.MetadataManager
@@ -438,6 +440,7 @@ metadata_listen_port=<%= @bind_port_metadata %>
 # Number of workers for metadata service. The default will be
 # the number of CPUs available. (integer value)
 #metadata_workers=<None>
+metadata_workers=<%= [node["cpu"]["total"], 2, 4].sort[1] %>
 
 # Full class name for the Manager for compute (string value)
 #compute_manager=nova.compute.manager.ComputeManager
@@ -2451,6 +2454,7 @@ api_insecure=<%= @cinder_insecure ? 'True' : 'False' %>
 # default will be the number of CPUs available. (integer
 # value)
 #workers=<None>
+workers=<%= [node["cpu"]["total"], 2, 4].sort[1] %>
 
 
 [ephemeral_storage_encryption]
