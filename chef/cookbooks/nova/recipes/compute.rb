@@ -198,12 +198,15 @@ if %w(redhat centos suse).include?(node.platform)
     libvirt_group = "root"
   end
 
-  bash "edit qemu config" do
-    only_if "cat /etc/libvirt/qemu.conf | grep 'user =' | grep -q -v '#{libvirt_user}' || cat /etc/libvirt/qemu.conf | grep 'group =' | grep -q -v '#{libvirt_group}'"
-    code <<-EOH
-     sed -i 's|^[#]*user *=.*|user = "#{libvirt_user}"|g' /etc/libvirt/qemu.conf
-     sed -i 's|^[#]*group *=.*|group = "#{libvirt_group}"|g' /etc/libvirt/qemu.conf
-    EOH
+  template "/etc/libvirt/qemu.conf" do
+    source "qemu.conf.sle12.erb" if node.platform == "suse" && node.platform_version.to_f >= 12.0
+    group "root"
+    owner "root"
+    mode 0644
+    variables(
+        :user => libvirt_user,
+        :group => libvirt_group
+    )
     notifies :restart, "service[libvirtd]"
   end
 
