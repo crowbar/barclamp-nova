@@ -34,7 +34,7 @@ def set_boot_kernel_and_trigger_reboot(flavor='default')
 
     # parse grub config, to find boot index for selected flavor
     File.open('/boot/grub2/grub.cfg') do |f|
-      f.lines.each do |line|
+      f.each_line do |line|
         if line.start_with?('menuentry')
           default_boot = line.split(" ")[1].gsub(/'/,"")
           if flavor.eql?('xen')
@@ -58,7 +58,7 @@ def set_boot_kernel_and_trigger_reboot(flavor='default')
 
     # parse grub config, to find boot index for selected flavor
     File.open('/boot/grub/menu.lst') do |f|
-      f.lines.each do |line|
+      f.each_line do |line|
         current_default = line.scan(/\d/).first.to_i if line.start_with?('default')
         if line.start_with?('title')
           if flavor.eql?('xen')
