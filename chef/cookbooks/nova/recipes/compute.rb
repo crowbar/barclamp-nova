@@ -36,7 +36,7 @@ def set_boot_kernel_and_trigger_reboot(flavor='default')
     File.open('/boot/grub2/grub.cfg') do |f|
       f.each_line do |line|
         if line.start_with?('menuentry')
-          default_boot = line.split(" ")[1].gsub(/'/,"")
+          default_boot = line.sub(/^menuentry '([^']*)'.*$/,'\1').strip
           if flavor.eql?('xen')
             # found boot index
             break if line.include?('Xen')
