@@ -49,7 +49,7 @@ def set_boot_kernel_and_trigger_reboot(flavor='default')
     end
     # change default option for grub config
     unless current_default.eql?(default_boot)
-      puts "changed grub default to #{default_boot}"
+      Chef::Log.info("changed grub default to #{default_boot}")
       %x[grub2-set-default '#{default_boot}']
     end
   else
@@ -74,7 +74,7 @@ def set_boot_kernel_and_trigger_reboot(flavor='default')
     end
     # change default option for grub config
     unless current_default.eql?(default_boot)
-      puts "changed grub default to #{default_boot}"
+      Chef::Log.info("changed grub default to #{default_boot}")
       %x[sed -i -e "s;^default.*;default #{default_boot};" /boot/grub/menu.lst]
     end
   end
