@@ -23,33 +23,60 @@ include_recipe "nova::config"
 
 def set_boot_kernel_and_trigger_reboot(flavor='default')
   # only default and xen flavor is supported by this helper right now
-  default_boot = 0
-  current_default = nil
-
-  # parse menu.lst, to find boot index for selected flavor
-  File.open('/boot/grub/menu.lst') do |f|
-    f.lines.each do |line|
-      current_default = line.scan(/\d/).first.to_i if line.start_with?('default')
-
-      if line.start_with?('title')
-        if flavor.eql?('xen')
-          # found boot index
-          break if line.include?('Xen')
-        else
-          # take first non-xen kernel as default
-          break unless line.include?('Xen')
-        end
-
-        default_boot += 1
-      end
-
+  if node.platform == "suse" && node.platform_version.to_f >= 12.0
+    default_boot = 'SLES12'
+    grub_env = %x[grub2-editenv list]
+    if grub_env.include?("saved_entry")
+      current_default = grub_env.strip.split("=")[1]
+    else
+      current_default = nil
     end
-  end
 
-  # change default option for /boot/grub/menu.lst
-  unless current_default.eql?(default_boot)
-    puts "changed grub default to #{default_boot}"
-    %x[sed -i -e "s;^default.*;default #{default_boot};" /boot/grub/menu.lst]
+    # parse grub config, to find boot index for selected flavor
+    File.open('/boot/grub2/grub.cfg') do |f|
+      f.each_line do |line|
+        if line.start_with?('menuentry')
+          default_boot = line.sub(/^menuentry '([^']*)'.*$/,'\1').strip
+          if flavor.eql?('xen')
+            # found boot index
+            break if line.include?('Xen')
+          else
+            # take first non-xen kernel as default
+            break unless line.include?('Xen')
+          end
+        end
+      end
+    end
+    # change default option for grub config
+    unless current_default.eql?(default_boot)
+      Chef::Log.info("changed grub default to #{default_boot}")
+      %x[grub2-set-default '#{default_boot}']
+    end
+  else
+    default_boot = 0
+    current_default = nil
+
+    # parse grub config, to find boot index for selected flavor
+    File.open('/boot/grub/menu.lst') do |f|
+      f.each_line do |line|
+        current_default = line.scan(/\d/).first.to_i if line.start_with?('default')
+        if line.start_with?('title')
+          if flavor.eql?('xen')
+            # found boot index
+            break if line.include?('Xen')
+          else
+            # take first non-xen kernel as default
+            break unless line.include?('Xen')
+          end
+          default_boot += 1
+        end
+      end
+    end
+    # change default option for grub config
+    unless current_default.eql?(default_boot)
+      Chef::Log.info("changed grub default to #{default_boot}")
+      %x[sed -i -e "s;^default.*;default #{default_boot};" /boot/grub/menu.lst]
+    end
   end
 
   # trigger reboot through reboot_handler, if kernel-$flavor is not yet
@@ -91,10 +118,14 @@ if %w(redhat centos suse).include?(node.platform)
     supports :status => true, :start => true, :stop => true, :restart => true
     action [:enable, :start]
     if node.platform == "suse"
-      # Workaround broken open-iscsi init scripts that return a failed code
-      # but start the service anyway. run a status command afterwards to
-      # see what the real status is (bnc#885834)
-      start_command "/etc/init.d/open-iscsi start; /etc/init.d/open-iscsi status"
+      if node.platform_version.to_f < 12
+        # Workaround broken open-iscsi init scripts that return a failed code
+        # but start the service anyway. run a status command afterwards to
+        # see what the real status is (bnc#885834)
+        start_command "/etc/init.d/open-iscsi start; /etc/init.d/open-iscsi status"
+      else
+        service_name "iscsid"
+      end
     end
   end
 
@@ -156,47 +187,27 @@ if %w(redhat centos suse).include?(node.platform)
       end
   end
 
-
   # change libvirt to run qemu as user qemu
-  unless %w(redhat centos).include?(node.platform)
-    ruby_block "change qemu user used by libvirt" do
-      block do
-        rc = Chef::Util::FileEdit.new("/etc/libvirt/qemu.conf")
-
-        # make sure to only set qemu:kvm for kvm and qemu deployments, use
-        # system defaults for xen
-        if ['kvm','qemu'].include?(node[:nova][:libvirt_type])
-          rc.search_file_replace_line(/^[ #]*user *=/, 'user = "qemu"')
-          rc.search_file_replace_line(/^[ #]*group *=/, 'group = "kvm"')
-        else
-          rc.search_file_replace_line(/^ *user *=/, '#user = "root"')
-          rc.search_file_replace_line(/^ *group *=/, '#group = "root"')
-        end
-
-        if rc.file_edited?
-          rc.write_file
-          # manually restart libvirtd; we can't do that with a notification to the libvirtd service because we're in a ruby_block
-          %x{rclibvirtd restart}
-        end
-      end
-    end
+  # make sure to only set qemu:kvm for kvm and qemu deployments, use
+  # system defaults for xen
+  if ['kvm','qemu'].include?(node[:nova][:libvirt_type])
+    libvirt_user = "qemu"
+    libvirt_group = "kvm"
   else
-    if ['kvm','qemu'].include?(node[:nova][:libvirt_type])
-      libvirt_user = "qemu"
-      libvirt_group = "kvm"
-    else
-      libvirt_user = "root"
-      libvirt_group = "root"
-    end
+    libvirt_user = "root"
+    libvirt_group = "root"
+  end
 
-    bash "edit qemu config" do
-      only_if "cat /etc/libvirt/qemu.conf | grep 'user =' | grep -q -v '#{libvirt_user}' || cat /etc/libvirt/qemu.conf | grep 'group =' | grep -q -v '#{libvirt_group}'"
-      code <<-EOH
-       sed -i 's|user *=.*|user = "#{libvirt_user}"|g' /etc/libvirt/qemu.conf
-       sed -i 's|group *=.*|group = "#{libvirt_group}"|g' /etc/libvirt/qemu.conf
-      EOH
-      notifies :restart, "service[libvirtd]"
-    end
+  template "/etc/libvirt/qemu.conf" do
+    source "qemu.conf.sle12.erb" if node.platform == "suse" && node.platform_version.to_f >= 12.0
+    group "root"
+    owner "root"
+    mode 0644
+    variables(
+        :user => libvirt_user,
+        :group => libvirt_group
+    )
+    notifies :restart, "service[libvirtd]"
   end
 
   service "libvirtd" do
@@ -341,6 +352,8 @@ if node[:nova][:libvirt_use_multipath]
 
   service "boot.multipath" do
     action [:enable]
+    # on SLES12 there is no boot.multipath service, because of systemd
+    not_if { node.platform == "suse" && node.platform_version.to_f >= 12.0 }
   end
 end
 
