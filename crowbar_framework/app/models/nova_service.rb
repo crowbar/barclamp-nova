@@ -49,7 +49,7 @@ class NovaService < PacemakerServiceObject
         },
         "nova-multi-compute-vmware" => {
           "unique" => false,
-          "count" => 1
+          "count" => -1
         },
         "nova-multi-compute-xen" => {
           "unique" => false,
