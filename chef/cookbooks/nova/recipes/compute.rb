@@ -371,3 +371,22 @@ unless %w(redhat centos suse).include?(node.platform)
     notifies :restart, "service[libvirt-bin]"
   end
 end
+
+# Set our availability zone
+command_no_arg = NovaAvailabilityZone.fetch_set_az_command_no_arg(node, @cookbook_name)
+command = NovaAvailabilityZone.add_arg_to_set_az_command(command_no_arg, node)
+
+execute "Set availability zone for #{node.hostname}" do
+  command command
+  timeout 15
+  returns [0, 68]
+  action :nothing
+  subscribes :run, "execute[trigger-nova-own-az-config]", :delayed
+end
+
+# This is to trigger all the above "execute" resources to run :delayed, so that
+# they run at the end of the chef-client run, after the nova service have been
+# restarted (in case of a config change and if we're also a controller)
+execute "trigger-nova-own-az-config" do
+  command "true"
+end

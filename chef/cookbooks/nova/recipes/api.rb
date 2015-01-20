@@ -24,10 +24,6 @@ venv_path = node[:nova][:use_virtualenv] ? "#{nova_path}/.venv" : nil
 
 keystone_settings = KeystoneHelper.keystone_settings(node, @cookbook_name)
 
-unless node[:nova][:use_gitrepo]
-  package "python-novaclient"
-end
-
 nova_package "api" do
   use_pacemaker_provider node[:nova][:ha][:enabled]
 end
