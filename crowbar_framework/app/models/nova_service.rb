@@ -33,11 +33,17 @@ class NovaService < PacemakerServiceObject
         "nova-multi-controller" => {
           "unique" => false,
           "count" => 1,
+          "exclude_platform" => {
+            "suse" => "12.0"
+          },
           "cluster" => true
         },
         "nova-multi-compute-hyperv" => {
           "unique" => false,
-          "count" => -1
+          "count" => -1,
+          "platform" => {
+            "windows" => "/.*/"
+          }
         },
         "nova-multi-compute-kvm" => {
           "unique" => false,
