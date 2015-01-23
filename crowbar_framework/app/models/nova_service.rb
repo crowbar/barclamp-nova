@@ -34,7 +34,8 @@ class NovaService < PacemakerServiceObject
           "unique" => false,
           "count" => 1,
           "exclude_platform" => {
-            "suse" => "12.0"
+            "suse" => "12.0",
+            "windows" => "/.*/"
           },
           "cluster" => true
         },
@@ -47,19 +48,31 @@ class NovaService < PacemakerServiceObject
         },
         "nova-multi-compute-kvm" => {
           "unique" => false,
-          "count" => -1
+          "count" => -1,
+          "exclude_platform" => {
+            "windows" => "/.*/"
+          }
         },
         "nova-multi-compute-qemu" => {
           "unique" => false,
-          "count" => -1
+          "count" => -1,
+          "exclude_platform" => {
+            "windows" => "/.*/"
+          }
         },
         "nova-multi-compute-vmware" => {
           "unique" => false,
-          "count" => 1
+          "count" => 1,
+          "exclude_platform" => {
+            "windows" => "/.*/"
+          }
         },
         "nova-multi-compute-xen" => {
           "unique" => false,
-          "count" => -1
+          "count" => -1,
+          "exclude_platform" => {
+            "windows" => "/.*/"
+          }
         }
       }
     end
