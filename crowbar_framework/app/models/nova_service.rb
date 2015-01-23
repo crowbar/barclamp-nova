@@ -185,11 +185,14 @@ class NovaService < PacemakerServiceObject
     neutron = ProposalObject.find_proposal("neutron",role.default_attributes["nova"]["neutron_instance"])
 
     all_nodes.each do |n|
-      if neutron["attributes"]["neutron"]["networking_mode"] == "gre"
-        net_svc.allocate_ip "default", "os_sdn", "host", n
-      else
-        net_svc.enable_interface "default", "nova_fixed", n
-        if neutron["attributes"]["neutron"]["networking_mode"] == "vlan"
+      # TODO(toabctl): The same code is in the neutron barclamp. Should be extracted and reused!
+      #                (see crowbar_framework/app/models/neutron_service.rb)
+      if neutron["attributes"]["neutron"]["networking_plugin"] == "ml2"
+        if neutron["attributes"]["neutron"]["ml2_type_drivers"].include?("gre")
+          net_svc.allocate_ip "default","os_sdn","host", n
+        end
+        if neutron["attributes"]["neutron"]["ml2_type_drivers"].include?("vlan")
+          net_svc.enable_interface "default", "nova_fixed", n
           # Force "use_vlan" to false in VLAN mode (linuxbridge and ovs). We
           # need to make sure that the network recipe does NOT create the
           # VLAN interfaces (ethX.VLAN)
