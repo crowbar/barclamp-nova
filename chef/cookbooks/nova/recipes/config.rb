@@ -416,3 +416,13 @@ template "/etc/nova/nova.conf" do
             )
 end
 
+unless node[:nova][:use_gitrepo]
+  # dependency for crowbar-nova-set-availability-zone
+  package "python-novaclient"
+end
+
+cookbook_file "crowbar-nova-set-availability-zone" do
+  source "crowbar-nova-set-availability-zone"
+  path "/usr/bin/crowbar-nova-set-availability-zone"
+  mode "0755"
+end

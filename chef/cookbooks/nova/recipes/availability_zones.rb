@@ -17,47 +17,14 @@
 # limitations under the License.
 #
 
-cookbook_file "crowbar-nova-set-availability-zone" do
-  source "crowbar-nova-set-availability-zone"
-  path "/usr/bin/crowbar-nova-set-availability-zone"
-  mode "0755"
-end
+command_no_arg = NovaAvailabilityZone.fetch_set_az_command_no_arg(node, @cookbook_name)
 
-keystone_settings = KeystoneHelper.keystone_settings(node, @cookbook_name)
+# non-hyperv nodes set their AZ themselves, so only look for hyperv nodes
+search_env_filtered(:node, "roles:nova-multi-compute-hyperv") do |n|
+  command = NovaAvailabilityZone.add_arg_to_set_az_command(command_no_arg, n)
 
-nova_insecure = node[:nova][:ssl][:enabled] && node[:nova][:ssl][:insecure]
-
-command = [ "/usr/bin/crowbar-nova-set-availability-zone" ]
-command << "--os-username"
-command << keystone_settings['admin_user']
-command << "--os-password"
-command << keystone_settings['admin_password']
-command << "--os-tenant-name"
-command << keystone_settings['default_tenant']
-command << "--os-auth-url"
-command << keystone_settings['internal_auth_url']
-command << "--os-region-name"
-command << keystone_settings['endpoint_region']
-
-if keystone_settings['insecure'] || nova_insecure
-  command << "--insecure"
-end
-
-search_env_filtered(:node, "roles:nova-multi-compute-*") do |n|
-  availability_zone = ""
-  unless n[:crowbar_wall].nil? or n[:crowbar_wall][:openstack].nil?
-    availability_zone = n[:crowbar_wall][:openstack][:availability_zone]
-  end
-
-  node_command = command.clone
-  node_command << n.hostname
-  # we need an array for the command to avoid command injection with this part
-  node_command << availability_zone
-
-  # Note: if availability_zone is "", then the command will move the host to
-  # the default availability zone, which is what we want
   execute "Set availability zone for #{n.hostname}" do
-    command node_command
+    command command
     timeout 15
     returns [0, 68]
     action :nothing
