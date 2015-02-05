@@ -51,13 +51,16 @@ include_recipe "database::client"
 include_recipe "#{db_settings[:backend_name]}::client"
 include_recipe "#{db_settings[:backend_name]}::python-client"
 
-db_conn_scheme = db_settings[:url_scheme]
-if node[:platform] == "suse" && db_settings[:backend_name] == "mysql"
-  # The C-extensions (python-mysql) can't be monkey-patched by eventlet. Therefore, when only one nova-conductor is present,
-  # all DB queries are serialized. By using the pure-Python driver by default, eventlet can do it's job:
-  db_conn_scheme = "mysql+pymysql"
+# don't expose database connection to the compute clients
+database_connection = if node["roles"].include?("nova-multi-controller")
+  db_conn_scheme = db_settings[:url_scheme]
+  if node[:platform] == "suse" && db_settings[:backend_name] == "mysql"
+    # The C-extensions (python-mysql) can't be monkey-patched by eventlet. Therefore, when only one nova-conductor is present,
+    # all DB queries are serialized. By using the pure-Python driver by default, eventlet can do it's job:
+    db_conn_scheme = "mysql+pymysql"
+  end
+  "#{db_conn_scheme}://#{node[:nova][:db][:user]}:#{node[:nova][:db][:password]}@#{db_settings[:address]}/#{node[:nova][:db][:database]}"
 end
-database_connection = "#{db_conn_scheme}://#{node[:nova][:db][:user]}:#{node[:nova][:db][:password]}@#{db_settings[:address]}/#{node[:nova][:db][:database]}"
 
 apis = search_env_filtered(:node, "recipes:nova\\:\\:api")
 if apis.length > 0
