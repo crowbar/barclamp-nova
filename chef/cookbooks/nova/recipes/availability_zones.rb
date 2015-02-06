@@ -59,7 +59,8 @@ search_env_filtered(:node, "roles:nova-multi-compute-*") do |n|
   execute "Set availability zone for #{n.hostname}" do
     command node_command
     timeout 15
-    returns [0, 68]
+    # Any exit code in the range 60-69 is a tempfail
+    returns [0] + (60..69).to_a
     action :nothing
     subscribes :run, "execute[trigger-nova-az-config]", :delayed
   end
