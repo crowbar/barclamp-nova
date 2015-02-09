@@ -138,7 +138,8 @@ try:
     hosts = c.hosts.list()
 except Exception as e:
     print >> sys.stderr, 'Cannot fetch list of nova hosts: %s' % e
-    sys.exit(1)
+    # Treat this as temp failure as likely its just the API is not up right now
+    sys.exit(69)
 
 try:
     host = [host for host in hosts if host.service == 'compute' and host.host_name == target_host_name][0]
