@@ -2969,13 +2969,13 @@ connection=<%= @database_connection %>
 #auth_protocol=https
 
 # Complete public Identity API endpoint (string value)
-#auth_uri=<None>
+auth_uri=<%= @keystone_settings['public_auth_url'] %>
 
 # Complete admin Identity API endpoint. This should specify
 # the unversioned root endpoint e.g. https://localhost:35357/
 # (string value)
 #identity_uri=<None>
-identity_uri=<%= @keystone_settings['protocol'] %>://<%= @keystone_settings['internal_url_host'] %>:<%= @keystone_settings['admin_port'] %>/
+identity_uri=<%= @keystone_settings['admin_auth_url'] %>
 
 # API version of the admin Identity API endpoint (string
 # value)
