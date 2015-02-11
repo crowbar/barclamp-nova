@@ -130,19 +130,44 @@ if %w(redhat centos suse).include?(node.platform)
   end
 
   case node[:nova][:libvirt_type]
-    when "kvm"
-      package "kvm"
+    when "kvm", "qemu"
+      if node.platform_version.to_f >= 12.0
+        package "qemu"
+      else
+        package "kvm"
+      end
+
+      # Install Ceph integration if needed
+      cinder_servers = search(:node, "roles:cinder-controller") || []
+      if cinder_servers.length > 0
+        cinder_servers[0][:cinder][:volumes].each do |volume|
+          next if volume['backend_driver'] != "rbd"
+
+          package "python-ceph"
+          package "ceph-common"
+
+          break
+        end
+      end
+
       set_boot_kernel_and_trigger_reboot
 
-      # load modules only when appropriate kernel is present
-      execute "loading kvm modules" do
-        command <<-EOF
-            grep -qw vmx /proc/cpuinfo && /sbin/modprobe kvm-intel
-            grep -qw svm /proc/cpuinfo && /sbin/modprobe kvm-amd
-            /sbin/modprobe vhost-net
-            /sbin/modprobe nbd
-          EOF
-        only_if { %x[uname -r].include?('default') }
+      if node[:nova][:libvirt_type] == "kvm"
+        if node.platform_version.to_f >= 12.0
+          package "qemu-kvm"
+          package "qemu-block-rbd"
+        end
+
+        # load modules only when appropriate kernel is present
+        execute "loading kvm modules" do
+          command <<-EOF
+              grep -qw vmx /proc/cpuinfo && /sbin/modprobe kvm-intel
+              grep -qw svm /proc/cpuinfo && /sbin/modprobe kvm-amd
+              /sbin/modprobe vhost-net
+              /sbin/modprobe nbd
+            EOF
+          only_if { %x[uname -r].include?('default') }
+        end
       end
 
     when "xen"
@@ -177,8 +202,6 @@ if %w(redhat centos suse).include?(node.platform)
       set_boot_kernel_and_trigger_reboot('xen')
     when "vmware"
       package "python-suds"
-    when "qemu"
-      package "kvm"
     when "lxc"
       package "lxc"
 
