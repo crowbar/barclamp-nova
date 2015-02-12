@@ -184,7 +184,7 @@ keystone_settings = KeystoneHelper.keystone_settings(node, @cookbook_name)
 ceph_user = node[:nova][:rbd][:user]
 ceph_uuid = node[:nova][:rbd][:secret_uuid]
 
-cinder_servers = search(:node, "roles:cinder-controller") || []
+cinder_servers = search_env_filtered(:node, "roles:cinder-controller") || []
 if cinder_servers.length > 0
   cinder_server = cinder_servers[0]
   cinder_insecure = cinder_server[:cinder][:api][:protocol] == 'https' && cinder_server[:cinder][:ssl][:insecure]
