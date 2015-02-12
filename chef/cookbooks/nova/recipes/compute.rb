@@ -138,7 +138,7 @@ if %w(redhat centos suse).include?(node.platform)
       end
 
       # Install Ceph integration if needed
-      cinder_servers = search(:node, "roles:cinder-controller") || []
+      cinder_servers = search_env_filtered(:node, "roles:cinder-controller") || []
       if cinder_servers.length > 0
         cinder_servers[0][:cinder][:volumes].each do |volume|
           next if volume['backend_driver'] != "rbd"
