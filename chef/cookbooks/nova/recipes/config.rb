@@ -225,8 +225,6 @@ if neutron_servers.length > 0
   neutron_insecure = neutron_protocol == 'https' && neutron_server[:neutron][:ssl][:insecure]
   neutron_service_user = neutron_server[:neutron][:service_user]
   neutron_service_password = neutron_server[:neutron][:service_password]
-  neutron_networking_plugin = neutron_server[:neutron][:networking_plugin]
-  neutron_networking_mode = neutron_server[:neutron][:networking_mode]
   neutron_dhcp_domain = neutron_server[:neutron][:dhcp_domain]
 else
   neutron_server_host = nil
@@ -402,7 +400,6 @@ template "/etc/nova/nova.conf" do
             :neutron_insecure => neutron_insecure,
             :neutron_service_user => neutron_service_user,
             :neutron_service_password => neutron_service_password,
-            :neutron_networking_plugin => neutron_networking_plugin,
             :neutron_dhcp_domain => neutron_dhcp_domain,
             :keystone_settings => keystone_settings,
             :cinder_insecure => cinder_insecure,
