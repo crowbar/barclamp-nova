@@ -39,6 +39,7 @@
             "pfs_deps": { "type": "seq", "required": true, "sequence": [ { "type": "str" } ] },
             "neutron_metadata_proxy_shared_secret": { "type": "str" },
             "neutron_url_timeout": {"type": "int"},
+            "vnc_keymap": { "type": "str" , "required": true },
             "scheduler": {
               "type": "map",
               "mapping": {
