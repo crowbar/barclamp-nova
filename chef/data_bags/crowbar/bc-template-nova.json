@@ -27,6 +27,7 @@
       "use_pip_cache": true,
       "use_virtualenv": true,
       "neutron_url_timeout": 30,
+      "vnc_keymap": "en-us",
       "pfs_deps": [
           "python-libvirt",
           "python-routes",
@@ -103,7 +104,7 @@
     "nova": {
       "crowbar-revision": 0,
       "crowbar-applied": false,
-      "schema-revision": 20,
+      "schema-revision": 21,
       "element_states": {
         "nova-multi-controller": [ "readying", "ready", "applying" ],
         "nova-multi-compute-hyperv": [ "readying", "ready", "applying" ],

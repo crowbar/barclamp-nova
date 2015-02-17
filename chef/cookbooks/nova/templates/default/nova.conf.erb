@@ -2048,7 +2048,7 @@ vncserver_proxyclient_address=<%= node[:nova][:my_ip] %>
 #vnc_enabled=true
 
 # Keymap for VNC (string value)
-#vnc_keymap=en-us
+vnc_keymap=<%= node[:nova][:vnc_keymap] %>
 
 
 #
