@@ -104,6 +104,7 @@ services.each do |service|
     agent primitive_ra
     op node[:nova][:ha][:op]
     action :create
+    only_if { CrowbarPacemakerHelper.is_cluster_founder?(node) }
   end
   primitives << primitive_name
 end
@@ -113,11 +114,13 @@ group_name = "g-nova-controller"
 pacemaker_group group_name do
   members primitives
   action :create
+  only_if { CrowbarPacemakerHelper.is_cluster_founder?(node) }
 end
 
 pacemaker_clone "cl-#{group_name}" do
   rsc group_name
   action [:create, :start]
+  only_if { CrowbarPacemakerHelper.is_cluster_founder?(node) }
 end
 
 crowbar_pacemaker_sync_mark "create-nova_ha_resources"

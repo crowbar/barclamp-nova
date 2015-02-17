@@ -21,6 +21,8 @@
 
 include_recipe "database::client"
 
+ha_enabled = node[:nova][:ha][:enabled]
+
 db_settings = fetch_database_settings
 
 crowbar_pacemaker_sync_mark "wait-nova_database" do
@@ -34,6 +36,7 @@ database "create #{node[:nova][:db][:database]} database" do
   database_name node[:nova][:db][:database]
   provider db_settings[:provider]
   action :create
+  only_if { !ha_enabled || CrowbarPacemakerHelper.is_cluster_founder?(node) }
 end
 
 database_user "create nova database user" do
@@ -42,6 +45,7 @@ database_user "create nova database user" do
   password node[:nova][:db][:password]
   provider db_settings[:user_provider]
   action :create
+  only_if { !ha_enabled || CrowbarPacemakerHelper.is_cluster_founder?(node) }
 end
 
 database_user "grant privileges to the nova database user" do
@@ -53,6 +57,7 @@ database_user "grant privileges to the nova database user" do
   privileges db_settings[:privs]
   provider db_settings[:user_provider]
   action :grant
+  only_if { !ha_enabled || CrowbarPacemakerHelper.is_cluster_founder?(node) }
 end
 
 execute "nova-manage db sync" do
