@@ -154,7 +154,7 @@ if %w(redhat centos suse).include?(node.platform)
 
       if node[:nova][:libvirt_type] == "kvm"
         if node.platform_version.to_f >= 12.0
-          package "qemu-kvm"
+          package "qemu-kvm" if node[:architecture] == "x86_64"
           package "qemu-block-rbd"
         end
 
@@ -163,9 +163,10 @@ if %w(redhat centos suse).include?(node.platform)
           command <<-EOF
               grep -qw vmx /proc/cpuinfo && /sbin/modprobe kvm-intel
               grep -qw svm /proc/cpuinfo && /sbin/modprobe kvm-amd
+              grep -q POWER /proc/cpuinfo && /sbin/modprobe kvm
               /sbin/modprobe vhost-net
               /sbin/modprobe nbd
-            EOF
+          EOF
           only_if { %x[uname -r].include?('default') }
         end
       end
