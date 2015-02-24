@@ -393,7 +393,7 @@ state_path=/var/lib/nova
 
 # A list of APIs with enabled SSL (list value)
 #enabled_ssl_apis=
-enabled_ssl_apis = <%= @ssl_enabled ? "ec2,osapi_compute" : "" %>
+enabled_ssl_apis = <%= @ssl_enabled ? "ec2,osapi_compute,metadata" : "" %>
 
 # The IP address on which the EC2 API will listen. (string
 # value)
