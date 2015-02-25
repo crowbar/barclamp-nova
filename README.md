@@ -16,6 +16,9 @@ About this barclamp
 -------------------
 
 [![Build Status](https://travis-ci.org/crowbar/barclamp-nova.svg?branch=master)](https://travis-ci.org/crowbar/barclamp-nova)
+[![Code Climate](https://codeclimate.com/github/crowbar/barclamp-nova/badges/gpa.svg)](https://codeclimate.com/github/crowbar/barclamp-nova)
+[![Test Coverage](https://codeclimate.com/github/crowbar/barclamp-nova/badges/coverage.svg)](https://codeclimate.com/github/crowbar/barclamp-nova)
+[![Dependency Status](https://gemnasium.com/crowbar/barclamp-nova.svg)](https://gemnasium.com/crowbar/barclamp-nova)
 
 Information for this barclamp is maintained on the [Crowbar Framework Wiki](https://github.com/crowbar/crowbar/wiki)
 
