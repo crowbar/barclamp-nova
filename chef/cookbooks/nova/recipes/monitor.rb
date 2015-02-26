@@ -49,6 +49,10 @@ search_env_filtered(:node, "roles:nova-multi-compute-kvm") do |n|
   nova_scale[:computes] << n
 end
 
+search_env_filtered(:node, "roles:nova-multi-compute-lxc") do |n|
+  nova_scale[:computes] << n
+end
+
 search_env_filtered(:node, "roles:nova-multi-compute-qemu") do |n|
   nova_scale[:computes] << n
 end

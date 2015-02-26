@@ -53,6 +53,13 @@ class NovaService < PacemakerServiceObject
             "windows" => "/.*/"
           }
         },
+        "nova-multi-compute-lxc" => {
+          "unique" => false,
+          "count" => -1,
+          "exclude_platform" => {
+            "windows" => "/.*/"
+          }
+        },
         "nova-multi-compute-qemu" => {
           "unique" => false,
           "count" => -1,
@@ -132,6 +139,7 @@ class NovaService < PacemakerServiceObject
     xen = non_kvm.select { |n| n unless n[:block_device].include?('vda') or !node_platform_supports_xen(n) }
     qemu = non_kvm - xen
 
+    # do not use lxc by default
     base["deployment"]["nova"]["elements"] = {
       "nova-multi-controller" => [ controller.name ],
       "nova-multi-compute-hyperv" => hyperv.map { |x| x.name },
@@ -238,6 +246,9 @@ class NovaService < PacemakerServiceObject
     elements["nova-multi-compute-kvm"].each do |n|
         nodes[n] += 1
     end unless elements["nova-multi-compute-kvm"].nil?
+    elements["nova-multi-compute-lxc"].each do |n|
+        nodes[n] += 1
+    end unless elements["nova-multi-compute-lxc"].nil?
     elements["nova-multi-compute-qemu"].each do |n|
         nodes[n] += 1
     end unless elements["nova-multi-compute-qemu"].nil?

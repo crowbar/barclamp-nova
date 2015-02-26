@@ -104,11 +104,12 @@
     "nova": {
       "crowbar-revision": 0,
       "crowbar-applied": false,
-      "schema-revision": 21,
+      "schema-revision": 22,
       "element_states": {
         "nova-multi-controller": [ "readying", "ready", "applying" ],
         "nova-multi-compute-hyperv": [ "readying", "ready", "applying" ],
         "nova-multi-compute-kvm": [ "readying", "ready", "applying" ],
+        "nova-multi-compute-lxc": [ "readying", "ready", "applying" ],
         "nova-multi-compute-qemu": [ "readying", "ready", "applying" ],
         "nova-multi-compute-vmware": [ "readying", "ready", "applying" ],
         "nova-multi-compute-xen": [ "readying", "ready", "applying" ]
@@ -119,6 +120,7 @@
         [
           "nova-multi-compute-hyperv",
           "nova-multi-compute-kvm",
+          "nova-multi-compute-lxc",
           "nova-multi-compute-qemu",
           "nova-multi-compute-vmware",
           "nova-multi-compute-xen"
@@ -128,6 +130,7 @@
         "nova-multi-controller": 95,
         "nova-multi-compute-hyperv": 97,
         "nova-multi-compute-kvm": 97,
+        "nova-multi-compute-lxc": 97,
         "nova-multi-compute-qemu": 97,
         "nova-multi-compute-vmware": 97,
         "nova-multi-compute-xen": 97
