@@ -209,6 +209,19 @@ if %w(redhat centos suse).include?(node.platform)
       service "boot.cgroup" do
         action [:enable, :start]
       end
+    when "docker"
+      package "docker"
+      package "openstack-nova-docker"
+
+      group "docker" do
+        action :modify
+        members [node[:nova][:user]]
+        append true
+      end
+
+      service "docker" do
+        action [:enable, :start]
+      end
   end
 
   # change libvirt to run qemu as user qemu
@@ -320,6 +333,9 @@ search_env_filtered(:node, "roles:nova-multi-compute-kvm") do |n|
     ssh_auth_keys += n[:nova][:service_ssh_key]
 end
 search_env_filtered(:node, "roles:nova-multi-compute-xen") do |n|
+    ssh_auth_keys += n[:nova][:service_ssh_key]
+end
+search_env_filtered(:node, "roles:nova-multi-compute-docker") do |n|
     ssh_auth_keys += n[:nova][:service_ssh_key]
 end
 search_env_filtered(:node, "roles:nova-multi-compute-qemu") do |n|

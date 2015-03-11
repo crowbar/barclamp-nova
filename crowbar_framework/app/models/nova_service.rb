@@ -39,6 +39,14 @@ class NovaService < PacemakerServiceObject
           },
           "cluster" => true
         },
+        "nova-multi-compute-docker" => {
+          "unique" => false,
+          "count" => -1,
+          "exclude_platform" => {
+            "suse" => "< 12.0",
+            "windows" => "/.*/"
+          }
+        },
         "nova-multi-compute-hyperv" => {
           "unique" => false,
           "count" => -1,
@@ -132,6 +140,7 @@ class NovaService < PacemakerServiceObject
     xen = non_kvm.select { |n| n unless n[:block_device].include?('vda') or !node_platform_supports_xen(n) }
     qemu = non_kvm - xen
 
+    # do not use docker by default
     base["deployment"]["nova"]["elements"] = {
       "nova-multi-controller" => [ controller.name ],
       "nova-multi-compute-hyperv" => hyperv.map { |x| x.name },
@@ -236,6 +245,9 @@ class NovaService < PacemakerServiceObject
       validation_error("Hyper-V support is not available.")
     end
 
+    elements["nova-multi-compute-docker"].each do |n|
+        nodes[n] += 1
+    end unless elements["nova-multi-compute-docker"].nil?
     elements["nova-multi-compute-hyperv"].each do |n|
         nodes[n] += 1
     end unless elements["nova-multi-compute-hyperv"].nil?
