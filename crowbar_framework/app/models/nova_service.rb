@@ -188,10 +188,11 @@ class NovaService < PacemakerServiceObject
       # TODO(toabctl): The same code is in the neutron barclamp. Should be extracted and reused!
       #                (see crowbar_framework/app/models/neutron_service.rb)
       if neutron["attributes"]["neutron"]["networking_plugin"] == "ml2"
-        if neutron["attributes"]["neutron"]["ml2_type_drivers"].include?("gre")
+        ml2_type_drivers = neutron["attributes"]["neutron"]["ml2_type_drivers"]
+        if ml2_type_drivers.include?("gre") || ml2_type_drivers.include?("vxlan")
           net_svc.allocate_ip "default","os_sdn","host", n
         end
-        if neutron["attributes"]["neutron"]["ml2_type_drivers"].include?("vlan")
+        if ml2_type_drivers.include?("vlan")
           net_svc.enable_interface "default", "nova_fixed", n
           # Force "use_vlan" to false in VLAN mode (linuxbridge and ovs). We
           # need to make sure that the network recipe does NOT create the
