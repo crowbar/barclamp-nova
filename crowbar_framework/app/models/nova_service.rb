@@ -184,7 +184,18 @@ class NovaService < PacemakerServiceObject
 
     neutron = ProposalObject.find_proposal("neutron",role.default_attributes["nova"]["neutron_instance"])
 
-    all_nodes.each do |n|
+    compute_nodes_for_network = []
+    role.override_attributes["nova"]["elements"].each do |role, nodes|
+      # only care about compute nodes
+      next unless role =~ /^nova-multi-compute-/
+      # vmware compute nodes do not need access to the networking
+      next if role == "nova-multi-compute-vmware"
+
+      compute_nodes_for_network << nodes
+    end
+    compute_nodes_for_network.flatten!
+
+    compute_nodes_for_network.each do |n|
       # TODO(toabctl): The same code is in the neutron barclamp. Should be extracted and reused!
       #                (see crowbar_framework/app/models/neutron_service.rb)
       if neutron["attributes"]["neutron"]["networking_plugin"] == "ml2"
