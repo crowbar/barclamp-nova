@@ -204,10 +204,20 @@ if %w(redhat centos suse).include?(node.platform)
     when "vmware"
       package "python-suds"
     when "lxc"
-      package "lxc"
+      if node.platform_version.to_f >= 12.0
+        package "libvirt-daemon-driver-lxc"
+      else
+        package "lxc"
 
-      service "boot.cgroup" do
-        action [:enable, :start]
+        service "boot.cgroup" do
+          action [:enable, :start]
+        end
+      end
+
+      execute "loading nbd module" do
+        command <<-EOF
+            /sbin/modprobe nbd
+          EOF
       end
   end
 
@@ -320,6 +330,9 @@ search_env_filtered(:node, "roles:nova-multi-compute-kvm") do |n|
     ssh_auth_keys += n[:nova][:service_ssh_key]
 end
 search_env_filtered(:node, "roles:nova-multi-compute-xen") do |n|
+    ssh_auth_keys += n[:nova][:service_ssh_key]
+end
+search_env_filtered(:node, "roles:nova-multi-compute-lxc") do |n|
     ssh_auth_keys += n[:nova][:service_ssh_key]
 end
 search_env_filtered(:node, "roles:nova-multi-compute-qemu") do |n|
