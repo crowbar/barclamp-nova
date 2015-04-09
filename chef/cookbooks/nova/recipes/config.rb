@@ -75,16 +75,6 @@ admin_api_host = CrowbarHelper.get_host_for_admin_url(api, api_ha_enabled)
 public_api_host = CrowbarHelper.get_host_for_public_url(api, api[:nova][:ssl][:enabled], api_ha_enabled)
 Chef::Log.info("Api server found at #{admin_api_host} #{public_api_host}")
 
-dns_servers = search_env_filtered(:node, "roles:dns-server")
-if dns_servers.length > 0
-  dns_server = dns_servers[0]
-  dns_server = node if dns_server.name == node.name
-else
-  dns_server = node
-end
-dns_server_public_ip = Chef::Recipe::Barclamp::Inventory.get_network_by_type(dns_server, "public").address
-Chef::Log.info("DNS server found at #{dns_server_public_ip}")
-
 glance_servers = search_env_filtered(:node, "roles:glance-server")
 if glance_servers.length > 0
   glance_server = glance_servers[0]
@@ -383,7 +373,6 @@ template "/etc/nova/nova.conf" do
             :libvirt_migration => node[:nova]["use_migration"],
             :libvirt_enable_multipath => node[:nova][:libvirt_use_multipath],
             :shared_instances => node[:nova]["use_shared_instance_storage"],
-            :dns_server_public_ip => dns_server_public_ip,
             :glance_server_protocol => glance_server_protocol,
             :glance_server_host => glance_server_host,
             :glance_server_port => glance_server_port,
