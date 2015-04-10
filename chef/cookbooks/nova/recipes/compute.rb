@@ -87,31 +87,6 @@ def set_boot_kernel_and_trigger_reboot(flavor='default')
 end
 
 if %w(redhat centos suse).include?(node.platform)
-  # make sure that the libvirt package is present before other actions try to access /etc/qemu.conf
-  package "libvirt" do
-    action :nothing
-  end.run_action(:install)
-
-  # Generate a UUID, as DMI's system uuid is unreliable
-  if node[:nova][:host_uuid].nil?
-    node.normal[:nova][:host_uuid] = `uuidgen`.strip
-    node.save
-  end
-
-  template "/etc/libvirt/libvirtd.conf" do
-    source "libvirtd.conf.erb"
-    group "root"
-    owner "root"
-    mode 0644
-    variables(
-      :libvirtd_host_uuid => node[:nova][:host_uuid],
-      :libvirtd_listen_tcp => node[:nova]["use_migration"] ? 1 : 0,
-      :libvirtd_listen_addr => Chef::Recipe::Barclamp::Inventory.get_network_by_type(node, "admin").address,
-      :libvirtd_auth_tcp => node[:nova]["use_migration"] ? "none" : "sasl"
-    )
-    notifies :restart, "service[libvirtd]", :delayed
-  end
-
   # Start open-iscsi daemon, since nova-compute is going to use it and stumble over the
   # "starting daemon" messages otherwise
   service "open-iscsi" do
@@ -128,115 +103,184 @@ if %w(redhat centos suse).include?(node.platform)
       end
     end
   end
+end
 
-  case node[:nova][:libvirt_type]
-    when "kvm", "qemu"
-      if node.platform_version.to_f >= 12.0
-        package "qemu"
-      else
-        package "kvm"
-      end
+case node[:nova][:libvirt_type]
+  when "vmware"
+    package "python-suds"
 
-      # Install Ceph integration if needed
-      cinder_servers = search_env_filtered(:node, "roles:cinder-controller") || []
-      if cinder_servers.length > 0
-        cinder_servers[0][:cinder][:volumes].each do |volume|
-          next if volume['backend_driver'] != "rbd"
+  when "docker"
+    package "docker"
+    package "openstack-nova-docker"
 
-          package "python-ceph"
-          package "ceph-common"
+    group "docker" do
+      action :modify
+      members [node[:nova][:user]]
+      append true
+    end
 
-          break
-        end
-      end
+    service "docker" do
+      action [:enable, :start]
+    end
 
-      set_boot_kernel_and_trigger_reboot
-
-      if node[:nova][:libvirt_type] == "kvm"
-        if node.platform_version.to_f >= 12.0
-          package "qemu-kvm" if node[:architecture] == "x86_64"
-          package "qemu-block-rbd"
-        end
-
-        # load modules only when appropriate kernel is present
-        execute "loading kvm modules" do
-          command <<-EOF
-              grep -qw vmx /proc/cpuinfo && /sbin/modprobe kvm-intel
-              grep -qw svm /proc/cpuinfo && /sbin/modprobe kvm-amd
-              grep -q POWER /proc/cpuinfo && /sbin/modprobe kvm
-              /sbin/modprobe vhost-net
-              /sbin/modprobe nbd
-          EOF
-          only_if { %x[uname -r].include?('default') }
-        end
-      end
-
-    when "xen"
-      %w{kernel-xen xen xen-tools openvswitch-kmp-xen}.each do |pkg|
-        package pkg do
-          action :install
-        end
-      end
-
-      service "xend" do
+  when "kvm", "lxc", "qemu", "xen"
+    if %w(redhat centos suse).include?(node.platform)
+      # make sure that the libvirt package is present before other actions try to access /etc/qemu.conf
+      package "libvirt" do
         action :nothing
-        supports :status => true, :start => true, :stop => true, :restart => true
-        # restart xend only when xen kernel is already present
-        only_if { %x[uname -r].include?('xen') }
+      end.run_action(:install)
+
+      # Generate a UUID, as DMI's system uuid is unreliable
+      if node[:nova][:host_uuid].nil?
+        node.normal[:nova][:host_uuid] = `uuidgen`.strip
+        node.save
       end
 
-      template "/etc/xen/xend-config.sxp" do
-        source "xend-config.sxp.erb"
+      template "/etc/libvirt/libvirtd.conf" do
+        source "libvirtd.conf.erb"
         group "root"
         owner "root"
         mode 0644
         variables(
-          :node_platform => node[:platform],
-          :libvirt_migration => node[:nova]["use_migration"],
-          :shared_instances => node[:nova]["use_shared_instance_storage"],
+          :libvirtd_host_uuid => node[:nova][:host_uuid],
           :libvirtd_listen_tcp => node[:nova]["use_migration"] ? 1 : 0,
-          :libvirtd_listen_addr => Chef::Recipe::Barclamp::Inventory.get_network_by_type(node, "admin").address
+          :libvirtd_listen_addr => Chef::Recipe::Barclamp::Inventory.get_network_by_type(node, "admin").address,
+          :libvirtd_auth_tcp => node[:nova]["use_migration"] ? "none" : "sasl"
         )
-        notifies :restart, "service[xend]", :delayed
+        notifies :restart, "service[libvirtd]", :delayed
       end
 
-      set_boot_kernel_and_trigger_reboot('xen')
-    when "vmware"
-      package "python-suds"
-    when "lxc"
-      package "lxc"
+      case node[:nova][:libvirt_type]
+        when "kvm", "qemu"
+          if node.platform_version.to_f >= 12.0
+            package "qemu"
+          else
+            package "kvm"
+          end
 
-      service "boot.cgroup" do
+          # Install Ceph integration if needed
+          cinder_servers = search_env_filtered(:node, "roles:cinder-controller") || []
+          if cinder_servers.length > 0
+            cinder_servers[0][:cinder][:volumes].each do |volume|
+              next if volume['backend_driver'] != "rbd"
+
+              package "python-ceph"
+              package "ceph-common"
+
+              break
+            end
+          end
+
+          set_boot_kernel_and_trigger_reboot
+
+          if node[:nova][:libvirt_type] == "kvm"
+            if node.platform_version.to_f >= 12.0
+              package "qemu-kvm" if node[:architecture] == "x86_64"
+              package "qemu-block-rbd"
+            end
+
+            # load modules only when appropriate kernel is present
+            execute "loading kvm modules" do
+              command <<-EOF
+                  grep -qw vmx /proc/cpuinfo && /sbin/modprobe kvm-intel
+                  grep -qw svm /proc/cpuinfo && /sbin/modprobe kvm-amd
+                  grep -q POWER /proc/cpuinfo && /sbin/modprobe kvm
+                  /sbin/modprobe vhost-net
+                  /sbin/modprobe nbd
+              EOF
+              only_if { %x[uname -r].include?('default') }
+            end
+          end
+
+        when "xen"
+          %w{kernel-xen xen xen-tools openvswitch-kmp-xen}.each do |pkg|
+            package pkg do
+              action :install
+            end
+          end
+
+          service "xend" do
+            action :nothing
+            supports :status => true, :start => true, :stop => true, :restart => true
+            # restart xend only when xen kernel is already present
+            only_if { %x[uname -r].include?('xen') }
+          end
+
+          template "/etc/xen/xend-config.sxp" do
+            source "xend-config.sxp.erb"
+            group "root"
+            owner "root"
+            mode 0644
+            variables(
+              :node_platform => node[:platform],
+              :libvirt_migration => node[:nova]["use_migration"],
+              :shared_instances => node[:nova]["use_shared_instance_storage"],
+              :libvirtd_listen_tcp => node[:nova]["use_migration"] ? 1 : 0,
+              :libvirtd_listen_addr => Chef::Recipe::Barclamp::Inventory.get_network_by_type(node, "admin").address
+            )
+            notifies :restart, "service[xend]", :delayed
+          end
+
+          set_boot_kernel_and_trigger_reboot('xen')
+        when "lxc"
+          package "lxc"
+
+          service "boot.cgroup" do
+            action [:enable, :start]
+          end
+      end
+
+      # change libvirt to run qemu as user qemu
+      # make sure to only set qemu:kvm for kvm and qemu deployments, use
+      # system defaults for xen
+      if ['kvm','qemu'].include?(node[:nova][:libvirt_type])
+        libvirt_user = "qemu"
+        libvirt_group = "kvm"
+      else
+        libvirt_user = "root"
+        libvirt_group = "root"
+      end
+
+      template "/etc/libvirt/qemu.conf" do
+        source "qemu.conf.sle12.erb" if node.platform == "suse" && node.platform_version.to_f >= 12.0
+        group "root"
+        owner "root"
+        mode 0644
+        variables(
+            :user => libvirt_user,
+            :group => libvirt_group
+        )
+        notifies :restart, "service[libvirtd]"
+      end
+
+      service "libvirtd" do
         action [:enable, :start]
       end
-  end
+    else
+      service "libvirt-bin" do
+        action :nothing
+        supports :status => true, :start => true, :stop => true, :restart => true
+      end
 
-  # change libvirt to run qemu as user qemu
-  # make sure to only set qemu:kvm for kvm and qemu deployments, use
-  # system defaults for xen
-  if ['kvm','qemu'].include?(node[:nova][:libvirt_type])
-    libvirt_user = "qemu"
-    libvirt_group = "kvm"
-  else
-    libvirt_user = "root"
-    libvirt_group = "root"
-  end
+      cookbook_file "/etc/libvirt/qemu.conf" do
+        owner "root"
+        group "root"
+        mode "0644"
+        source "qemu.conf"
+        notifies :restart, "service[libvirt-bin]"
+      end
+    end
 
-  template "/etc/libvirt/qemu.conf" do
-    source "qemu.conf.sle12.erb" if node.platform == "suse" && node.platform_version.to_f >= 12.0
-    group "root"
-    owner "root"
-    mode 0644
-    variables(
-        :user => libvirt_user,
-        :group => libvirt_group
-    )
-    notifies :restart, "service[libvirtd]"
-  end
+    # kill all the libvirt default networks.
+    execute "Destroy the libvirt default network" do
+      command "virsh net-destroy default"
+      only_if "virsh net-list |grep -q default"
+    end
 
-  service "libvirtd" do
-    action [:enable, :start]
-  end
+    link "/etc/libvirt/qemu/networks/autostart/default.xml" do
+      action :delete
+    end
+
 end
 
 nova_package("compute")
@@ -248,13 +292,6 @@ cookbook_file "/etc/nova/nova-compute.conf" do
   mode 0644
   notifies :restart, "service[nova-compute]"
 end unless node.platform == "suse"
-
-# kill all the libvirt default networks.
-execute "Destroy the libvirt default network" do
-  command "virsh net-destroy default"
-  only_if "virsh net-list |grep -q default"
-end
-
 
 env_filter = " AND nova_config_environment:#{node[:nova][:config][:environment]}"
 nova_controller = search(:node, "roles:nova-multi-controller#{env_filter}")
@@ -322,6 +359,9 @@ end
 search_env_filtered(:node, "roles:nova-multi-compute-xen") do |n|
     ssh_auth_keys += n[:nova][:service_ssh_key]
 end
+search_env_filtered(:node, "roles:nova-multi-compute-docker") do |n|
+    ssh_auth_keys += n[:nova][:service_ssh_key]
+end
 search_env_filtered(:node, "roles:nova-multi-compute-qemu") do |n|
     ssh_auth_keys += n[:nova][:service_ssh_key]
 end
@@ -329,10 +369,6 @@ end
 file "#{node[:nova][:home_dir]}/.ssh/authorized_keys" do
   content ssh_auth_keys
   owner node[:nova][:user]
-end
-
-link "/etc/libvirt/qemu/networks/autostart/default.xml" do
-  action :delete
 end
 
 # enable or disable the ksm setting (performance)
@@ -378,21 +414,6 @@ if node[:nova][:libvirt_use_multipath]
     action [:enable]
     # on SLES12 there is no boot.multipath service, because of systemd
     not_if { node.platform == "suse" && node.platform_version.to_f >= 12.0 }
-  end
-end
-
-unless %w(redhat centos suse).include?(node.platform)
-  #since using native ovs we have to gain acess to lower networking functions
-  service "libvirt-bin" do
-    action :nothing
-    supports :status => true, :start => true, :stop => true, :restart => true
-  end
-  cookbook_file "/etc/libvirt/qemu.conf" do
-    owner "root"
-    group "root"
-    mode "0644"
-    source "qemu.conf"
-    notifies :restart, "service[libvirt-bin]"
   end
 end
 

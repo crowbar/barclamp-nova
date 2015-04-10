@@ -1928,6 +1928,8 @@ ram_allocation_ratio=<%= node[:nova][:scheduler][:ram_allocation_ratio] %>
 #compute_driver=<None>
 <% if @libvirt_type.eql?('vmware') -%>
 compute_driver=vmwareapi.VMwareVCDriver
+<% elsif @libvirt_type.eql?('docker') -%>
+compute_driver=novadocker.virt.docker.DockerDriver
 <% else -%>
 compute_driver=libvirt.LibvirtDriver
 <% end -%>
@@ -2455,6 +2457,11 @@ api_insecure=<%= @cinder_insecure ? 'True' : 'False' %>
 # value)
 #workers=<None>
 workers=<%= [node["cpu"]["total"], 2, 4].sort[1] %>
+
+
+[docker]
+# vif_driver=novadocker.virt.docker.vifs.DockerGenericVIFDriver
+# snapshots_directory=/var/tmp/my-snapshot-tempdir
 
 
 [ephemeral_storage_encryption]
