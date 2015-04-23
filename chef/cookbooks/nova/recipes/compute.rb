@@ -158,19 +158,6 @@ case node[:nova][:libvirt_type]
             package "kvm"
           end
 
-          # Install Ceph integration if needed
-          cinder_servers = search_env_filtered(:node, "roles:cinder-controller") || []
-          if cinder_servers.length > 0
-            cinder_servers[0][:cinder][:volumes].each do |volume|
-              next if volume['backend_driver'] != "rbd"
-
-              package "python-ceph"
-              package "ceph-common"
-
-              break
-            end
-          end
-
           set_boot_kernel_and_trigger_reboot
 
           if node[:nova][:libvirt_type] == "kvm"

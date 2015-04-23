@@ -1,57 +1,100 @@
-include_recipe "ceph::keyring"
+#
+# Copyright (c) 2015 SUSE Linux GmbH.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+#
+# Cookbook Name:: nova
+# Recipe:: ceph
+#
 
-case node[:platform]
-when "suse"
-  package "python-ceph"
-  package "qemu-block-rbd" do
-    action :install
-    only_if { node[:platform_version].to_f >= 12.0 }
+has_internal = false
+has_external = false
+
+cinder_controller = search_env_filtered(:node, "roles:cinder-controller").first
+return if cinder_controller.nil?
+
+# First loop to find if we have internal/external cluster
+cinder_controller[:cinder][:volumes].each_with_index do |volume, volid|
+  next unless volume[:backend_driver] == "rbd"
+
+  has_internal ||= true if volume[:rbd][:use_crowbar]
+  has_external ||= true unless volume[:rbd][:use_crowbar]
+end
+
+if has_internal
+  ceph_env_filter = " AND ceph_config_environment:ceph-config-default"
+  ceph_servers = search(:node, "roles:ceph-osd#{ceph_env_filter}") || []
+  if ceph_servers.length > 0
+    include_recipe "ceph::keyring"
+  else
+    message = "Ceph was not deployed with Crowbar yet!"
+    Chef::Log.fatal(message)
+    raise message
   end
 end
 
-# TODO cluster name
-cluster = 'ceph'
-
-cinder_controller = search(:node, "roles:cinder-controller")
-if cinder_controller.length > 0
-  cinder_pools = []
-  cinder_controller[0][:cinder][:volumes].each do |volume|
-    next unless (volume['backend_driver'] == "rbd") && volume['rbd']['use_crowbar']
-    cinder_pools << volume[:rbd][:pool]
+if has_external
+  # Ensure ceph is available here
+  if node[:platform] == "suse"
+    # install package in compile phase because we will run "ceph -s"
+    package "ceph-common" do
+      action :nothing
+    end.run_action(:install)
   end
+end
 
-  nova_user = 'nova'
+# Second loop to do our setup
+cinder_controller[:cinder][:volumes].each_with_index do |volume, volid|
+  next unless volume[:backend_driver] == "rbd"
 
-  nova_uuid = is_crowbar? ? "" : node["ceph"]["config"]["fsid"]
-  if nova_uuid.nil? || nova_uuid.empty?
-    mons = get_mon_nodes("ceph_admin-secret:*")
-    if mons.empty? then
-      Chef::Log.fatal("No ceph-mon found")
-      raise "No ceph-mon found"
+  if volume[:rbd][:use_crowbar]
+    ceph_conf = "/etc/ceph/ceph.conf"
+    admin_keyring = "/etc/ceph/ceph.client.admin.keyring"
+  else
+    ceph_conf = volume[:rbd][:config_file]
+    admin_keyring = volume[:rbd][:admin_keyring]
+
+    if ceph_conf.empty? || !File.exists?(ceph_conf)
+      Chef::Log.info("Ceph configuration file is missing; skipping the ceph setup for backend #{volume[:backend_name]}")
+      next
     end
 
-    nova_uuid = mons[0]["ceph"]["config"]["fsid"]
+    if !admin_keyring.empty? && File.exists?(admin_keyring)
+      Chef::Log.info("Using external ceph cluster for cinder #{volume[:backend_name]} backend, with automatic setup.")
+    else
+      Chef::Log.info("Using external ceph cluster for cinder #{volume[:backend_name]} backend, with no automatic setup.")
+      next
+    end
+
+    cmd = ["ceph", "-k", admin_keyring, "-c", ceph_conf, "-s"]
+    check_ceph = Mixlib::ShellOut.new(cmd)
+
+    unless check_ceph.run_command.stdout.match("(HEALTH_OK|HEALTH_WARN)")
+      Chef::Log.info("Ceph cluster is not healthy; skipping the ceph setup for backend #{volume[:backend_name]}")
+      next
+    end
   end
 
-  allow_pools = cinder_pools.map{|p| "allow rwx pool=#{p}"}.join(", ")
-  ceph_caps = { 'mon' => 'allow r', 'osd' => "allow class-read object_prefix rbd_children, #{allow_pools}" }
+  rbd_user = volume[:rbd][:user]
+  rbd_uuid = volume[:rbd][:secret_uuid]
 
-  ceph_client nova_user do
-    caps ceph_caps
-    keyname "client.#{nova_user}"
-    filename "/etc/ceph/ceph.client.#{nova_user}.keyring"
-    owner "root"
-    group node[:nova][:group]
-    mode 0640
-  end
-
-  secret_file_path = "/etc/ceph/ceph-secret.xml"
-
+  secret_file_path = "/etc/ceph/ceph-secret-#{rbd_uuid}.xml"
+  
   file secret_file_path do
     owner "root"
     group "root"
     mode "0640"
-    content "<secret ephemeral='no' private='no'> <uuid>#{nova_uuid}</uuid><usage type='ceph'> <name>client.#{nova_user} secret</name> </usage> </secret>"
+    content "<secret ephemeral='no' private='no'> <uuid>#{rbd_uuid}</uuid><usage type='ceph'> <name>client.#{rbd_user} secret</name> </usage> </secret>"
   end #file secret_file_path
 
   ruby_block "save nova key as libvirt secret" do
@@ -60,7 +103,7 @@ if cinder_controller.length > 0
         # First remove conflicting secrets due to same usage name
         secret_list = %x[ virsh secret-list 2> /dev/null ]
 
-        secret_lines = secret_list.split("\n")
+        secret_lines = secret_list.strip.split("\n")
         if secret_lines.length < 2 || !secret_lines[0].start_with?("UUID") || !secret_lines[1].start_with?("----")
           raise "cannot fetch list of libvirt secret"
         end
@@ -79,10 +122,10 @@ if cinder_controller.length > 0
 
           undefine = false
 
-          if secret_uuid == nova_uuid
-            undefine = true if secret_usage != "client.#{nova_user} secret"
+          if secret_uuid == rbd_uuid
+            undefine = true if secret_usage != "client.#{rbd_user} secret"
           else
-            undefine = true if secret_usage == "client.#{nova_user} secret"
+            undefine = true if secret_usage == "client.#{rbd_user} secret"
           end
 
           if undefine
@@ -91,24 +134,19 @@ if cinder_controller.length > 0
         end
 
         # Now add our secret and its value
-        client_key = %x[ ceph auth get-key client.'#{nova_user}' ]
+        client_key = %x[ ceph auth get-key client.'#{rbd_user}' ]
         raise 'getting nova client key failed' unless $?.exitstatus == 0
 
-        secret = %x[ virsh secret-get-value #{nova_uuid} 2> /dev/null ].chomp.strip
+        secret = %x[ virsh secret-get-value #{rbd_uuid} 2> /dev/null ].chomp.strip
         if secret != client_key
           %x[ virsh secret-define --file '#{secret_file_path}' ]
           raise 'generating secret file failed' unless $?.exitstatus == 0
 
-          %x[ virsh secret-set-value --secret '#{nova_uuid}' --base64 '#{client_key}' ]
+          %x[ virsh secret-set-value --secret '#{rbd_uuid}' --base64 '#{client_key}' ]
           raise 'importing secret file failed' unless $?.exitstatus == 0
         end
       end
     end
   end
 
-  if node['ceph']['nova-user'] != nova_user || node['ceph']['nova-uuid'] != nova_uuid
-    node['ceph']['nova-user'] = nova_user
-    node['ceph']['nova-uuid'] = nova_uuid
-    node.save
-  end
 end
