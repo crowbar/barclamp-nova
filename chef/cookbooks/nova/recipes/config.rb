@@ -107,8 +107,7 @@ end
 
 keystone_settings = KeystoneHelper.keystone_settings(node, @cookbook_name)
 
-ceph_user = node[:nova][:rbd][:user]
-ceph_uuid = node[:nova][:rbd][:secret_uuid]
+rbd_enabled = false
 
 cinder_servers = search_env_filtered(:node, "roles:cinder-controller") || []
 if cinder_servers.length > 0
@@ -116,30 +115,20 @@ if cinder_servers.length > 0
   cinder_insecure = cinder_server[:cinder][:api][:protocol] == 'https' && cinder_server[:cinder][:ssl][:insecure]
 
   if node.roles.include? "nova-multi-compute-kvm"
-    include_ceph_recipe = false
-
     cinder_server[:cinder][:volumes].each do |volume|
-      next if volume['backend_driver'] != "rbd"
-
-      # if include_ceph_recipe is already true, avoid re-entering the if (and executing a slow search)
-      if volume['rbd']['use_crowbar'] && !include_ceph_recipe
-        ceph_env_filter = " AND ceph_config_environment:ceph-config-default"
-        ceph_servers = search(:node, "roles:ceph-osd#{ceph_env_filter}") || []
-        if ceph_servers.length > 0
-          include_ceph_recipe = true
-        end
-      end
-    end
-
-    if include_ceph_recipe
-      include_recipe "nova::ceph"
-      ceph_user = node['ceph']['nova-user']
-      ceph_uuid = node['ceph']['nova-uuid']
+      rbd_enabled = true if volume['backend_driver'] == "rbd"
     end
   end
 else
   cinder_insecure = false
 end
+
+if rbd_enabled
+  include_recipe "nova::ceph"
+end
+
+ceph_user = node[:nova][:rbd][:user]
+ceph_uuid = node[:nova][:rbd][:secret_uuid]
 
 neutron_servers = search_env_filtered(:node, "roles:neutron-server")
 if neutron_servers.length > 0
