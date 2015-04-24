@@ -160,8 +160,9 @@ cinder_controller[:cinder][:volumes].each_with_index do |volume, volid|
           virsh_secret_set_value.run_command
           virsh_secret_set_value.error!
         end
+
+        File.delete(secret_file_path)
       end
     end
   end
-
 end
