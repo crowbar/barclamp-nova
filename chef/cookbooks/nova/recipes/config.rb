@@ -132,7 +132,7 @@ if cinder_servers.length > 0
     end
 
     if include_ceph_recipe
-      include_recipe('ceph::nova')
+      include_recipe "nova::ceph"
       ceph_user = node['ceph']['nova-user']
       ceph_uuid = node['ceph']['nova-uuid']
     end
