@@ -42,7 +42,3 @@ crowbar:
 
 smoketest:
   timeout: 2400
-
-git_repo:
-  - 'nova https://github.com/openstack/nova.git stable/juno'
-  - 'novnc https://github.com/kanaka/noVNC.git master'

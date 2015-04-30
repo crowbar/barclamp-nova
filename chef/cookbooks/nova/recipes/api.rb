@@ -19,9 +19,6 @@
 
 include_recipe "nova::config"
 
-nova_path = "/opt/nova"
-venv_path = node[:nova][:use_virtualenv] ? "#{nova_path}/.venv" : nil
-
 keystone_settings = KeystoneHelper.keystone_settings(node, @cookbook_name)
 
 nova_package "api" do
