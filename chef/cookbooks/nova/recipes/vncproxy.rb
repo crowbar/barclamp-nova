@@ -30,13 +30,9 @@ end
 # forcing novnc is deliberate on suse
 if node[:nova][:use_novnc]
   if %w(redhat centos suse).include?(node.platform)
-    package "openstack-nova-novncproxy" do
-      action :install
-    end
+    package "openstack-nova-novncproxy"
     unless %w(redhat centos).include?(node.platform)
-      package "openstack-nova-consoleauth" do
-        action :install
-      end
+      package "openstack-nova-consoleauth"
     end
   else
     package "nova-novncproxy"
