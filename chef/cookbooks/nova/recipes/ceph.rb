@@ -57,6 +57,9 @@ end
 cinder_controller[:cinder][:volumes].each_with_index do |volume, volid|
   next unless volume[:backend_driver] == "rbd"
 
+  rbd_user = volume[:rbd][:user]
+  rbd_uuid = volume[:rbd][:secret_uuid]
+
   if volume[:rbd][:use_crowbar]
     ceph_conf = "/etc/ceph/ceph.conf"
     admin_keyring = "/etc/ceph/ceph.client.admin.keyring"
@@ -70,23 +73,23 @@ cinder_controller[:cinder][:volumes].each_with_index do |volume, volid|
     end
 
     if !admin_keyring.empty? && File.exists?(admin_keyring)
-      Chef::Log.info("Using external ceph cluster for cinder #{volume[:backend_name]} backend, with automatic setup.")
+      cmd = ["ceph", "-k", admin_keyring, "-c", ceph_conf, "-s"]
+      check_ceph = Mixlib::ShellOut.new(cmd)
+
+      unless check_ceph.run_command.stdout.match("(HEALTH_OK|HEALTH_WARN)")
+        Chef::Log.info("Ceph cluster is not healthy; skipping the ceph setup for backend #{volume[:backend_name]}")
+        next
+      end
     else
-      Chef::Log.info("Using external ceph cluster for cinder #{volume[:backend_name]} backend, with no automatic setup.")
-      next
+      # Check if rbd keyring was uploaded manually by user
+      client_keyring = "/etc/ceph/ceph.client.#{rbd_user}.keyring"
+      unless File.exists?(client_keyring)
+        Chef::Log.info("Ceph user keyring wasn't provided for backend #{volume[:backend_name]}")
+        next
+      end
     end
 
-    cmd = ["ceph", "-k", admin_keyring, "-c", ceph_conf, "-s"]
-    check_ceph = Mixlib::ShellOut.new(cmd)
-
-    unless check_ceph.run_command.stdout.match("(HEALTH_OK|HEALTH_WARN)")
-      Chef::Log.info("Ceph cluster is not healthy; skipping the ceph setup for backend #{volume[:backend_name]}")
-      next
-    end
   end
-
-  rbd_user = volume[:rbd][:user]
-  rbd_uuid = volume[:rbd][:secret_uuid]
 
   secret_file_path = "/etc/ceph/ceph-secret-#{rbd_uuid}.xml"
   
@@ -140,11 +143,25 @@ cinder_controller[:cinder][:volumes].each_with_index do |volume, volid|
           end
         end
 
-        # Now add our secret and its value
-        cmd = ["ceph", "-k", admin_keyring, "-c", ceph_conf, "auth", "get-key", "client.#{rbd_user}" ]
-        ceph_get_key = Mixlib::ShellOut.new(cmd)
-        client_key = ceph_get_key.run_command.stdout
-        ceph_get_key.error!
+        if !admin_keyring.empty? && File.exists?(admin_keyring)
+          # Now add our secret and its value
+          cmd = ["ceph", "-k", admin_keyring, "-c", ceph_conf, "auth", "get-key", "client.#{rbd_user}" ]
+          ceph_get_key = Mixlib::ShellOut.new(cmd)
+          client_key = ceph_get_key.run_command.stdout.strip
+          ceph_get_key.error!
+        else
+          # Check if rbd keyring was uploaded manually by user
+          client_keyring = "/etc/ceph/ceph.client.#{rbd_user}.keyring"
+          if File.exists?(client_keyring)
+            f = File.open(client_keyring)
+            f.each do |line|
+              if match = line.match("key\s*=\s*(.+)")
+                client_key = match[1]
+                break
+              end
+            end
+          end
+        end
 
         cmd = ["virsh", "secret-get-value", rbd_uuid ]
         virsh_secret_get_value = Mixlib::ShellOut.new(cmd)
