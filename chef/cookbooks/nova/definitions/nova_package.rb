@@ -18,7 +18,6 @@ define :nova_package, :enable => true, :use_pacemaker_provider => false do
 
   package nova_name do
     package_name "openstack-#{nova_name}" if %w(redhat centos suse).include?(node.platform)
-    options "--force-yes -o Dpkg::Options::=\"--force-confdef\"" unless %w(redhat centos suse).include?(node.platform)
     action :install
   end
 

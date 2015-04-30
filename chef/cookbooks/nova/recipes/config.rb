@@ -25,8 +25,6 @@ node.set[:nova][:my_ip] = Chef::Recipe::Barclamp::Inventory.get_network_by_type(
 package "nova-common" do
   if %w(redhat centos suse).include?(node.platform)
     package_name "openstack-nova"
-  else
-    options "--force-yes -o Dpkg::Options::=\"--force-confdef\""
   end
   action :install
 end

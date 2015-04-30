@@ -23,10 +23,7 @@ include_recipe "nova::config"
 unless %w(redhat centos suse).include?(node.platform)
   pkgs=%w[python-numpy nova-console nova-consoleauth]
   pkgs.each do |pkg|
-    package pkg do
-      action :install
-      options "--force-yes"
-    end
+    package pkg
   end
 end
 
@@ -42,10 +39,7 @@ if node[:nova][:use_novnc]
       end
     end
   else
-    package "nova-novncproxy" do
-      action :install
-      options "--force-yes"
-    end
+    package "nova-novncproxy"
     execute "Fix permission Bug" do
       command "sed -i 's/nova$/root/g' /etc/init/nova-novncproxy.conf"
       action :run
