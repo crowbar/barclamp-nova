@@ -16,21 +16,9 @@ define :nova_package, :enable => true, :use_pacemaker_provider => false do
 
   nova_name="nova-#{params[:name]}"
 
-  if node[:nova][:use_gitrepo]
-
-    nova_path = "/opt/nova"
-    venv_path = node[:nova][:use_virtualenv] ? "#{nova_path}/.venv" : nil
-
-    link_service nova_name do
-      user node[:nova][:user]
-      virtualenv venv_path
-    end
-  else
-    package nova_name do
-      package_name "openstack-#{nova_name}" if %w(redhat centos suse).include?(node.platform)
-      options "--force-yes -o Dpkg::Options::=\"--force-confdef\"" unless %w(redhat centos suse).include?(node.platform)
-      action :install
-    end
+  package nova_name do
+    package_name "openstack-#{nova_name}" if %w(redhat centos suse).include?(node.platform)
+    action :install
   end
 
   service nova_name do

@@ -22,27 +22,11 @@
 node.set[:nova][:my_ip] = Chef::Recipe::Barclamp::Inventory.get_network_by_type(node, "admin").address
 
 
-unless node[:nova][:use_gitrepo]
-  package "nova-common" do
-    if %w(redhat centos suse).include?(node.platform)
-      package_name "openstack-nova"
-    else
-      options "--force-yes -o Dpkg::Options::=\"--force-confdef\""
-    end
-    action :install
+package "nova-common" do
+  if %w(redhat centos suse).include?(node.platform)
+    package_name "openstack-nova"
   end
-
-else
-  nova_path = "/opt/nova"
-  venv_path = node[:nova][:use_virtualenv] ? "#{nova_path}/.venv" : nil
-  venv_prefix_path = node[:nova][:use_virtualenv] ? ". #{venv_path}/bin/activate && " : nil
-
-  pfs_and_install_deps "nova" do
-    virtualenv venv_path
-    # enable access to system site packages only for this virtualenv
-    system_site true
-    wrap_bins(["nova-rootwrap", "nova", "nova-manage"])
-  end
+  action :install
 end
 
 db_settings = fetch_database_settings
@@ -119,54 +103,6 @@ memcached_servers.sort!
 directory "/etc/nova" do
    mode 0755
    action :create
-end
-
-if node[:nova][:use_gitrepo]
-  package("libvirt-bin")
-
-  create_user_and_dirs node[:nova][:user] do
-    opt_dirs [node[:nova][:instances_path]]
-  end
-
-  execute "cp_policy.json" do
-    command "cp #{nova_path}/etc/nova/policy.json /etc/nova/"
-    creates "/etc/nova/policy.json"
-  end
-
-  template "/etc/sudoers.d/nova-rootwrap" do
-    source "nova-rootwrap.erb"
-    mode 0440
-    variables(:user => node[:nova][:user])
-  end
-
-  bash "deploy_filters" do
-    cwd nova_path
-    code <<-EOH
-    ### that was copied from devstack's stack.sh
-    if [[ -d $NOVA_DIR/etc/nova/rootwrap.d ]]; then
-      # Wipe any existing rootwrap.d files first
-      if [[ -d $NOVA_CONF_DIR/rootwrap.d ]]; then
-          rm -rf $NOVA_CONF_DIR/rootwrap.d
-      fi
-      # Deploy filters to /etc/nova/rootwrap.d
-      mkdir -m 755 $NOVA_CONF_DIR/rootwrap.d
-      cp $NOVA_DIR/etc/nova/rootwrap.d/*.filters $NOVA_CONF_DIR/rootwrap.d
-      chown -R root:root $NOVA_CONF_DIR/rootwrap.d
-      chmod 644 $NOVA_CONF_DIR/rootwrap.d/*
-      # Set up rootwrap.conf, pointing to /etc/nova/rootwrap.d
-      cp $NOVA_DIR/etc/nova/rootwrap.conf $NOVA_CONF_DIR/
-      sed -e "s:^filters_path=.*$:filters_path=$NOVA_CONF_DIR/rootwrap.d:" -i $NOVA_CONF_DIR/rootwrap.conf
-      chown root:root $NOVA_CONF_DIR/rootwrap.conf
-      chmod 0644 $NOVA_CONF_DIR/rootwrap.conf
-    fi
-    ### end
-  EOH
-  environment({
-    'NOVA_DIR' => nova_path,
-    'NOVA_CONF_DIR' => '/etc/nova',
-  })
-  not_if {File.exists?("/etc/nova/rootwrap.d")}
-  end
 end
 
 keystone_settings = KeystoneHelper.keystone_settings(node, @cookbook_name)
@@ -364,7 +300,7 @@ template "/etc/nova/nova.conf" do
             :bind_port_objectstore => bind_port_objectstore,
             :bind_port_novncproxy => bind_port_novncproxy,
             :bind_port_xvpvncproxy => bind_port_xvpvncproxy,
-            :dhcpbridge => "#{node[:nova][:use_gitrepo] ? nova_path:"/usr"}/bin/nova-dhcpbridge",
+            :dhcpbridge => "/usr/bin/nova-dhcpbridge",
             :database_connection => database_connection,
             :rabbit_settings => fetch_rabbitmq_settings,
             :libvirt_type => node[:nova][:libvirt_type],
@@ -405,10 +341,8 @@ template "/etc/nova/nova.conf" do
             )
 end
 
-unless node[:nova][:use_gitrepo]
-  # dependency for crowbar-nova-set-availability-zone
-  package "python-novaclient"
-end
+# dependency for crowbar-nova-set-availability-zone
+package "python-novaclient"
 
 cookbook_file "crowbar-nova-set-availability-zone" do
   source "crowbar-nova-set-availability-zone"

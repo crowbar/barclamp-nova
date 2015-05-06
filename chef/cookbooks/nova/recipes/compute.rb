@@ -314,16 +314,6 @@ unless node[:nova][:user].empty? or node["etc"]["passwd"][node[:nova][:user]].ni
 end
 
 
-if node[:nova][:use_gitrepo]
-  # This account needs to be ssh'able, so must have a login shell
-  user node[:nova][:user] do
-    shell "/bin/bash"
-    supports :manage_home => true
-    home node[:nova][:home_dir]
-    gid "libvirtd"
-  end
-end
-
 # Create and distribute ssh keys for nova user on all compute nodes
 
 # if for some reason, we only have one of the two keys, we recreate the keys
