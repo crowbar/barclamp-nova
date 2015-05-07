@@ -91,15 +91,6 @@ cinder_controller[:cinder][:volumes].each_with_index do |volume, volid|
 
   end
 
-  secret_file_path = "/etc/ceph/ceph-secret-#{rbd_uuid}.xml"
-  
-  file secret_file_path do
-    owner "root"
-    group "root"
-    mode "0640"
-    content "<secret ephemeral='no' private='no'> <uuid>#{rbd_uuid}</uuid><usage type='ceph'> <name>client.#{rbd_user} secret</name> </usage> </secret>"
-  end #file secret_file_path
-
   ruby_block "save nova key as libvirt secret" do
     block do
       # Check if libvirt is installed and started
@@ -168,6 +159,10 @@ cinder_controller[:cinder][:volumes].each_with_index do |volume, volid|
         secret = virsh_secret_get_value.run_command.stdout.chomp.strip
 
         if secret != client_key
+          secret_file_path = "/etc/ceph/ceph-secret-#{rbd_uuid}.xml"
+          secret_file_content = "<secret ephemeral='no' private='no'> <uuid>#{rbd_uuid}</uuid><usage type='ceph'> <name>client.#{rbd_user} secret</name> </usage> </secret>"
+          File.write(secret_file_path, secret_file_content)
+
           cmd = ["virsh", "secret-define", "--file", secret_file_path]
           virsh_secret_define = Mixlib::ShellOut.new(cmd)
           secret_uuid_out = virsh_secret_define.run_command.stdout
@@ -180,9 +175,9 @@ cinder_controller[:cinder][:volumes].each_with_index do |volume, volid|
           else
             raise "Libvirt secret for UUID #{rbd_uuid} was not created properly."
           end
-        end
 
-        File.delete(secret_file_path)
+          File.delete(secret_file_path)
+        end
       end
     end
   end
