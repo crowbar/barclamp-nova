@@ -3166,6 +3166,9 @@ block_migration_flag=VIR_MIGRATE_UNDEFINE_SOURCE, VIR_MIGRATE_PEER2PEER, VIR_MIG
 # rbd, default. If default is specified, then use_cow_images
 # flag is used instead of this one. (string value)
 #images_type=default
+<% if @libvirt_type.eql?('kvm') and @use_ephemeral_rbd %>
+images_type=rbd
+<% end %>
 
 # LVM Volume Group that is used for VM images, when you
 # specify images_type=lvm. (string value)
@@ -3183,12 +3186,16 @@ block_migration_flag=VIR_MIGRATE_UNDEFINE_SOURCE, VIR_MIGRATE_PEER2PEER, VIR_MIG
 # (integer value)
 #volume_clear_size=0
 
+<% if @libvirt_type.eql?('kvm') and @use_ephemeral_rbd %>
 # The RADOS pool in which rbd volumes are stored (string
 # value)
 #images_rbd_pool=rbd
+images_rbd_pool=<%= @rbd_pool %>
 
 # Path to the ceph configuration file to use (string value)
 #images_rbd_ceph_conf=
+images_rbd_ceph_conf=/etc/ceph/ceph.conf
+<% end %>
 
 # Discard option for nova managed disks (valid options are:
 # ignore, unmap). Need Libvirt(1.0.6) Qemu1.5 (raw format)
