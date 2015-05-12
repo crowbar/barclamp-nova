@@ -3255,12 +3255,10 @@ block_migration_flag=VIR_MIGRATE_UNDEFINE_SOURCE, VIR_MIGRATE_PEER2PEER, VIR_MIG
 # The RADOS client name for accessing rbd volumes (string
 # value)
 #rbd_user=<None>
-<%= "rbd_user=#{@ceph_user}" if @ceph_user %>
 
 # The libvirt UUID of the secret for the rbd_uservolumes
 # (string value)
 #rbd_secret_uuid=<None>
-<%= "rbd_secret_uuid=#{@ceph_uuid}" if @ceph_uuid %>
 
 # Directory where the NFS volume is mounted on the compute
 # node (string value)
