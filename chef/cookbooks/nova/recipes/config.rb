@@ -201,6 +201,10 @@ if rbd_enabled
   include_recipe "nova::ceph"
 end
 
+# FIXME: These attributes will be removed or re-used
+# with ephemeral storage change. Right now they are 
+# disabled in nova.conf to prevent overwritting 
+# multi Ceph backends from Cinder
 ceph_user = node[:nova][:rbd][:user]
 ceph_uuid = node[:nova][:rbd][:secret_uuid]
 
