@@ -19,10 +19,11 @@
 
 package "memcached"
 
-if node.platform_family? "rhel"
-  package "python-memcached"
-elsif node.platform_family? "suse"
-  package "python-python-memcached"
+case node[:platform_family]
+  when "rhel"
+    package "python-memcached"
+  when "suse"
+    package "python-python-memcached"
 end
 
 node[:memcached][:listen] = node[:nova][:my_ip]
