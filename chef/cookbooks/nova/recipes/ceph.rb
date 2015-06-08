@@ -102,7 +102,7 @@ cinder_controller[:cinder][:volumes].each_with_index do |volume, volid|
         virsh_secret.error!
 
         secret_lines = secret_list.strip.split("\n")
-        if secret_lines.length < 2 || !secret_lines[0].start_with?("UUID") || !secret_lines[1].start_with?("----")
+        if secret_lines.length < 2 || !secret_lines[0].lstrip.start_with?("UUID") || !secret_lines[1].start_with?("----")
           raise "cannot fetch list of libvirt secret"
         end
         secret_lines.shift(2)
