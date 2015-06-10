@@ -46,6 +46,17 @@
         "datastore": "",
         "interface": "vmnic0"
       },
+      "zvm": {
+        "zvm_xcat_server": "",
+        "zvm_xcat_username": "",
+        "zvm_xcat_password": "",
+        "zvm_diskpool": "",
+        "zvm_diskpool_type": "",
+        "zvm_host": "",
+        "zvm_scsi_pool": "",
+        "zvm_user_profile": "",
+        "zvm_xcat_master": ""
+      },
       "ssl": {
         "enabled": false,
         "certfile": "/etc/nova/ssl/certs/signing_cert.pem",
@@ -68,7 +79,7 @@
     "nova": {
       "crowbar-revision": 0,
       "crowbar-applied": false,
-      "schema-revision": 31,
+      "schema-revision": 32,
       "element_states": {
         "nova-multi-controller": [ "readying", "ready", "applying" ],
         "nova-multi-compute-docker": [ "readying", "ready", "applying" ],
@@ -76,7 +87,8 @@
         "nova-multi-compute-kvm": [ "readying", "ready", "applying" ],
         "nova-multi-compute-qemu": [ "readying", "ready", "applying" ],
         "nova-multi-compute-vmware": [ "readying", "ready", "applying" ],
-        "nova-multi-compute-xen": [ "readying", "ready", "applying" ]
+        "nova-multi-compute-xen": [ "readying", "ready", "applying" ],
+        "nova-multi-compute-zvm": [ "readying", "ready", "applying" ]
       },
       "elements": {},
       "element_order": [
@@ -87,7 +99,8 @@
           "nova-multi-compute-kvm",
           "nova-multi-compute-qemu",
           "nova-multi-compute-vmware",
-          "nova-multi-compute-xen"
+          "nova-multi-compute-xen",
+          "nova-multi-compute-zvm"
         ]
       ],
       "element_run_list_order": {
@@ -97,7 +110,8 @@
         "nova-multi-compute-kvm": 97,
         "nova-multi-compute-qemu": 97,
         "nova-multi-compute-vmware": 97,
-        "nova-multi-compute-xen": 97
+        "nova-multi-compute-xen": 97,
+        "nova-multi-compute-zvm": 97
       },
       "config": {
         "environment": "nova-config-base",

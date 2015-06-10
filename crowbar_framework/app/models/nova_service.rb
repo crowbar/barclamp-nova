@@ -74,6 +74,13 @@ class NovaService < PacemakerServiceObject
             "windows" => "/.*/"
           }
         },
+        "nova-multi-compute-zvm" => {
+          "unique" => false,
+          "count" => 1,
+          "exclude_platform" => {
+            "windows" => "/.*/"
+          }
+        },
         "nova-multi-compute-xen" => {
           "unique" => false,
           "count" => -1,
@@ -137,6 +144,8 @@ class NovaService < PacemakerServiceObject
     qemu = non_kvm - xen
 
     # do not use docker by default
+    # do not use zvm by default
+    #   TODO add it here once a compute node can run inside z/VM
     base["deployment"]["nova"]["elements"] = {
       "nova-multi-controller" => [ controller.name ],
       "nova-multi-compute-hyperv" => hyperv.map { |x| x.name },
@@ -262,6 +271,9 @@ class NovaService < PacemakerServiceObject
     elements["nova-multi-compute-vmware"].each do |n|
         nodes[n] += 1
     end unless elements["nova-multi-compute-vmware"].nil?
+    elements["nova-multi-compute-zvm"].each do |n|
+        nodes[n] += 1
+    end unless elements["nova-multi-compute-zvm"].nil?
     elements["nova-multi-compute-xen"].each do |n|
         nodes[n] += 1
         node = NodeObject.find_node_by_name(n)

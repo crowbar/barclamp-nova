@@ -48,6 +48,17 @@ en:
           datastore: 'Datastore Name'
           interface: 'VLAN Interface'
         vmware_cluster_hint: 'A comma-separated list of cluster names'
+        zvm_header: 'z/VM Configuration'
+        zvm:
+          zvm_xcat_server: 'xCAT Host/IP Address'
+          zvm_xcat_username: 'xCAT Username'
+          zvm_xcat_password: 'xCAT Password'
+          zvm_diskpool: 'z/VM disk pool for ephemeral disks'
+          zvm_diskpool_type: 'z/VM disk pool type for ephemeral disks (ECKD or FBA)'
+          zvm_host: 'z/VM Host Managed By xCAT MN'
+          zvm_scsi_pool: 'Default zFCP SCSI Disk Pool'
+          zvm_user_profile: 'User profile for creating a z/VM userid'
+          zvm_xcat_master: 'The xCAT MN node name'
         ssl_header: 'SSL Support'
         ssl:
           enabled: 'Protocol'

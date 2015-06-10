@@ -106,6 +106,9 @@ if %w(redhat centos suse).include?(node.platform)
 end
 
 case node[:nova][:libvirt_type]
+  when "zvm"
+    package "openstack-nova-virt-zvm"
+
   when "vmware"
     package "python-suds"
 
@@ -340,6 +343,9 @@ search_env_filtered(:node, "roles:nova-multi-compute-docker") do |n|
     ssh_auth_keys += n[:nova][:service_ssh_key]
 end
 search_env_filtered(:node, "roles:nova-multi-compute-qemu") do |n|
+    ssh_auth_keys += n[:nova][:service_ssh_key]
+end
+search_env_filtered(:node, "roles:nova-multi-compute-zvm") do |n|
     ssh_auth_keys += n[:nova][:service_ssh_key]
 end
 

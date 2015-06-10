@@ -1119,6 +1119,9 @@ instance_usage_audit=True
 # Template string to be used to generate instance names
 # (string value)
 #instance_name_template=instance-%08x
+<% if @libvirt_type.eql?('zvm') -%>
+instance_name_template=zvm%05x
+<% end %>
 
 # Template string to be used to generate snapshot names
 # (string value)
@@ -1930,6 +1933,8 @@ ram_allocation_ratio=<%= node[:nova][:scheduler][:ram_allocation_ratio] %>
 compute_driver=vmwareapi.VMwareVCDriver
 <% elsif @libvirt_type.eql?('docker') -%>
 compute_driver=novadocker.virt.docker.DockerDriver
+<% elsif @libvirt_type.eql?('zvm') -%>
+compute_driver=nova.virt.zvm.ZVMDriver
 <% else -%>
 compute_driver=libvirt.LibvirtDriver
 <% end -%>
@@ -4076,3 +4081,132 @@ cluster_name="<%= cluster %>"
 #sg_retry_interval=5
 
 
+[zvm]
+
+#
+# Options defined in nova.virt.zvm.ZVMDriver
+#
+
+# The config driver format, should be tgz
+config_drive_format=tgz
+
+# Set file system format for ephemeral disk, this value can be set to ext2, ext3 or ext4,
+# please note that the file system specified must be one that the Linux distro on the deployed
+# system allows to be mounted in read-write mode. If this option is not specified in nova.conf,
+# the created ephemeral disk will use default ext3 as its file system.
+#default_ephemeral_format=ext3
+
+# z/VM only suport config drive for cloud-init
+force_config_drive=true
+
+# The host is used to distinguish different nova compute host, it can be same with zvm_host
+#host=zvmhost1
+<%= "host=#{node[:nova][:zvm][:zvm_host]}" if @libvirt_type.eql?('zvm') %>
+
+# NOT z/VM specific, set it default 86400(s) = 24hours
+#image_cache_manager_interval=86400
+
+# Default instance name template (resides in DEFAULT section) this is just for reference here
+# There is restriction that you should define the template with length 8, and first 3 should be
+# characters, should not use “rsz” or “RSZ” as the first 3 characters.
+#instance_name_template = zvm%05x
+
+# Live migration will not success with default rpc value, set to 180
+#rpc_response_timeout=180
+
+# The threshold when xCAT MN disk space is not big enough(default is 1G), purge operation will start
+#xcat_free_space_threshold=1
+
+#xCAT image that not used for a long time (default is 30 days) will be purged
+#xcat_image_clean_period=30
+
+# Define whether to inject the password in config drive, if zvm_config_drive_inject_password
+# is set to be True, the default os root password for the new booted vm will be the random value of
+# adminPass property that is shown in the output of nova boot command.
+#zvm_config_drive_inject_password=False
+
+# The disk pool name that xCAT will allocate disk from for new servers
+# Note: The zvm_diskpool name is the name of the storage ’group’ defined in the Directory Manager
+#zvm_diskpool=
+<%= "zvm_diskpool=#{node[:nova][:zvm][:zvm_diskpool]}" if @libvirt_type.eql?('zvm') %>
+
+# The disk pool type (can be FBA or ECKD )
+#zvm_diskpool_type=FBA
+<%= "zvm_diskpool_type=#{node[:nova][:zvm][:zvm_diskpool_type]}" if @libvirt_type.eql?('zvm') %>
+
+# The list of FCPs used by instances. Each instance needs one FCP in order to attach a
+# volume to itself. Those FCPs should be well planned and made online before
+# OpenStack can use them. OpenStack will not check their status but use them directly.
+# So if they are not ready, errors may be returned. The format of this variable should look
+# like “ min1-max1;min2-max2;min3-max3”. Please contact your z/VM system manager
+# if you don’t know what FCPs you can use.
+#zvm_fcp_list=B15B-B15F
+
+# The xCAT node name of the z/VM hypervisor
+# Same value as XCAT_sysid in DMSSICNF COPY file
+#zvm_host=
+<%= "zvm_host=#{node[:nova][:zvm][:zvm_host]}" if @libvirt_type.eql?('zvm') %>
+
+# An integer between 0 and 9, indicating the level of gzip compression used when
+# capturing a disk. The values are as follows:
+# 0 No compression.
+# 1-9 The gzip compression level. The recommended compression value is 6 when
+# compression is desired.
+# Notes: If this value is set in nova.conf, the specified gzip compression level will be used when
+# capturing a disk. If it is not set, the gzip compression level is controlled by the xCAT/ZHCP
+# side, and the default is 6.
+#zvm_image_compression_level=6
+
+# If zvm_config_drive_inject_password is set to be False, this password will be
+# used as default os root password for the new booted vm.
+#zvm_image_default_password=xxxxxxxx
+
+# The path that images will be stored (snapshot, deploy etc)
+#zvm_image_tmp_path = /var/lib/nova/images
+
+# Timeout value for spawn in seconds, if new spawn machine can’t be reachable
+# after this value, deploy will report error “Failed to power on instance”
+#zvm_reachable_timeout=300
+
+# The name of xCAT SCSI pool. Users can specify any name as their wish. xCAT will
+# create and manage it.
+#zvm_scsi_pool=
+<%= "zvm_scsi_pool=#{node[:nova][:zvm][:zvm_scsi_pool]}" if @libvirt_type.eql?('zvm') %>
+
+# The default password for a newly created z/VM user ID.
+#zvm_user_default_password = dfltpass
+
+# Default template of user directory for new servers
+# User should not use lnxdflt but should define his own profile.
+#zvm_user_profile=OSDFLT
+<%= "zvm_user_profile=#{node[:nova][:zvm][:zvm_user_profile]}" if @libvirt_type.eql?('zvm') %>
+
+#Live migration
+#Choose one of “ARCHITECTURE”, “DOMAIN”, "NONE" or “STORAGE”
+#zvm_vmrelocate_force=
+
+#Timeout value for reading xCAT response.
+#zvm_xcat_connection_timeout=3600
+
+# The xCAT master node (the node name in xCAT definition)
+#zvm_xcat_master=
+<%= "zvm_xcat_master=#{node[:nova][:zvm][:zvm_xcat_master]}" if @libvirt_type.eql?('zvm') %>
+
+# The password of xCAT server which will be used for REST API call
+#zvm_xcat_password=
+<%= "zvm_xcat_password=#{node[:nova][:zvm][:zvm_xcat_password]}" if @libvirt_type.eql?('zvm') %>
+
+# The xCAT server IP that this nova compute node operates on
+#zvm_xcat_server=
+<%= "zvm_xcat_server=#{node[:nova][:zvm][:zvm_xcat_server]}" if @libvirt_type.eql?('zvm') %>
+
+# The user name of xCAT server which will be used for REST API call
+#zvm_xcat_username=
+<%= "zvm_xcat_username=#{node[:nova][:zvm][:zvm_xcat_username]}" if @libvirt_type.eql?('zvm') %>
+
+# The list of FCPs used only by xCAT HCP node. It must be different to zvm_fcp_list.
+# Any FCP exist in both zvm_fcp_list and zvm_zhcp_fcp_list leads to errors. The format
+# of this variable should look like “ min1-max1;min2-max2;min3-max3”. Strongly
+# recommend to specify only one FCP for HCP to avoid resource waste. Please contact
+# your z/VM system manager if you don’t know what FCPs you can use.
+#zvm_zhcp_fcp_list=B159
