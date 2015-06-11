@@ -2842,8 +2842,7 @@ identity_uri=<%= @keystone_settings['admin_auth_url'] %>
 
 # API version of the admin Identity API endpoint (string
 # value)
-#auth_version=<None>
-auth_version=v2.0
+auth_version= <%= @keystone_settings['api_version_for_middleware'] %>
 
 # Do not handle authorization requests within the middleware,
 # but delegate the authorization decision to downstream WSGI
@@ -3427,7 +3426,10 @@ region_name=<%= @keystone_settings['endpoint_region'] %>
 # Authorization URL for connecting to neutron in admin context
 # (string value)
 #admin_auth_url=http://localhost:5000/v2.0
-admin_auth_url=<%= @keystone_settings['internal_auth_url'] %>
+admin_auth_url=<%= KeystoneHelper.versioned_service_URL(@keystone_settings["protocol"],
+                                    @keystone_settings["internal_url_host"],
+                                    @keystone_settings["service_port"],
+                                    "2.0") %>
 
 # If set, ignore any SSL validation issues (boolean value)
 # Deprecated group/name - [DEFAULT]/neutron_api_insecure
