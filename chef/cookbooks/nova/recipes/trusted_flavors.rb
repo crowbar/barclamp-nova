@@ -37,6 +37,10 @@ if node[:nova][:trusted_flavors]
   if ssl_insecure
     novacmd = "#{novacmd} --insecure"
   end
+  if keystone_settings['api_version'] != "2.0"
+    novacmd = "#{novacmd} --os-user-domain-name Default --os-project-domain-name Default"
+  end
+
 
   flavors.keys.each do |id|
     execute "register_#{flavors[id]["name"]}_flavor" do
