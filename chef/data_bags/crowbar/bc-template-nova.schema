@@ -24,6 +24,7 @@
             "libvirt_type": { "type": "str", "required": true },
             "use_novnc": { "type": "bool", "required": true },
             "verbose": { "type": "bool", "required": true },
+            "max_header_line": { "type": "int", "required": true },
             "trusted_flavors": { "type": "bool", "required": true },
             "use_migration": { "type": "bool", "required": true },
             "use_shared_instance_storage": { "type": "bool", "required": true },
