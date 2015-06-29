@@ -16,6 +16,7 @@
       "use_novnc": true,
       "debug": false,
       "verbose": true,
+      "max_header_line": 16384,
       "use_shared_instance_storage": false,
       "use_migration": false,
       "use_syslog": false,
@@ -67,7 +68,7 @@
     "nova": {
       "crowbar-revision": 0,
       "crowbar-applied": false,
-      "schema-revision": 30,
+      "schema-revision": 31,
       "element_states": {
         "nova-multi-controller": [ "readying", "ready", "applying" ],
         "nova-multi-compute-docker": [ "readying", "ready", "applying" ],
