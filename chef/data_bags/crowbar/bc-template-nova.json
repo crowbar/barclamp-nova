@@ -1,0 +1,148 @@
+{
+  "id": "bc-template-nova",
+  "description": "installs and configures the Openstack Nova component. It relies upon the network and glance barclamps for normal operation.",
+  "attributes": {
+    "nova": {
+      "database_instance": "none",
+      "rabbitmq_instance": "none",
+      "keystone_instance": "none",
+      "service_user": "nova",
+      "glance_instance": "none",
+      "cinder_instance": "none",
+      "neutron_instance": "none",
+      "itxt_instance": "none",
+      "trusted_flavors": false,
+      "libvirt_type": "kvm",
+      "use_novnc": true,
+      "debug": false,
+      "verbose": true,
+      "max_header_line": 16384,
+      "use_shared_instance_storage": false,
+      "use_migration": false,
+      "use_syslog": false,
+      "gitrepo": "http://github.com/openstack/nova.git",
+      "git_instance": "",
+      "git_refspec": "stable/icehouse",
+      "use_gitrepo": false,
+      "use_gitbarclamp": true,
+      "use_pip_cache": true,
+      "use_virtualenv": true,
+      "neutron_url_timeout": 30,
+      "vnc_keymap": "en-us",
+      "pfs_deps": [
+          "python-libvirt",
+          "python-routes",
+          "dnsmasq-base",
+          "dnsmasq-utils",
+          "kpartx",
+          "sysfsutils",
+          "parted",
+          "iputils-arping",
+          "kvm",
+          "gawk",
+          "iptables",
+          "ebtables",
+          "sqlite3",
+          "sudo",
+          "kvm",
+          "libvirt-bin",
+          "vlan",
+          "curl",
+          "socat",
+          "lvm2",
+          "open-iscsi",
+          "open-iscsi-utils",
+          "tgt",
+          "libmysqlclient-dev",
+          "pip://setuptools-git",
+          "pip://distribute==0.6.28",
+          "pip://MySQL-python",
+          "pip://python-novaclient"
+      ],
+      "scheduler": {
+        "ram_allocation_ratio": 1.0,
+        "cpu_allocation_ratio": 16.0
+      },
+      "db": {
+        "password": "",
+        "user": "nova",
+        "database": "nova"
+      },
+      "rbd": {
+        "user": "",
+        "secret_uuid": ""
+      },
+      "kvm": {
+        "ksm_enabled": false
+      },
+      "vcenter": {
+        "host": "",
+        "user": "",
+        "password": "",
+        "clusters": [],
+        "datastore": "",
+        "interface": "vmnic0"
+      },
+      "ssl": {
+        "enabled": false,
+        "certfile": "/etc/nova/ssl/certs/signing_cert.pem",
+        "keyfile": "/etc/nova/ssl/private/signing_key.pem",
+        "generate_certs": false,
+        "insecure": false,
+        "cert_required": false,
+        "ca_certs": "/etc/nova/ssl/certs/ca.pem"
+      },
+      "novnc": {
+        "ssl": {
+          "enabled": false,
+          "certfile": "",
+          "keyfile": ""
+        }
+      }
+    }
+  },
+  "deployment": {
+    "nova": {
+      "crowbar-revision": 0,
+      "crowbar-applied": false,
+      "schema-revision": 23,
+      "element_states": {
+        "nova-multi-controller": [ "readying", "ready", "applying" ],
+        "nova-multi-compute-docker": [ "readying", "ready", "applying" ],
+        "nova-multi-compute-hyperv": [ "readying", "ready", "applying" ],
+        "nova-multi-compute-kvm": [ "readying", "ready", "applying" ],
+        "nova-multi-compute-qemu": [ "readying", "ready", "applying" ],
+        "nova-multi-compute-vmware": [ "readying", "ready", "applying" ],
+        "nova-multi-compute-xen": [ "readying", "ready", "applying" ]
+      },
+      "elements": {},
+      "element_order": [
+        [ "nova-multi-controller" ],
+        [
+          "nova-multi-compute-docker",
+          "nova-multi-compute-hyperv",
+          "nova-multi-compute-kvm",
+          "nova-multi-compute-qemu",
+          "nova-multi-compute-vmware",
+          "nova-multi-compute-xen"
+        ]
+      ],
+      "element_run_list_order": {
+        "nova-multi-controller": 95,
+        "nova-multi-compute-docker": 97,
+        "nova-multi-compute-hyperv": 97,
+        "nova-multi-compute-kvm": 97,
+        "nova-multi-compute-qemu": 97,
+        "nova-multi-compute-vmware": 97,
+        "nova-multi-compute-xen": 97
+      },
+      "config": {
+        "environment": "nova-config-base",
+        "mode": "full",
+        "transitions": false,
+        "transition_list": []
+      }
+    }
+  }
+}
+

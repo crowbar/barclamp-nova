@@ -1,0 +1,180 @@
+{
+  "type": "map",
+  "required": true,
+  "mapping": {
+    "id": { "type": "str", "required": true, "pattern": "/^bc-nova-|^bc-template-nova$/" },
+    "description": { "type": "str", "required": true },
+    "attributes": {
+      "type": "map",
+      "required": true,
+      "mapping": {
+        "nova": { 
+          "type": "map", 
+          "required": true,
+          "mapping": {
+            "debug": { "type": "bool", "required": true },
+            "database_instance": { "type": "str", "required": true },
+            "rabbitmq_instance": { "type": "str", "required": true },
+            "keystone_instance": { "type": "str", "required": true },
+            "service_user": { "type": "str", "required": true },
+            "service_password": { "type": "str" },
+            "glance_instance": { "type": "str", "required": true },
+            "cinder_instance": { "type": "str", "required": true },
+            "neutron_instance": { "type": "str", "required": true },
+            "libvirt_type": { "type": "str", "required": true },
+            "use_novnc": { "type": "bool", "required": true },
+            "verbose": { "type": "bool", "required": true },
+            "max_header_line": { "type": "int", "required": true },
+            "trusted_flavors": { "type": "bool", "required": true },
+            "use_migration": { "type": "bool", "required": true },
+            "use_shared_instance_storage": { "type": "bool", "required": true },
+            "use_syslog": { "type": "bool", "required": true },
+            "gitrepo": { "type": "str", "required": true },
+            "git_instance": { "type": "str", "required": true },
+            "itxt_instance": { "type": "str", "required": true },
+            "git_refspec": { "type": "str", "required": true },
+            "use_gitrepo": { "type": "bool", "required": true },
+            "use_gitbarclamp": { "type": "bool", "required": true },
+            "use_pip_cache": { "type": "bool", "required": true },
+            "use_virtualenv": { "type": "bool", "required": true },
+            "pfs_deps": { "type": "seq", "required": true, "sequence": [ { "type": "str" } ] },
+            "neutron_metadata_proxy_shared_secret": { "type": "str" },
+            "neutron_url_timeout": {"type": "int"},
+            "vnc_keymap": { "type": "str" , "required": true },
+            "scheduler": {
+              "type": "map",
+              "mapping": {
+                "ram_allocation_ratio": { "type": "number" },
+                "cpu_allocation_ratio": { "type": "number" }
+              }
+            },
+            "db": {
+              "type": "map",
+              "required": true,
+              "mapping": {
+                "password": { "type": "str", "required": true },
+                "user": { "type": "str", "required": true },
+                "database": { "type": "str", "required": true }
+              }
+            },
+            "rbd": {
+              "type": "map", "required": false, "mapping": {
+                "user": { "type": "str", "required": true },
+                "secret_uuid": { "type": "str", "required": true }
+              }  
+            },
+            "kvm": {
+              "type": "map", "required": true, "mapping": {
+                "ksm_enabled": { "type": "bool", "required": true }
+              }
+            },
+            "vcenter": {
+              "type": "map", "required": true, "mapping": {
+                "host": { "type": "str", "required": true },
+                "user": { "type": "str", "required": true },
+                "password": { "type": "str", "required": true },
+                "clusters": { "type": "seq", "required": true, "sequence": [ { "type": "str" } ] },
+                "datastore": { "type": "str", "required": true },
+                "interface": { "type": "str", "required": true }
+              }
+            },
+            "ssl": {
+              "type": "map", "required": true, "mapping": {
+                "enabled": { "type" : "bool", "required" : true },
+                "certfile": { "type" : "str", "required" : true },
+                "keyfile": { "type" : "str", "required" : true },
+                "generate_certs": { "type" : "bool", "required" : true },
+                "insecure": { "type" : "bool", "required" : true },
+                "cert_required": { "type" : "bool", "required" : true },
+                "ca_certs": { "type" : "str", "required" : true }
+              }
+            },
+            "novnc": {
+              "type": "map", "required": true, "mapping": {
+                "ssl": {
+                  "type": "map", "required": true, "mapping": {
+                    "enabled": { "type" : "bool", "required" : true },
+                    "certfile": { "type" : "str", "required" : true },
+                    "keyfile": { "type" : "str", "required" : true }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "deployment": {
+      "type": "map",
+      "required": true,
+      "mapping": {
+        "nova": {
+          "type": "map",
+          "required": true,
+          "mapping": {
+            "crowbar-revision": { "type": "int", "required": true },
+            "schema-revision": { "type": "int" },
+            "crowbar-committing": { "type": "bool" },
+            "crowbar-applied": { "type": "bool" },
+            "crowbar-status": { "type": "str" },
+            "crowbar-failed": { "type": "str" },
+            "crowbar-queued": { "type": "bool" },
+            "element_states": {
+              "type": "map",
+              "mapping": {
+                = : {
+                  "type": "seq",
+                  "required": true,
+                  "sequence": [ { "type": "str" } ]
+                }
+              }
+            },
+            "elements": {
+              "type": "map",
+              "required": true,
+              "mapping": {
+                = : {
+                  "type": "seq",
+                  "required": true,
+                  "sequence": [ { "type": "str" } ]
+                }
+              }
+            },
+            "element_order": {
+              "type": "seq",
+              "required": true,
+              "sequence": [ {
+                "type": "seq",
+                "sequence": [ { "type": "str" } ]
+              } ]
+            },
+            "element_run_list_order": {
+              "type": "map",
+              "required": false,
+              "mapping": {
+                = : {
+                  "type": "int",
+                  "required": true
+                }
+              }
+            },
+            "config": {
+              "type": "map",
+              "required": true,
+              "mapping": {
+                "environment": { "type": "str", "required": true },
+                "mode": { "type": "str", "required": true },
+                "transitions": { "type": "bool", "required": true },
+                "transition_list": {
+                  "type": "seq",
+                  "required": true,
+                  "sequence": [ { "type": "str" } ]
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}
