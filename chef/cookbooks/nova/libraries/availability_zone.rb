@@ -28,7 +28,10 @@ module NovaAvailabilityZone
     command << "--os-tenant-name"
     command << keystone_settings['default_tenant']
     command << "--os-auth-url"
-    command << keystone_settings['internal_auth_url']
+    command << KeystoneHelper.versioned_service_URL(keystone_settings["protocol"],
+                                                    keystone_settings["internal_url_host"],
+                                                    keystone_settings["service_port"],
+                                                    "2.0")
     command << "--os-region-name"
     command << keystone_settings['endpoint_region']
 

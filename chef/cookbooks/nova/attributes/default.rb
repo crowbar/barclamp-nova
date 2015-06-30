@@ -19,6 +19,7 @@
 #
 
 default[:nova][:debug] = false
+default[:nova][:max_header_line] = 16384
 
 #
 # Database Settings
