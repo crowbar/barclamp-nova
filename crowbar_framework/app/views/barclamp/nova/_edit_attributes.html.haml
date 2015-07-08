@@ -49,6 +49,20 @@
 
     %fieldset
       %legend
+        = t(".zvm_header")
+
+      = string_field %w(zvm zvm_xcat_server)
+      = string_field %w(zvm zvm_xcat_username)
+      = string_field %w(zvm zvm_xcat_password)
+      = string_field %w(zvm zvm_diskpool)
+      = string_field %w(zvm zvm_diskpool_type)
+      = string_field %w(zvm zvm_host)
+      = string_field %w(zvm zvm_user_profile)
+      = string_field %w(zvm zvm_scsi_pool)
+      = string_field %w(zvm zvm_xcat_master)
+
+    %fieldset
+      %legend
         = t(".ssl_header")
 
       = boolean_field %w(ssl enabled), :collection => :ssl_protocols_for_nova, "data-sslprefix" => "ssl", "data-sslcert" => "/etc/nova/ssl/certs/signing_cert.pem", "data-sslkey" => "/etc/nova/ssl/private/signing_key.pem"

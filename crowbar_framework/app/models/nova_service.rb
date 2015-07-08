@@ -74,6 +74,13 @@ class NovaService < PacemakerServiceObject
             "windows" => "/.*/"
           }
         },
+        "nova-multi-compute-zvm" => {
+          "unique" => false,
+          "count" => 1,
+          "exclude_platform" => {
+            "windows" => "/.*/"
+          }
+        },
         "nova-multi-compute-xen" => {
           "unique" => false,
           "count" => -1,
@@ -137,6 +144,8 @@ class NovaService < PacemakerServiceObject
     qemu = non_kvm - xen
 
     # do not use docker by default
+    # do not use zvm by default
+    #   TODO add it here once a compute node can run inside z/VM
     base["deployment"]["nova"]["elements"] = {
       "nova-multi-controller" => [ controller.name ],
       "nova-multi-compute-hyperv" => hyperv.map { |x| x.name },
@@ -248,32 +257,35 @@ class NovaService < PacemakerServiceObject
     end
 
     elements["nova-multi-compute-docker"].each do |n|
-        nodes[n] += 1
+      nodes[n] += 1
     end unless elements["nova-multi-compute-docker"].nil?
     elements["nova-multi-compute-hyperv"].each do |n|
-        nodes[n] += 1
+      nodes[n] += 1
     end unless elements["nova-multi-compute-hyperv"].nil?
     elements["nova-multi-compute-kvm"].each do |n|
-        nodes[n] += 1
+      nodes[n] += 1
     end unless elements["nova-multi-compute-kvm"].nil?
     elements["nova-multi-compute-qemu"].each do |n|
-        nodes[n] += 1
+      nodes[n] += 1
     end unless elements["nova-multi-compute-qemu"].nil?
     elements["nova-multi-compute-vmware"].each do |n|
-        nodes[n] += 1
+      nodes[n] += 1
     end unless elements["nova-multi-compute-vmware"].nil?
+    elements["nova-multi-compute-zvm"].each do |n|
+      nodes[n] += 1
+    end unless elements["nova-multi-compute-zvm"].nil?
     elements["nova-multi-compute-xen"].each do |n|
-        nodes[n] += 1
-        node = NodeObject.find_node_by_name(n)
-        unless node.nil? || node_platform_supports_xen(node)
-            validation_error("Platform of node #{n} (#{node[:platform]}-#{node[:platform_version]}) does not support Xen.")
-        end
+      nodes[n] += 1
+      node = NodeObject.find_node_by_name(n)
+      unless node.nil? || node_platform_supports_xen(node)
+        validation_error("Platform of node #{n} (#{node[:platform]}-#{node[:platform_version]}) does not support Xen.")
+      end
     end unless elements["nova-multi-compute-xen"].nil?
 
     nodes.each do |key,value|
-        if value > 1
-            validation_error("Node #{key} has been assigned to a nova-multi-compute role more than once")
-        end
+      if value > 1
+        validation_error("Node #{key} has been assigned to a nova-multi-compute role more than once")
+      end
     end unless nodes.nil?
 
     super

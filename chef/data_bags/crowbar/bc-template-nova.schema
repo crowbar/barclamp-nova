@@ -70,6 +70,19 @@
                 "interface": { "type": "str", "required": true }
               }
             },
+            "zvm": {
+              "type": "map", "required": true, "mapping": {
+                "zvm_xcat_server": { "type": "str", "required": true },
+                "zvm_xcat_username": { "type": "str", "required": true },
+                "zvm_xcat_password": { "type": "str", "required": true },
+                "zvm_diskpool": { "type": "str", "required": true },
+                "zvm_diskpool_type": { "type": "str", "required": true },
+                "zvm_host": { "type": "str", "required": true },
+                "zvm_scsi_pool": { "type": "str", "required": true },
+                "zvm_user_profile": { "type": "str", "required": true },
+                "zvm_xcat_master": { "type": "str", "required": true }
+              }
+            },
             "ssl": {
               "type": "map", "required": true, "mapping": {
                 "enabled": { "type" : "bool", "required" : true },
