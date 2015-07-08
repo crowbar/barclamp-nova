@@ -334,19 +334,19 @@ end
 
 ssh_auth_keys = ""
 search_env_filtered(:node, "roles:nova-multi-compute-kvm") do |n|
-    ssh_auth_keys += n[:nova][:service_ssh_key]
+  ssh_auth_keys += n[:nova][:service_ssh_key]
 end
 search_env_filtered(:node, "roles:nova-multi-compute-xen") do |n|
-    ssh_auth_keys += n[:nova][:service_ssh_key]
+  ssh_auth_keys += n[:nova][:service_ssh_key]
 end
 search_env_filtered(:node, "roles:nova-multi-compute-docker") do |n|
-    ssh_auth_keys += n[:nova][:service_ssh_key]
+  ssh_auth_keys += n[:nova][:service_ssh_key]
 end
 search_env_filtered(:node, "roles:nova-multi-compute-qemu") do |n|
-    ssh_auth_keys += n[:nova][:service_ssh_key]
+  ssh_auth_keys += n[:nova][:service_ssh_key]
 end
 search_env_filtered(:node, "roles:nova-multi-compute-zvm") do |n|
-    ssh_auth_keys += n[:nova][:service_ssh_key]
+  ssh_auth_keys += n[:nova][:service_ssh_key]
 end
 
 file "#{node[:nova][:home_dir]}/.ssh/authorized_keys" do
