@@ -225,7 +225,7 @@ class NovaService < PacemakerServiceObject
           end
         end
         if neutron["attributes"]["neutron"]["use_dvr"]
-          net_svc.allocate_ip "default","public","host", n
+          net_svc.enable_interface "default", "nova_floating", n
         end
       end
     end unless all_nodes.nil?
