@@ -100,6 +100,12 @@
                   }
                 }
               }
+            },
+            "block_device": {
+              "type": "map", "required": true, "mapping": {
+                "allocate_retries": { "type": "number", "required" : true },
+                "allocate_retries_interval": { "type": "number", "required" : true }
+              }
             }
           }
         }

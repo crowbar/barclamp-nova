@@ -903,6 +903,7 @@ instance_usage_audit=True
 # Number of times to retry block device allocation on failures
 # (integer value)
 #block_device_allocate_retries=60
+block_device_allocate_retries=<%= node[:nova][:block_device][:allocate_retries] %>
 
 # The number of times to attempt to reap an instance's files.
 # (integer value)
@@ -950,6 +951,7 @@ instance_usage_audit=True
 # Waiting time interval (seconds) between block device
 # allocation retries on failures (integer value)
 #block_device_allocate_retries_interval=3
+block_device_allocate_retries_interval=<%= node[:nova][:block_device][:allocate_retries_interval] %>
 
 # Action to take if a running deleted instance is
 # detected.Valid options are 'noop', 'log', 'shutdown', or
