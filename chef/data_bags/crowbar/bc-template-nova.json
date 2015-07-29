@@ -98,14 +98,16 @@
           "certfile": "",
           "keyfile": ""
         }
-      }
+      },
+      "block_device_allocate_retries": 60,
+      "block_device_allocate_retries_interval": 3
     }
   },
   "deployment": {
     "nova": {
       "crowbar-revision": 0,
       "crowbar-applied": false,
-      "schema-revision": 23,
+      "schema-revision": 24,
       "element_states": {
         "nova-multi-controller": [ "readying", "ready", "applying" ],
         "nova-multi-compute-docker": [ "readying", "ready", "applying" ],

@@ -119,3 +119,9 @@ default[:nova][:ha][:ports][:metadata] = 5552
 default[:nova][:ha][:ports][:objectstore] = 5553
 default[:nova][:ha][:ports][:novncproxy] = 5554
 default[:nova][:ha][:ports][:xvpvncproxy] = 5555
+
+#
+# Block device allocation retries settings
+#
+default[:nova][:block_device_allocate_retries] = 60
+default[:nova][:block_device_allocate_retries_interval] = 3
