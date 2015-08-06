@@ -81,7 +81,9 @@ end
 crowbar_pacemaker_sync_mark "sync-nova_before_ha"
 
 # Avoid races when creating pacemaker resources
-crowbar_pacemaker_sync_mark "wait-nova_ha_resources"
+crowbar_pacemaker_sync_mark "wait-nova_ha_resources" do
+  timeout 120
+end
 
 primitives = []
 
