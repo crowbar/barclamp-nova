@@ -21,6 +21,7 @@
       "use_migration": false,
       "use_syslog": false,
       "neutron_url_timeout": 30,
+      "force_config_drive": false,
       "vnc_keymap": "en-us",
       "scheduler": {
         "ram_allocation_ratio": 1.0,
@@ -79,7 +80,7 @@
     "nova": {
       "crowbar-revision": 0,
       "crowbar-applied": false,
-      "schema-revision": 32,
+      "schema-revision": 33,
       "element_states": {
         "nova-multi-controller": [ "readying", "ready", "applying" ],
         "nova-multi-compute-docker": [ "readying", "ready", "applying" ],

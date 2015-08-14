@@ -32,6 +32,7 @@
             "itxt_instance": { "type": "str", "required": true },
             "neutron_metadata_proxy_shared_secret": { "type": "str" },
             "neutron_url_timeout": {"type": "int"},
+            "force_config_drive": { "type": "bool", "required": true },
             "vnc_keymap": { "type": "str" , "required": true },
             "scheduler": {
               "type": "map",
