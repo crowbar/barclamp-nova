@@ -283,15 +283,18 @@ end unless node.platform == "suse"
 env_filter = " AND nova_config_environment:#{node[:nova][:config][:environment]}"
 nova_controller = search(:node, "roles:nova-multi-controller#{env_filter}")
 
+nova_controller_ips = nova_controller.map do |nova_controller_node|
+  Chef::Recipe::Barclamp::Inventory.get_network_by_type(nova_controller_node, "admin").address
+end
+
 # Note: since we do not allow shared storage with a cluster, we know that the
 # first controller is the right one to use (ie, the only one)
 if !nova_controller.nil? and nova_controller.length > 0 and nova_controller[0].name != node.name
-  nova_controller_ip =  Chef::Recipe::Barclamp::Inventory.get_network_by_type(nova_controller[0], "admin").address
   mount node[:nova][:instances_path] do
     action node[:nova]["use_shared_instance_storage"] ? [:mount, :enable] : [:umount, :disable]
     fstype "nfs"
     options "rw,auto"
-    device nova_controller_ip + ":" +  node[:nova][:instances_path]
+    device nova_controller_ips[0] + ":" +  node[:nova][:instances_path]
   end
 
 end
@@ -422,4 +425,37 @@ end
 # restarted (in case of a config change and if we're also a controller)
 execute "trigger-nova-own-az-config" do
   command "true"
+end
+
+# Set iptables rules for blocking VNC Access for all but the nova-controller node.
+# Using iptables u32 module to check for the first 1024 bits of a tcp packet in
+# port range 5900 to 15900. Do a string matching with RFB-003 protocol to verify
+# if the packets are VNC packets. Only apply the iptables rules to VNC packets.
+bash "nova_compute_vncblock_reject_all" do
+  code <<-EOH
+    iptables -N VNCBLOCK
+    iptables -I INPUT  \
+       -p tcp --match multiport --dports 5900:15900 \
+       -m connbytes --connbytes 0:1024 \
+       --connbytes-dir both --connbytes-mode bytes \
+       -m state --state ESTABLISHED \
+       -m u32 --u32 "0>>22&0x3C@ 12>>26&0x3C@ 0=0x52464220" \
+       -m string --algo kmp --string "RFB 003." --to 130 \
+       -j VNCBLOCK
+    iptables -I VNCBLOCK -p tcp -j REJECT --reject-with tcp-reset
+  EOH
+  not_if "iptables -L INPUT | grep -q VNCBLOCK"
+end
+
+# Allow out packets which use VNC protocol as per RFB 003 using the u32 module
+# for all possible hosts with role nova_multi_controller. This block does the
+# same basic filtering as explained above but only to allow nova_multi_controller
+# hosts.
+nova_controller_ips.each do |nova_controller_ip|
+  bash "nova_compute_vncblock_allow_#{nova_controller_ip}" do
+    code <<-EOH
+      iptables -I VNCBLOCK -s #{nova_controller_ip} -j ACCEPT
+    EOH
+    not_if "iptables -nL VNCBLOCK | grep -q #{nova_controller_ip}"
+  end
 end
