@@ -44,7 +44,7 @@ end.run_action(:create)
 haproxy_loadbalancer "nova-metadata" do
   address cluster_admin_ip
   port node[:nova][:ports][:metadata]
-  use_ssl false
+  use_ssl node[:nova][:ssl][:enabled]
   servers CrowbarPacemakerHelper.haproxy_servers_for_service(node, "nova", "nova-multi-controller", "metadata")
   action :nothing
 end.run_action(:create)
