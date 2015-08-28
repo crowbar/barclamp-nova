@@ -1370,6 +1370,9 @@ linuxnet_interface_driver=""
 # Whether to attempt to inject network setup into guest
 # (boolean value)
 #flat_injected=false
+<% if @force_config_drive %>
+flat_injected=true
+<% end -%>
 
 # FlatDhcp will bridge into this interface if set (string
 # value)
@@ -1878,6 +1881,10 @@ ram_allocation_ratio=<%= node[:nova][:scheduler][:ram_allocation_ratio] %>
 # Config drive format. One of iso9660 (default) or vfat
 # (string value)
 #config_drive_format=iso9660
+<% if @force_config_drive %>
+# We need to set it to vfat then, see https://review.openstack.org/#/c/168646/
+config_drive_format=vfat
+<% end -%>
 
 # DEPRECATED (not needed any more):  Where to put temporary
 # files associated with config drive creation (string value)
@@ -1885,7 +1892,9 @@ ram_allocation_ratio=<%= node[:nova][:scheduler][:ram_allocation_ratio] %>
 
 # Set to force injection to take place on a config drive (if
 # set, valid options are: always) (string value)
-#force_config_drive=<None>
+<% if @force_config_drive %>
+force_config_drive=always
+<% end -%>
 
 # Name and optionally path of the tool used for ISO image
 # creation (string value)

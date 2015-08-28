@@ -28,6 +28,7 @@
       "use_pip_cache": true,
       "use_virtualenv": true,
       "neutron_url_timeout": 30,
+      "force_config_drive": false,
       "vnc_keymap": "en-us",
       "pfs_deps": [
           "python-libvirt",
@@ -105,7 +106,7 @@
     "nova": {
       "crowbar-revision": 0,
       "crowbar-applied": false,
-      "schema-revision": 23,
+      "schema-revision": 24,
       "element_states": {
         "nova-multi-controller": [ "readying", "ready", "applying" ],
         "nova-multi-compute-docker": [ "readying", "ready", "applying" ],
