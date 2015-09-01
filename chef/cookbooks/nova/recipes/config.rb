@@ -192,8 +192,8 @@ if rbd_enabled
 end
 
 # FIXME: These attributes will be removed or re-used
-# with ephemeral storage change. Right now they are 
-# disabled in nova.conf to prevent overwritting 
+# with ephemeral storage change. Right now they are
+# disabled in nova.conf to prevent overwritting
 # multi Ceph backends from Cinder
 ceph_user = node[:nova][:rbd][:user]
 ceph_uuid = node[:nova][:rbd][:secret_uuid]
@@ -366,6 +366,7 @@ template "/etc/nova/nova.conf" do
             :libvirt_migration => node[:nova]["use_migration"],
             :libvirt_enable_multipath => node[:nova][:libvirt_use_multipath],
             :shared_instances => node[:nova]["use_shared_instance_storage"],
+            :force_config_drive => node[:nova]["force_config_drive"],
             :glance_server_protocol => glance_server_protocol,
             :glance_server_host => glance_server_host,
             :glance_server_port => glance_server_port,
