@@ -19,3 +19,24 @@
 #
 
 node.set[:nova][:libvirt_type] = "docker"
+
+
+# if tempest is deployed, load packaged docker image at docker compute node
+tempest_node = search(:node, "roles:tempest").first
+unless tempest_node.nil?
+  docker_image = tempest_node[:tempest][:tempest_test_docker_image] || ""
+
+  bash "load docker image" do
+    code <<-EOH
+      TEMP=$(mktemp -d)
+      IMG_FILE=$(basename #{docker_image})
+
+      wget --no-verbose #{docker_image} --directory-prefix=$TEMP 2>&1 || exit $?
+      docker load --input=$TEMP/$IMG_FILE
+      mkdir -p /var/lib/crowbar
+      touch /var/lib/crowbar/docker_for_tempest_loaded
+      rm -rf $TEMP
+EOH
+    not_if { docker_image.empty? || ::File.exists?("/var/lib/crowbar/docker_for_tempest_loaded") }
+  end
+end
