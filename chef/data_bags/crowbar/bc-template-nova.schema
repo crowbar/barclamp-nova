@@ -100,7 +100,9 @@
                   }
                 }
               }
-            }
+            },
+            "block_device_allocate_retries": {"type": "number"},
+            "block_device_allocate_retries_interval": {"type": "number"}
           }
         }
       }
