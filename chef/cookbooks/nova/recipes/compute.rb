@@ -162,7 +162,7 @@ case node[:nova][:libvirt_type]
 
           if node[:nova][:libvirt_type] == "kvm"
             if node.platform_version.to_f >= 12.0
-              package "qemu-kvm" if node[:architecture] == "x86_64"
+              package "qemu-kvm" if node[:kernel][:machine] == "x86_64"
               package "qemu-block-rbd"
             end
 
