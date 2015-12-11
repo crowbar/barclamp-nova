@@ -542,6 +542,18 @@ ssl_key_file = <%= @ssl_key_file %>
 # with big service catalogs). (integer value)
 max_header_line = <%= node[:nova][:max_header_line] %>
 
+# If False, closes the client socket connection explicitly.
+# (boolean value)
+#wsgi_keep_alive=true
+wsgi_keep_alive=false
+
+# Timeout for client connections' socket operations. If an
+# incoming connection is idle for this number of seconds it
+# will be closed. A value of '0' means wait forever. (integer
+# value)
+#client_socket_timeout=0
+client_socket_timeout=900
+
 
 #
 # Options defined in nova.api.auth
