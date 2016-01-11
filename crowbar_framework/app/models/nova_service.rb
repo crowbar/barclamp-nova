@@ -204,30 +204,12 @@ class NovaService < PacemakerServiceObject
     end
     compute_nodes_for_network.flatten!
 
+    neutron_service = NeutronService.new @logger
+
     compute_nodes_for_network.each do |n|
-      # TODO(toabctl): The same code is in the neutron barclamp. Should be extracted and reused!
-      #                (see crowbar_framework/app/models/neutron_service.rb)
-      if neutron["attributes"]["neutron"]["networking_plugin"] == "ml2"
-        ml2_type_drivers = neutron["attributes"]["neutron"]["ml2_type_drivers"]
-        if ml2_type_drivers.include?("gre") || ml2_type_drivers.include?("vxlan")
-          net_svc.allocate_ip "default","os_sdn","host", n
-        end
-        if ml2_type_drivers.include?("vlan")
-          net_svc.enable_interface "default", "nova_fixed", n
-          # Force "use_vlan" to false in VLAN mode (linuxbridge and ovs). We
-          # need to make sure that the network recipe does NOT create the
-          # VLAN interfaces (ethX.VLAN)
-          node = NodeObject.find_node_by_name n
-          if node.crowbar["crowbar"]["network"]["nova_fixed"]["use_vlan"]
-            @logger.info("Forcing use_vlan to false for the nova_fixed network on node #{n}")
-            node.crowbar["crowbar"]["network"]["nova_fixed"]["use_vlan"] = false
-            node.save
-          end
-        end
-        if neutron["attributes"]["neutron"]["use_dvr"]
-          net_svc.enable_interface "default", "nova_floating", n
-        end
-      end
+      neutron_service.enable_neutron_networks(neutron["attributes"]["neutron"],
+                                              n, net_svc,
+                                              neutron["attributes"]["neutron"]["use_dvr"])
     end unless all_nodes.nil?
 
     @logger.debug("Nova apply_role_pre_chef_call: leaving")
