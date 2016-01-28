@@ -442,7 +442,7 @@ bash "nova_compute_vncblock_reject_all" do
        -m u32 --u32 "0>>22&0x3C@ 12>>26&0x3C@ 0=0x52464220" \
        -m string --algo kmp --string "RFB 003." --to 130 \
        -j VNCBLOCK
-    iptables -I VNCBLOCK -p tcp -j REJECT --reject-with tcp-reset
+    iptables -I VNCBLOCK -p tcp -j REJECT
   EOH
   not_if "iptables -L INPUT | grep -q VNCBLOCK"
 end
