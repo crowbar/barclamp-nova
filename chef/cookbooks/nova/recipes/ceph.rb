@@ -122,9 +122,9 @@ cinder_controller[:cinder][:volumes].each_with_index do |volume, volid|
           undefine = false
 
           if secret_uuid == rbd_uuid
-            undefine = true if secret_usage != "client.#{rbd_user} secret"
+            undefine = true if secret_usage != "crowbar-#{rbd_uuid} secret"
           else
-            undefine = true if secret_usage == "client.#{rbd_user} secret"
+            undefine = true if secret_usage == "crowbar-#{rbd_uuid} secret"
           end
 
           if undefine
@@ -160,7 +160,12 @@ cinder_controller[:cinder][:volumes].each_with_index do |volume, volid|
 
         if secret != client_key
           secret_file_path = "/etc/ceph/ceph-secret-#{rbd_uuid}.xml"
-          secret_file_content = "<secret ephemeral='no' private='no'> <uuid>#{rbd_uuid}</uuid><usage type='ceph'> <name>client.#{rbd_user} secret</name> </usage> </secret>"
+          secret_file_content = "<secret ephemeral='no' private='no'>" \
+                                " <uuid>#{rbd_uuid}</uuid>" \
+                                " <usage type='ceph'>" \
+                                " <name>crowbar-#{rbd_uuid} secret</name>" \
+                                " </usage> " \
+                                "</secret>"
           File.write(secret_file_path, secret_file_content)
 
           cmd = ["virsh", "secret-define", "--file", secret_file_path]
