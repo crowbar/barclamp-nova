@@ -23,6 +23,13 @@ node.set[:nova][:my_ip] = Chef::Recipe::Barclamp::Inventory.get_network_by_type(
 
 
 unless node[:nova][:use_gitrepo]
+  directory "/var/cache/nova" do
+    owner node[:cinder][:user]
+    group node[:cinder][:group]
+    mode 0755
+    action :create
+    only_if { node[:platform] == "ubuntu" }
+  end
   package "nova-common" do
     if %w(redhat centos suse).include?(node.platform)
       package_name "openstack-nova"
