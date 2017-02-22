@@ -23,6 +23,13 @@ node.set[:nova][:my_ip] = Chef::Recipe::Barclamp::Inventory.get_network_by_type(
 
 
 unless node[:nova][:use_gitrepo]
+  directory "/var/cache/nova" do
+    owner node[:nova][:user]
+    group node[:nova][:group]
+    mode 0755
+    action :create
+    only_if { node[:platform] == "ubuntu" }
+  end
   package "nova-common" do
     if %w(redhat centos suse).include?(node.platform)
       package_name "openstack-nova"
@@ -391,6 +398,7 @@ template "/etc/nova/nova.conf" do
             :vncproxy_cert_file => api_novnc_ssl_certfile,
             :vncproxy_key_file => api_novnc_ssl_keyfile,
             :memcached_servers => memcached_servers,
+	    :neutron_metadata_proxy_shared_secret => node[:nova][:neutron_metadata_proxy_shared_secret],
             :neutron_protocol => neutron_protocol,
             :neutron_server_host => neutron_server_host,
             :neutron_server_port => neutron_server_port,

@@ -17,6 +17,12 @@
 # limitations under the License.
 #
 
+execute "stevedore_upgrade" do
+  command "pip install --upgrade stevedore"
+  notifies :restart, "service[nova-scheduler]", :immediately
+  only_if { node[:platform] == "ubuntu" }
+end
+
 include_recipe "nova::config"
 
 nova_package "scheduler" do
