@@ -346,3 +346,16 @@ unless %w(redhat centos suse).include?(node.platform)
     notifies :restart, "service[libvirt-bin]"
   end
 end
+
+# Check and deploy Ceph configuration for Nova
+cinder_servers = search(:node, "roles:cinder-controller") || []
+if cinder_servers.length > 0
+  cinder_server = cinder_servers[0]
+  if cinder_server[:cinder][:volume][:volume_type] == "rbd" and node[:nova][:libvirt_type] == "kvm"
+    ceph_env_filter = " AND ceph_config_environment:ceph-config-default"
+    ceph_servers = search(:node, "roles:ceph-osd#{ceph_env_filter}") || []
+    if ceph_servers.length > 0
+      include_recipe('ceph::nova')
+    end
+  end
+end
